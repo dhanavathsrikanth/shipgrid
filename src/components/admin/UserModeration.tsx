@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { usePaginatedQuery, useMutation, useConvexAuth } from "convex/react";
+import { usePaginatedQuery, useMutation, useConvexAuth, useAction } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
 import { Id, Doc } from "../../../convex/_generated/dataModel";
@@ -24,6 +24,7 @@ import {
   PlayCircle,
   ShieldCheck,
   ShieldOff,
+  RefreshCw,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { debounce } from "lodash-es";
@@ -35,6 +36,7 @@ type AdminUserView = {
   _creationTime: number;
   name: string;
   email?: string;
+  clerkId: string;
   username?: string;
   imageUrl?: string;
   isBanned: boolean;
@@ -114,6 +116,29 @@ export function UserModeration() {
   const unpauseUserMutation = useMutation(api.users.unpauseUserByAdmin);
   const verifyUserMutation = useMutation(api.users.verifyUserByAdmin);
   const unverifyUserMutation = useMutation(api.users.unverifyUserByAdmin);
+  
+  // We'll use ensureUser for syncing if needed, but the backend now handles most of it.
+  const syncClerkEmail = useMutation(api.users.ensureUser); 
+  const syncUserEmailAction = useAction(api.clerkSync.syncUserEmail);
+  const syncAllMissingAction = useAction(api.clerkSync.syncAllMissing);
+
+  const handleSyncUser = async (clerkId: string) => {
+    try {
+      await syncUserEmailAction({ clerkId });
+      toast.success("User email synced successfully.");
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast.error("Failed to sync user email from Clerk.");
+    }
+  };
+
+  const handleSyncAll = async () => {
+    toast.promise(syncAllMissingAction(), {
+      loading: "Scanning for missing emails and syncing from Clerk...",
+      success: "Successfully started sync for all missing emails.",
+      error: "Failed to start bulk sync.",
+    });
+  };
 
   // Navigate to user profile
   const handleUserClick = (username: string | undefined) => {
@@ -199,20 +224,31 @@ export function UserModeration() {
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              <SelectItem value="banned">Banned Users</SelectItem>
-              <SelectItem value="not_banned">Not Banned Users</SelectItem>
-              <SelectItem value="paused">Paused Users</SelectItem>
-              <SelectItem value="not_paused">Not Paused Users</SelectItem>
-              <SelectItem value="verified">Verified Users</SelectItem>
-              <SelectItem value="not_verified">Not Verified Users</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Filter by status..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="banned">Banned Users</SelectItem>
+                <SelectItem value="not_banned">Not Banned Users</SelectItem>
+                <SelectItem value="paused">Paused Users</SelectItem>
+                <SelectItem value="not_paused">Not Paused Users</SelectItem>
+                <SelectItem value="verified">Verified Users</SelectItem>
+                <SelectItem value="not_verified">Not Verified Users</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleSyncAll}
+              title="Sync All Missing Emails from Clerk"
+              className="flex-shrink-0"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {filteredResults.length === 0 && !isLoading && (
@@ -227,6 +263,7 @@ export function UserModeration() {
               <thead>
                 <tr>
                   <th className={thClass}>User</th>
+                  <th className={thClass}>Clerk ID</th>
                   <th className={thClass}>Email</th>
                   <th className={thClass}>Username</th>
                   <th className={thClass}>Joined</th>
@@ -275,7 +312,28 @@ export function UserModeration() {
                           </span>
                         </div>
                       </td>
-                      <td className={tdClass}>{user.email || "N/A"}</td>
+                      <td className={tdClass}>
+                        <code className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-mono">
+                          {user.clerkId}
+                        </code>
+                      </td>
+                      <td className={tdClass}>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-600">{user.email || "N/A"}</span>
+                          {!user.email && (
+                            <button 
+                              onClick={() => handleSyncUser(user.clerkId)}
+                              className="p-1 px-1.5 hover:bg-orange-100 rounded text-orange-600 border border-orange-200 transition-all flex items-center gap-1 group"
+                              title="Sync from Clerk"
+                            >
+                              <span className="text-[10px] text-orange-500 font-medium group-hover:text-orange-600">
+                                Missing Sync
+                              </span>
+                              <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                       <td className={tdClass}>{user.username || "N/A"}</td>
                       <td className={tdClass}>
                         {formatDistanceToNow(user._creationTime, { addSuffix: true })}

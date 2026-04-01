@@ -3,6 +3,7 @@ import {
   query,
   QueryCtx,
   MutationCtx,
+  ActionCtx,
   internalMutation,
   action,
   internalQuery,
@@ -372,7 +373,7 @@ export const checkIsUserAdmin = query({
  * This should be called at the beginning of admin-only mutations/actions.
  */
 export async function requireAdminRole(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<void> {
   console.log("[requireAdminRole] Function called.");
   const identity = await ctx.auth.getUserIdentity();
@@ -383,29 +384,8 @@ export async function requireAdminRole(
     throw new Error("Authentication required for admin action.");
   }
 
-  console.log(
-    "[requireAdminRole] Identity subject (Clerk User ID):",
-    identity.subject,
-  );
-  // Log the entire identity object to see all available fields including the top-level role
-  console.log(
-    "[requireAdminRole] Full identity object (includes top-level claims):",
-    JSON.stringify(identity, null, 2),
-  );
-
   // Access role directly from the identity object
-  // The JWT template "role": "{{user.public_metadata.role}}" maps it to the top level
   const clerkTokenRole = (identity as any).role;
-
-  console.log(
-    "[requireAdminRole] Role directly from identity object:",
-    clerkTokenRole,
-  );
-
-  console.log(
-    "[requireAdminRole] Final determined clerkTokenRole before check:",
-    JSON.stringify(clerkTokenRole),
-  );
 
   if (clerkTokenRole === "admin") {
     console.log(
@@ -415,10 +395,14 @@ export async function requireAdminRole(
   }
 
   // Fallback: Check the database directly for the role attribute
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-    .unique();
+  const user = ("db" in ctx)
+    ? await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+        .unique()
+    : await ctx.runQuery(internal.users.getUserByClerkIdInternal, { 
+        clerkId: identity.subject 
+      });
 
   if (user && user.role === "admin") {
     console.log("[requireAdminRole] 'admin' role FOUND in Database. Access GRANTED.");
@@ -1247,6 +1231,7 @@ export const listAllUsersAdmin = query({
         _creationTime: v.number(),
         name: v.string(),
         email: v.optional(v.string()),
+        clerkId: v.string(),
         username: v.optional(v.string()),
         imageUrl: v.optional(v.string()),
         isBanned: v.boolean(),
@@ -1309,6 +1294,7 @@ export const listAllUsersAdmin = query({
         _creationTime: user._creationTime,
         name: user.name,
         email: user.email,
+        clerkId: user.clerkId,
         username: user.username,
         imageUrl: user.imageUrl,
         isBanned: user.isBanned ?? false,
@@ -1341,6 +1327,7 @@ export const listAllUsersAdmin = query({
       _id: user._id,
       _creationTime: user._creationTime,
       name: user.name,
+      clerkId: user.clerkId,
       email: user.email,
       username: user.username,
       imageUrl: user.imageUrl,
@@ -2216,5 +2203,51 @@ export const getAllWithIcpInternal = internalQuery({
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
     return users.filter((u) => !!u.icpRoles);
+  },
+});
+/**
+ * Internal mutation to update a user's email address.
+ * Used by the clerkSync action to backfill missing emails.
+ */
+export const updateEmailInternal = internalMutation({
+  args: {
+    userId: v.id("users"),
+    email: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    if (user.email !== args.email) {
+      await ctx.db.patch(args.userId, { email: args.email });
+      console.log(`Updated email for user ${user.clerkId}: ${args.email}`);
+    }
+  },
+});
+
+/**
+ * Internal query to fetch a user by Clerk ID for syncing.
+ */
+export const getUserByClerkIdInternal = internalQuery({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+  },
+});
+
+/**
+ * Internal query to fetch all users missing an email address.
+ */
+export const getUsersMissingEmailInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("email"), undefined))
+      .collect();
   },
 });

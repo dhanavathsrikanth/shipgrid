@@ -28,6 +28,7 @@ export default defineSchema({
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_username", ["username"]) // Index for fetching by username
+    .index("by_email", ["email"]) // Index for fast lookup by email
     .searchIndex("search_users", {
       searchField: "name",
       filterFields: ["isBanned"],

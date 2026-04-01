@@ -18,6 +18,7 @@ import type * as auth from "../auth.js";
 import type * as backfill from "../backfill.js";
 import type * as bookmarks from "../bookmarks.js";
 import type * as clerk from "../clerk.js";
+import type * as clerkSync from "../clerkSync.js";
 import type * as comments from "../comments.js";
 import type * as convexBoxConfig from "../convexBoxConfig.js";
 import type * as crons from "../crons.js";
@@ -85,6 +86,7 @@ declare const fullApi: ApiFromModules<{
   backfill: typeof backfill;
   bookmarks: typeof bookmarks;
   clerk: typeof clerk;
+  clerkSync: typeof clerkSync;
   comments: typeof comments;
   convexBoxConfig: typeof convexBoxConfig;
   crons: typeof crons;

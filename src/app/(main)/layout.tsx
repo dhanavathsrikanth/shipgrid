@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Layout } from "@/components/Layout";
 
 export default function MainLayout({
@@ -8,6 +9,7 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -21,6 +23,12 @@ export default function MainLayout({
         <div className="flex-grow">{children}</div>
       </div>
     );
+  }
+
+  const isAdminPage = pathname.startsWith("/admin");
+
+  if (isAdminPage) {
+    return <div className="min-h-screen bg-background">{children}</div>;
   }
 
   return <Layout>{children}</Layout>;

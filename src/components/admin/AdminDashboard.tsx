@@ -62,9 +62,8 @@ export function AdminDashboard() {
   );
 
   const handleMainTabChange = (value: string) => {
-    const newTab = value as MainAdminTab;
-    setActiveMainTab(newTab);
-    router.replace(`/admin?tab=newTab`); // Update URL query param, removing subtab
+    setActiveMainTab(value as MainAdminTab);
+    router.replace(`/admin?tab=${value}`);
   };
 
   const handleSubTabChange = (
@@ -82,59 +81,24 @@ export function AdminDashboard() {
     }
   };
 
-  if (authIsLoading || (isAuthenticated && isUserAdmin === undefined)) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8 text-center">
-        Loading authentication...
+  // Note: Auth and Admin check is now handled in the parent layout.tsx
+
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mb-10 flex flex-col items-start gap-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          Admin Dashboard
+        </h1>
+        <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold">
+          {activeMainTab.replace("-", " ")}
+        </p>
       </div>
-    );
-  }
-
-  // Show 404 for non-authenticated users or users without admin role
-  if (!isAuthenticated || isUserAdmin === false) {
-    return <NotFoundPage />;
-  }
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <Link
-        href="/"
-        className="text-sm text-muted-foreground hover:text-foreground inline-block mb-6 transition-colors"
-      >
-        ← Back to Apps Home
-      </Link>
-
-      <h1 className="text-2xl font-medium text-foreground mb-8">
-        Admin Dashboard
-      </h1>
 
       <Tabs.Root
         value={activeMainTab}
         onValueChange={handleMainTabChange}
         className="space-y-6"
       >
-        <Tabs.List className="flex flex-wrap gap-1 sm:gap-4 border-b border-border">
-          {(
-            [
-              { value: "content", label: "Moderation" },
-              { value: "tags", label: "Tags" },
-              { value: "submit-forms", label: "Forms" },
-              { value: "judging", label: "Judging" },
-              { value: "numbers", label: "Numbers" },
-              { value: "users", label: "User Moderation" },
-              { value: "emails", label: "Email Management" },
-              { value: "settings", label: "Settings" },
-            ] as { value: MainAdminTab; label: string }[]
-          ).map((tab) => (
-            <Tabs.Trigger
-              key={tab.value}
-              value={tab.value}
-              className="px-3 sm:px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary focus:outline-none focus:z-10 whitespace-nowrap transition-all"
-            >
-              {tab.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+        {/* Navigation is now handled by the Sidebar */}
 
         <Tabs.Content value="content" className="focus:outline-none">
           <ContentModeration />

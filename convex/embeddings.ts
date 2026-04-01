@@ -98,6 +98,7 @@ export const updateUserEmbedding = internalMutation({
     }
   },
 });
+
 export const getUserEmbedding = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {

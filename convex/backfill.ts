@@ -1,11 +1,12 @@
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { ActionCtx } from "./_generated/server";
 
 export const all = internalAction({
   args: {},
-  handler: async (ctx): Promise<{ message: string; storiesCount: number; usersCount: number }> => {
+  handler: async (ctx: ActionCtx): Promise<{ message: string; storiesCount: number; usersCount: number }> => {
     // 1. Load all approved stories
-    const stories: any[] = await ctx.runQuery(internal.stories.getAllApprovedInternal);
+    const stories = (await ctx.runQuery(internal.stories.getAllApprovedInternal)) as any[];
     console.log(`Scheduling backfill for ${stories.length} stories...`);
     
     for (const story of stories) {
@@ -15,7 +16,7 @@ export const all = internalAction({
     }
 
     // 2. Load all users with ICP
-    const users: any[] = await ctx.runQuery(internal.users.getAllWithIcpInternal);
+    const users = (await ctx.runQuery(internal.users.getAllWithIcpInternal)) as any[];
     console.log(`Scheduling backfill for ${users.length} users...`);
 
     for (const user of users) {
@@ -23,7 +24,7 @@ export const all = internalAction({
         userId: user._id,
       });
     }
-    
+
     return { 
       message: "Backfill scheduled successfully",
       storiesCount: stories.length, 
