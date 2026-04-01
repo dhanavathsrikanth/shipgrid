@@ -18,6 +18,7 @@ import {
   Users,
   Mail,
   Home,
+  Globe,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -91,6 +92,7 @@ export function AdminSidebar() {
     { label: "Tags", tab: "tags", icon: Hash },
     { label: "Forms", tab: "submit-forms", icon: ClipboardList },
     { label: "Judging", tab: "judging", icon: GraduationCap },
+    { label: "AI SEO", tab: "seo", icon: Globe },
     { label: "Performance", tab: "numbers", icon: BarChart3 },
     { label: "User Governance", tab: "users", icon: Users },
     { label: "Email Tools", tab: "emails", icon: Mail },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -18,8 +18,7 @@ import { FormFieldManagement } from "./FormFieldManagement";
 import { Judging } from "./Judging";
 import { EmailManagement } from "./EmailManagement";
 import { UserReportManagement } from "./UserReportManagement";
-// FormResults is typically viewed via a specific form, not as a main tab.
-// Consider removing it from the main tabs if it doesn't show an overview.
+import { SEO } from "./SEO";
 
 // Define the possible main tabs
 type MainAdminTab =
@@ -27,6 +26,7 @@ type MainAdminTab =
   | "tags"
   | "submit-forms"
   | "judging"
+  | "seo"
   | "numbers"
   | "users"
   | "emails"
@@ -34,7 +34,7 @@ type MainAdminTab =
 
 // Define sub-tabs
 type SubmitSubTab = "form-fields" | "forms";
-type UserSubTab = "user-moderation" | "reports";
+type UserSubTab = "user-moderation" | "reports" | "user-reports";
 
 export function AdminDashboard() {
   const searchParams = useSearchParams();
@@ -53,6 +53,23 @@ export function AdminDashboard() {
   const [activeUserSubTab, setActiveUserSubTab] =
     useState<UserSubTab>(initialUserSubTab);
 
+  // Sync state with URL search parameters
+  useEffect(() => {
+    const tab = searchParams.get("tab") as MainAdminTab;
+    if (tab && tab !== activeMainTab) {
+      setActiveMainTab(tab);
+    }
+
+    const subtab = searchParams.get("subtab");
+    if (subtab) {
+      if (tab === "submit-forms" && subtab !== activeSubmitSubTab) {
+        setActiveSubmitSubTab(subtab as SubmitSubTab);
+      } else if (tab === "users" && subtab !== activeUserSubTab) {
+        setActiveUserSubTab(subtab as UserSubTab);
+      }
+    }
+  }, [searchParams]);
+
   const { isLoading: authIsLoading, isAuthenticated } = useConvexAuth();
 
   // Check if user is admin
@@ -62,8 +79,9 @@ export function AdminDashboard() {
   );
 
   const handleMainTabChange = (value: string) => {
-    setActiveMainTab(value as MainAdminTab);
-    router.replace(`/admin?tab=${value}`);
+    const newTab = value as MainAdminTab;
+    setActiveMainTab(newTab);
+    router.replace(`/admin?tab=${newTab}`);
   };
 
   const handleSubTabChange = (
@@ -73,32 +91,68 @@ export function AdminDashboard() {
     if (mainTab === "submit-forms") {
       const newSubTab = subTabValue as SubmitSubTab;
       setActiveSubmitSubTab(newSubTab);
-      router.replace(`/admin?tab=mainTab, subtab: newSubTab`);
+      router.replace(`/admin?tab=${mainTab}&subtab=${newSubTab}`);
     } else if (mainTab === "users") {
       const newSubTab = subTabValue as UserSubTab;
       setActiveUserSubTab(newSubTab);
-      router.replace(`/admin?tab=mainTab, subtab: newSubTab`);
+      router.replace(`/admin?tab=${mainTab}&subtab=${newSubTab}`);
     }
   };
 
-  // Note: Auth and Admin check is now handled in the parent layout.tsx
-
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-10 flex flex-col items-start gap-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          Admin Dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold">
-          {activeMainTab.replace("-", " ")}
-        </p>
+  if (authIsLoading || (isAuthenticated && isUserAdmin === undefined)) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8 text-center">
+        Loading authentication...
       </div>
+    );
+  }
+
+  // Show 404 for non-authenticated users or users without admin role
+  if (!isAuthenticated || isUserAdmin === false) {
+    return <NotFoundPage />;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <Link
+        href="/"
+        className="text-sm text-muted-foreground hover:text-foreground inline-block mb-6 transition-colors"
+      >
+        ← Back to Apps Home
+      </Link>
+
+      <h1 className="text-2xl font-medium text-foreground mb-8">
+        Admin Dashboard
+      </h1>
 
       <Tabs.Root
         value={activeMainTab}
         onValueChange={handleMainTabChange}
         className="space-y-6"
       >
-        {/* Navigation is now handled by the Sidebar */}
+        <Tabs.List className="flex flex-wrap gap-1 sm:gap-4 border-b border-border">
+          {(
+            [
+              { value: "content", label: "Moderation" },
+              { value: "tags", label: "Tags" },
+              { value: "submit-forms", label: "Forms" },
+              { value: "judging", label: "Judging" },
+              { value: "seo", label: "AI SEO" },
+              { value: "numbers", label: "Performance" },
+              { value: "users", label: "User Governance" },
+              { value: "emails", label: "Email Tools" },
+              { value: "settings", label: "Settings" },
+            ] as { value: MainAdminTab; label: string }[]
+          ).map((tab) => (
+            <Tabs.Trigger
+              key={tab.value}
+              value={tab.value}
+              className="px-3 sm:px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary focus:outline-none focus:z-10 whitespace-nowrap transition-all"
+            >
+              {tab.label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
 
         <Tabs.Content value="content" className="focus:outline-none">
           <ContentModeration />
@@ -139,6 +193,10 @@ export function AdminDashboard() {
 
         <Tabs.Content value="judging" className="focus:outline-none">
           <Judging />
+        </Tabs.Content>
+
+        <Tabs.Content value="seo" className="focus:outline-none">
+          <SEO />
         </Tabs.Content>
 
         <Tabs.Content value="numbers" className="focus:outline-none">
@@ -197,6 +255,3 @@ export function AdminDashboard() {
     </div>
   );
 }
-
-
-
