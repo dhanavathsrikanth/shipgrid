@@ -55,4 +55,12 @@ crons.cron(
   {},
 );
 
+// Daily Clerk Sync at 1:00 AM UTC (safety net for missing emails)
+crons.cron(
+  "daily sync clerk emails",
+  "0 1 * * *",
+  internal.clerkSync.syncAllMissingEmails,
+  {},
+);
+
 export default crons;

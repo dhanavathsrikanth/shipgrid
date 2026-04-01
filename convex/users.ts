@@ -373,7 +373,7 @@ export const checkIsUserAdmin = query({
  * This should be called at the beginning of admin-only mutations/actions.
  */
 export async function requireAdminRole(
-  ctx: QueryCtx | MutationCtx | ActionCtx,
+  ctx: any,
 ): Promise<void> {
   console.log("[requireAdminRole] Function called.");
   const identity = await ctx.auth.getUserIdentity();
@@ -398,7 +398,7 @@ export async function requireAdminRole(
   const user = ("db" in ctx)
     ? await ctx.db
         .query("users")
-        .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+        .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
         .unique()
     : await ctx.runQuery(internal.users.getUserByClerkIdInternal, { 
         clerkId: identity.subject 
@@ -913,98 +913,6 @@ export const setUsername = mutation({
   },
 });
 
-export const syncUserFromClerkWebhook = internalMutation({
-  args: {
-    clerkId: v.string(),
-    email: v.optional(v.string()),
-    firstName: v.optional(v.union(v.string(), v.null())),
-    lastName: v.optional(v.union(v.string(), v.null())),
-    imageUrl: v.optional(v.union(v.string(), v.null())),
-    publicMetadata: v.optional(v.any()), // Or a more specific v.object if you know the structure
-  },
-  handler: async (ctx, args) => {
-    const existingUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-      .unique();
-
-    let nameToStore = "Anonymous";
-    if (args.firstName && args.lastName) {
-      nameToStore = `${args.firstName} ${args.lastName}`;
-    } else if (args.firstName) {
-      nameToStore = args.firstName;
-    } else if (args.lastName) {
-      nameToStore = args.lastName; // Or consider just one name if only one is present
-    }
-    // No explicit fallback to nickname from webhook data, as it's not directly available in the root of user object
-
-    const userRole = args.publicMetadata?.role as string | undefined;
-
-    if (existingUser) {
-      // User exists, update them
-      const updates: Partial<Doc<"users">> = {};
-      let changed = false;
-
-      if (nameToStore !== existingUser.name) {
-        updates.name = nameToStore;
-        changed = true;
-      }
-      if (args.email && args.email !== existingUser.email) {
-        updates.email = args.email;
-        changed = true;
-      }
-      // Handle imageUrl: if it's null from webhook, store as undefined
-      const webhookImageUrl =
-        args.imageUrl === null ? undefined : args.imageUrl;
-      if (
-        webhookImageUrl !== undefined &&
-        webhookImageUrl !== existingUser.imageUrl
-      ) {
-        updates.imageUrl = webhookImageUrl;
-        changed = true;
-      }
-
-      // Sync the role if your users table has a 'role' field
-      // Note: This requires 'role: v.optional(v.string())' in your convex/schema.ts for the 'users' table
-      if (userRole !== (existingUser as any).role) {
-        // Cast to any if role isn't strictly on Doc<"users">
-        updates.role = userRole; // Store the role from publicMetadata
-        changed = true;
-      }
-
-      if (changed) {
-        await ctx.db.patch(existingUser._id, updates);
-        console.log(`Webhook: Patched user ${args.clerkId}`);
-      } else {
-        console.log(`Webhook: No changes for user ${args.clerkId}`);
-      }
-      return existingUser._id;
-    } else {
-      // New user, insert them
-      console.log(`Webhook: Creating new user ${args.clerkId}`);
-      const newUserId = await ctx.db.insert("users", {
-        clerkId: args.clerkId,
-        name: nameToStore,
-        email: args.email, // This might be undefined if not found
-        imageUrl: args.imageUrl === null ? undefined : args.imageUrl,
-        username: undefined, // Username is not typically in basic webhook data, handle separately if needed
-        role: userRole, // Store the role from publicMetadata
-        // Initialize other fields your 'users' table requires
-      });
-
-      // Schedule welcome email for new user created via webhook
-      if (args.email) {
-        await ctx.scheduler.runAfter(
-          10000, // 10 second delay for webhook-created users
-          internal.emails.welcome.sendWelcomeEmail,
-          { userId: newUserId },
-        );
-      }
-
-      return newUserId;
-    }
-  },
-});
 
 // Action to generate a short-lived upload URL for profile images
 export const generateUploadUrl = action({
@@ -2249,5 +2157,70 @@ export const getUsersMissingEmailInternal = internalQuery({
       .query("users")
       .filter((q) => q.eq(q.field("email"), undefined))
       .collect();
+  },
+});
+
+/**
+ * Internal mutation to sync user data from a Clerk webhook.
+ * Handles user.created and user.updated events.
+ */
+export const syncUserFromClerkWebhook = internalMutation({
+  args: {
+    clerkId: v.string(),
+    email: v.optional(v.string()),
+    firstName: v.optional(v.union(v.string(), v.null())),
+    lastName: v.optional(v.union(v.string(), v.null())),
+    imageUrl: v.optional(v.union(v.string(), v.null())),
+    publicMetadata: v.optional(v.any()),
+  },
+  handler: async (ctx, args) => {
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    const name =
+      args.firstName && args.lastName
+        ? `${args.firstName} ${args.lastName}`
+        : args.firstName || args.lastName || undefined;
+
+    if (existingUser) {
+      const updates: Partial<Doc<"users">> = {};
+      let changed = false;
+
+      if (args.email && args.email !== existingUser.email) {
+        updates.email = args.email;
+        changed = true;
+      }
+      if (name && name !== existingUser.name) {
+        updates.name = name;
+        changed = true;
+      }
+      if (args.imageUrl && args.imageUrl !== existingUser.imageUrl) {
+        updates.imageUrl = args.imageUrl;
+        changed = true;
+      }
+
+      if (changed) {
+        await ctx.db.patch(existingUser._id, updates);
+        console.log(`Synced user ${args.clerkId} from Clerk webhook.`);
+      }
+    } else {
+      // If user doesn't exist, we could potentially create them here,
+      // but usually ensureUser handles the first login.
+      // However, for consistency, we can pre-create the user if we have an email.
+      if (args.email) {
+        await ctx.db.insert("users", {
+          clerkId: args.clerkId,
+          email: args.email,
+          name: name || "Anonymous",
+          imageUrl: args.imageUrl || undefined,
+          role: "user", // Default role
+          // Add other required fields if any (e.g., username: null)
+          username: undefined,
+        });
+        console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
+      }
+    }
   },
 });
