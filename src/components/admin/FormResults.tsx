@@ -1,0 +1,261 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { Download, ArrowLeft, ArrowUp, ArrowDown } from "lucide-react";
+import { useQuery, useConvexAuth } from "convex/react";
+import { NotFoundPage } from "../../views/NotFoundPage";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import type { CustomForm, FormSubmission, FormField } from "../../types";
+
+// Helper function to format date
+const formatDate = (timestamp: number): string => {
+  try {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch (e) {
+    return "Invalid Date";
+  }
+};
+
+// Function to safely access nested data, assuming field labels are keys
+const getFieldValue = (data: any, fieldLabel: string): string => {
+  // Convert label to the key format used in submission data (e.g., lowercase_with_underscores)
+  const key = fieldLabel.toLowerCase().replace(/\s+/g, "_");
+  const value = data?.[key];
+  if (Array.isArray(value)) return value.join(", "); // Join array values
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return value?.toString() || "-"; // Return value or placeholder
+};
+
+// Function to generate CSV content
+const generateCSV = (
+  fields: FormField[],
+  submissions: FormSubmission[],
+): string => {
+  const headers = ["Submitted At", ...fields.map((f) => f.label)];
+  const rows = submissions.map((sub) => {
+    const rowData = [
+      formatDate(sub._creationTime),
+      ...fields.map(
+        (field) =>
+          `"${getFieldValue(sub.data, field.label).replace(/"/g, '""')}"`,
+      ), // Escape quotes
+    ];
+    return rowData.join(",");
+  });
+  return [headers.join(","), ...rows].join("\n");
+};
+
+export function FormResults({ formId: formIdProp }: { formId?: string }) {
+  const formId = formIdProp as Id<"forms"> | undefined;
+  const { isLoading: authIsLoading, isAuthenticated } = useConvexAuth();
+
+  // Check if user is admin
+  const isUserAdmin = useQuery(
+    api.users.checkIsUserAdmin,
+    isAuthenticated ? {} : "skip",
+  );
+
+  const skipQuery = !formId || (formId && (authIsLoading || !isAuthenticated));
+
+  const formData = useQuery(
+    api.forms.getFormWithFields,
+    skipQuery ? "skip" : { formId: formId! },
+  );
+  const submissions = useQuery(
+    api.forms.listSubmissions,
+    skipQuery ? "skip" : { formId: formId! },
+  );
+
+  const [sortField, setSortField] = useState<string>("_creationTime");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  const handleSort = (fieldKey: string) => {
+    if (sortField === fieldKey) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(fieldKey);
+      setSortDirection("desc"); // Default to descending for new column
+    }
+  };
+
+  const exportCSV = () => {
+    if (!formData || !submissions) return;
+    const csvContent = generateCSV(formData.fields, submissions);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${formData.slug}_submissions.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Sort submissions based on current state
+  const sortedSubmissions = React.useMemo(() => {
+    if (!submissions) return [];
+    return [...submissions].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      if (sortField === "_creationTime") {
+        aValue = a._creationTime;
+        bValue = b._creationTime;
+      } else {
+        // sortField is the field label, convert to key
+        const fieldKey = sortField.toLowerCase().replace(/\s+/g, "_");
+        aValue = a.data?.[fieldKey];
+        bValue = b.data?.[fieldKey];
+      }
+
+      // Basic comparison, might need refinement for different types
+      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [submissions, sortField, sortDirection]);
+
+  // Handle auth loading state first
+  if (authIsLoading || (isAuthenticated && isUserAdmin === undefined)) {
+    return <div>Loading authentication...</div>;
+  }
+
+  // Show 404 for non-authenticated users or users without admin role
+  if (!isAuthenticated || isUserAdmin === false) {
+    return <NotFoundPage />;
+  }
+
+  // Loading state for data (only if formId is present and auth is fine)
+  if (
+    formId &&
+    isAuthenticated &&
+    (formData === undefined || submissions === undefined)
+  ) {
+    return <div>Loading results...</div>;
+  }
+
+  // If formId was provided but formData is null (not found), and auth is fine
+  if (formId && isAuthenticated && !formData) {
+    return <div>Form not found.</div>;
+  }
+
+  // If no formId, this page shouldn't be accessible or should show an error.
+  // This case should ideally be handled by routing.
+  if (!formId) {
+    return <div>No form specified.</div>; // Or redirect
+  }
+
+  const formFields = formData?.fields || []; // Use optional chaining as formData can be null here now if query skipped
+
+  return (
+    <div className="space-y-6">
+      {/* Back Link and Title */}
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <Link
+            href="/admin?tab=forms"
+            className="text-sm text-muted-foreground hover:text-muted-foreground flex items-center gap-1 mb-1"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Forms List
+          </Link>
+          <h2 className="text-xl font-medium text-muted-foreground">
+            Results for: {formData?.title}
+          </h2>
+        </div>
+        <button
+          onClick={exportCSV}
+          disabled={!submissions || submissions.length === 0}
+          className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-[#e5e1de] transition-colors flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4" />
+          Export CSV ({sortedSubmissions.length} rows)
+        </button>
+      </div>
+
+      {/* Results Table */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        {sortedSubmissions.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            No submissions received yet.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50">
+                <tr>
+                  {/* Submitted At Column (Sortable) */}
+                  <th
+                    className="text-left p-3 px-4 text-gray-600 font-medium cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort("_creationTime")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Submitted At
+                      {sortField === "_creationTime" &&
+                        (sortDirection === "asc" ? (
+                          <ArrowUp className="w-3 h-3" />
+                        ) : (
+                          <ArrowDown className="w-3 h-3" />
+                        ))}
+                    </div>
+                  </th>
+                  {/* Dynamic Columns based on Form Fields (Sortable) */}
+                  {formFields.map((field) => (
+                    <th
+                      key={field._id}
+                      className="text-left p-3 px-4 text-gray-600 font-medium cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+                      onClick={() => handleSort(field.label)} // Sort by label
+                    >
+                      <div className="flex items-center gap-1">
+                        {field.label}
+                        {sortField === field.label &&
+                          (sortDirection === "asc" ? (
+                            <ArrowUp className="w-3 h-3" />
+                          ) : (
+                            <ArrowDown className="w-3 h-3" />
+                          ))}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedSubmissions.map((submission) => (
+                  <tr
+                    key={submission._id}
+                    className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                  >
+                    {/* Submitted At Data */}
+                    <td className="p-3 px-4 text-gray-500 whitespace-nowrap">
+                      {formatDate(submission._creationTime)}
+                    </td>
+                    {/* Dynamic Data based on Form Fields */}
+                    {formFields.map((field) => (
+                      <td
+                        key={field._id}
+                        className="p-3 px-4 text-gray-700 align-top"
+                      >
+                        {getFieldValue(submission.data, field.label)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+

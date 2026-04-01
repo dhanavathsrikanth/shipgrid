@@ -1,0 +1,142 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Lock, Calendar, ArrowLeft, LogIn } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { useDialog } from "../hooks/useDialog";
+import { Label } from "../components/ui/label";
+
+export default function JudgingGroupPage({ slug }: { slug: string }) {
+  const router = useRouter();
+  const { showMessage, DialogComponents } = useDialog();
+
+  const [password, setPassword] = useState("");
+  const [judgeName, setJudgeName] = useState("");
+  const [judgeEmail, setJudgeEmail] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const group = useQuery(api.judgingGroups.getPublicGroup, slug ? { slug } : "skip");
+  const registerJudge = useMutation(api.judges.registerJudge);
+  const validatePassword = useMutation(api.judgingGroups.validatePassword);
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!group || !slug) return;
+    try {
+      const isValid = await validatePassword({ groupId: group._id, password: password.trim() });
+      if (isValid) { setPasswordError(""); setIsRegistering(true); }
+      else setPasswordError("Incorrect password. Please try again.");
+    } catch { setPasswordError("Error validating password. Please try again."); }
+  };
+
+  const handleJudgeRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!group || !judgeName.trim()) return;
+    try {
+      const result = await registerJudge({ groupId: group._id, name: judgeName.trim(), email: judgeEmail.trim() || undefined });
+      localStorage.setItem("judgeSessionId", result.sessionId);
+      router.push(`/judging/${slug}/judge`);
+    } catch (error) {
+      console.error("Error registering judge:", error);
+      showMessage("Error", "Failed to register. Please try again.", "error");
+    }
+  };
+
+  if (group === undefined) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading judging group...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (group === null) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg border border-gray-200 p-6 shadow-sm text-center">
+          <h1 className="text-xl font-medium text-gray-900 mb-4">Group Not Found</h1>
+          <p className="text-gray-600 mb-6">This judging group does not exist or is not currently available.</p>
+          <Link href="/" className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium">
+            <ArrowLeft className="w-4 h-4" />Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!group.isPublic && !isRegistering) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="text-center mb-6">
+            <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-xl font-medium text-gray-900 mb-2">{group.name}</h1>
+            <p className="text-gray-600">This judging group is private. Please enter the access code to continue.</p>
+          </div>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="password">Access Code</Label>
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter group access code" required className={passwordError ? "border-red-500" : ""} />
+              {passwordError && <p className="mt-1 text-sm text-red-600">{passwordError}</p>}
+            </div>
+            <Button type="submit" className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 font-medium rounded-lg h-11" disabled={!password.trim()}>
+              <Lock className="w-4 h-4" />Continue
+            </Button>
+          </form>
+          <div className="mt-6 text-center">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" />Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <DialogComponents />
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+        <div className="max-w-lg w-full bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-medium text-gray-900 mb-2">{group.name}</h1>
+            {group.description && <p className="text-gray-600 mb-4">{group.description}</p>}
+            <div className="flex items-center justify-center gap-4 text-sm text-gray-500 mb-6">
+              {(group as any).startDate && <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>Started {new Date((group as any).startDate).toLocaleDateString()}</span></div>}
+              {(group as any).endDate && <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /><span>Ends {new Date((group as any).endDate).toLocaleDateString()}</span></div>}
+            </div>
+          </div>
+          <form onSubmit={handleJudgeRegistration} className="space-y-4">
+            <div>
+              <Label htmlFor="judgeName">Your Name * <br /><strong>Use the same first name if you need to come back and continue judging.</strong></Label>
+              <Input id="judgeName" type="text" value={judgeName} onChange={(e) => { const value = e.target.value.toLowerCase().replace(/[^a-z]/g, ""); setJudgeName(value); }} placeholder="Enter your full name" required minLength={2} />
+              <p className="mt-1 text-sm text-gray-500">This will identify your scores in the system.</p>
+            </div>
+            <div>
+              <Label htmlFor="judgeEmail">Email (Optional)</Label>
+              <Input id="judgeEmail" type="email" value={judgeEmail} onChange={(e) => setJudgeEmail(e.target.value)} placeholder="your.email@example.com" />
+              <p className="mt-1 text-sm text-gray-500">For communication about the judging process.</p>
+            </div>
+            <Button type="submit" className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 font-medium rounded-lg h-11" disabled={!judgeName.trim()}>
+              <LogIn className="w-4 h-4" />Start Judging
+            </Button>
+          </form>
+          <div className="mt-6 text-center">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" />Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

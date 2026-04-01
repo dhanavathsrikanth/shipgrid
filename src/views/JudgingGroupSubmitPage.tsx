@@ -1,0 +1,1211 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
+import { ExternalLink, Lock, Plus, X } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Markdown } from "../components/Markdown";
+import { useAuth } from "@clerk/nextjs";
+
+export function JudgingGroupSubmitPage({ slug }: { slug: string }) {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+  const [password, setPassword] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Fetch submission page data
+  const submissionPage = useQuery(
+    api.judgingGroups.getSubmissionPage,
+    slug ? { slug } : "skip",
+  );
+  const validateSubmissionPagePassword = useMutation(
+    api.judgingGroups.validateSubmissionPagePassword,
+  );
+
+  // Handle password validation
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!submissionPage) return;
+
+    try {
+      const isValid = await validateSubmissionPagePassword({
+        groupId: submissionPage._id,
+        password,
+      });
+
+      if (isValid) {
+        setIsAuthenticated(true);
+        setPasswordError("");
+      } else {
+        setPasswordError("Incorrect password");
+      }
+    } catch (error) {
+      setPasswordError("Error validating password");
+    }
+  };
+
+  // Auto-authenticate if public
+  useEffect(() => {
+    if (submissionPage && submissionPage.isPublic) {
+      setIsAuthenticated(true);
+    }
+  }, [submissionPage]);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (submissionPage === undefined) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="text-muted-foreground">Loading submission page...</div>
+      </div>
+    );
+  }
+
+  if (submissionPage === null) {
+    return (
+      <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4">
+        <h1 className="text-2xl font-medium text-foreground mb-4">
+          Page Not Found
+        </h1>
+        <p className="text-muted-foreground mb-6">
+          This submission page doesn't exist or isn't enabled.
+        </p>
+        <Link href="/" className="text-foreground hover:underline">
+          ← Back to Home
+        </Link>
+      </div>
+    );
+  }
+
+  // Show password form if not authenticated
+  if (!isAuthenticated && submissionPage.hasSubmissionPagePassword) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg p-8 max-w-md w-full border border-gray-200">
+          <div className="flex items-center justify-center w-12 h-12 bg-muted rounded-full mx-auto mb-4">
+            <Lock className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-medium text-foreground text-center mb-2">
+            Password Required
+          </h2>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            This submission page is password-protected
+          </p>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                className="w-full"
+                required
+              />
+              {passwordError && (
+                <p className="text-sm text-red-600 mt-1">{passwordError}</p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-foreground hover:opacity-90"
+            >
+              Submit
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Determine grid layout classes based on admin setting
+  const layoutClass =
+    submissionPage.submissionPageLayout === "one-third"
+      ? "lg:grid-cols-[1fr_2fr]" // 33/67 split
+      : "lg:grid-cols-2"; // 50/50 split
+
+  // Calculate image size (square)
+  const imageSize = submissionPage.submissionPageImageSize || 400;
+
+  // Main submission page - Luma-style layout
+  return (
+    <div className="min-h-screen bg-muted">
+      {/* Main Content - Dynamic Column Layout */}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className={`grid grid-cols-1 ${layoutClass} gap-8`}>
+          {/* Left Column - Event Info */}
+          <div className="space-y-6 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto self-start">
+            {/* Header Image */}
+            {submissionPage.submissionPageImageUrl && (
+              <div className="rounded-lg overflow-hidden">
+                <img
+                  src={submissionPage.submissionPageImageUrl}
+                  alt={
+                    submissionPage.submissionPageTitle || submissionPage.name
+                  }
+                  style={{
+                    width: `${imageSize}px`,
+                    height: `${imageSize}px`,
+                    objectFit: "cover",
+                  }}
+                  className="mx-auto"
+                />
+              </div>
+            )}
+
+            {/* Title & Description */}
+            <div className="bg-white rounded-lg p-6 border border-border">
+              <h1 className="text-3xl font-medium text-foreground mb-4">
+                {submissionPage.submissionPageTitle || submissionPage.name}
+              </h1>
+              {submissionPage.submissionPageDescription && (
+                <div className="prose prose-sm max-w-none text-muted-foreground">
+                  <p className="whitespace-pre-wrap">
+                    {submissionPage.submissionPageDescription}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Links - No Heading, Just Links */}
+            {submissionPage.submissionPageLinks &&
+              submissionPage.submissionPageLinks.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border border-border">
+                  <div className="space-y-2">
+                    {submissionPage.submissionPageLinks.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-foreground hover:text-muted-foreground transition-colors group"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span className="group-hover:underline">
+                          {link.label}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+          </div>
+
+          {/* Right Column - Submission Form */}
+          <div>
+            <div className="bg-white rounded-lg p-6 border border-border">
+              {showSuccess ? (
+                /* Success Message */
+                <div className="text-center py-12">
+                  <div className="mb-4">
+                    <svg
+                      className="mx-auto h-16 w-16 text-green-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl font-medium text-foreground mb-2">
+                    Thank You!
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Your submission has been received successfully.
+                  </p>
+                  <p className="text-sm text-[#787672] mt-4">
+                    Redirecting you to the homepage...
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-medium text-foreground mb-2">
+                    {submissionPage.submissionFormTitle || "Submit Your App"}
+                  </h2>
+                  {submissionPage.submissionFormSubtitle && (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {submissionPage.submissionFormSubtitle}
+                    </p>
+                  )}
+                  <div className="mb-6" />
+
+                  {/* Notice about authentication */}
+                  {!isSignedIn && (
+                    <div className="mb-6 p-4 bg-muted border border-border rounded-md">
+                      <p className="text-sm text-muted-foreground">
+                        You need to{" "}
+                        <Link
+                          href="/sign-up"
+                          className="underline font-medium text-foreground hover:text-muted-foreground"
+                        >
+                          sign up
+                        </Link>{" "}
+                        or{" "}
+                        <Link
+                          href="/sign-in"
+                          className="underline font-medium text-foreground hover:text-muted-foreground"
+                        >
+                          sign in
+                        </Link>{" "}
+                        to submit your app to the hackathon.
+                      </p>
+                    </div>
+                  )}
+
+                  {isSignedIn ? (
+                    <SubmissionFormContent
+                      judgingGroupId={submissionPage._id}
+                      requiredTagId={submissionPage.submissionFormRequiredTagId}
+                      onSuccess={() => {
+                        setShowSuccess(true);
+                        // Redirect to homepage after 2.5 seconds
+                        setTimeout(() => {
+                          router.push("/");
+                        }, 2500);
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">
+                        You need to sign up or sign in to submit your app to the
+                        hackathon.
+                      </p>
+                      <div className="flex items-center justify-center gap-3">
+                        <Link href="/sign-up">
+                          <Button className="bg-foreground hover:opacity-90">
+                            Sign Up
+                          </Button>
+                        </Link>
+                        <Link href="/sign-in">
+                          <Button className="bg-foreground hover:opacity-90">
+                            Sign In
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Submission Form Content Component - Matches StoryForm.tsx exactly
+function SubmissionFormContent({
+  judgingGroupId,
+  requiredTagId,
+  onSuccess,
+}: {
+  judgingGroupId: Id<"judgingGroups">;
+  requiredTagId?: Id<"tags"> | null;
+  onSuccess: () => void;
+}) {
+  const submit = useMutation(api.stories.submit);
+  const generateUploadUrl = useMutation(api.stories.generateUploadUrl);
+  const availableTags = useQuery(api.tags.listHeader); // Only show header tags
+  const allTags = useQuery(api.tags.listAllForDropdown); // For dropdown search
+  const formFields = useQuery(api.storyFormFields.listEnabled);
+
+  const [selectedTagIds, setSelectedTagIds] = React.useState<Id<"tags">[]>([]);
+  const [newTagInputValue, setNewTagInputValue] = React.useState("");
+  const [newTagNames, setNewTagNames] = React.useState<string[]>([]);
+  const [dropdownSearchValue, setDropdownSearchValue] = React.useState("");
+  const [showDropdown, setShowDropdown] = React.useState(false);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    tagline: "",
+    longDescription: "",
+    submitterName: "",
+    url: "",
+    videoUrl: "",
+    email: "",
+  });
+
+  const [teamData, setTeamData] = useState({
+    teamName: "",
+    teamSize: "",
+    teamMembers: [{ name: "", email: "" }],
+  });
+
+  const [dynamicFormData, setDynamicFormData] = useState<
+    Record<string, string>
+  >({});
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const MAX_TAGLINE_LENGTH = 140;
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Auto-select required tag if specified
+  useEffect(() => {
+    if (requiredTagId && !selectedTagIds.includes(requiredTagId)) {
+      setSelectedTagIds((prev) => [...prev, requiredTagId]);
+    }
+  }, [requiredTagId]);
+
+  // Click outside handler for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setScreenshot(e.target.files[0]);
+    }
+  };
+
+  const handleAdditionalImagesChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const totalImages = additionalImages.length + filesArray.length;
+      if (totalImages > 5) {
+        setError("You can upload a maximum of 5 additional images.");
+        return;
+      }
+      setAdditionalImages((prev) => [...prev, ...filesArray]);
+    }
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddNewTag = () => {
+    const tagName = newTagInputValue.trim();
+    const totalTags = selectedTagIds.length + newTagNames.length;
+
+    if (totalTags >= 10) {
+      setError("You can select a maximum of 10 tags.");
+      return;
+    }
+
+    if (
+      tagName &&
+      !newTagNames.some((t) => t.toLowerCase() === tagName.toLowerCase()) &&
+      !availableTags?.some(
+        (t) => t.name.toLowerCase() === tagName.toLowerCase(),
+      ) &&
+      !allTags?.some((t) => t.name.toLowerCase() === tagName.toLowerCase())
+    ) {
+      setNewTagNames((prev) => [...prev, tagName]);
+      setNewTagInputValue("");
+      setError("");
+    } else if (tagName) {
+      setError("Tag name already exists or is invalid.");
+    }
+  };
+
+  const handleSelectFromDropdown = (tagId: Id<"tags">) => {
+    const totalTags = selectedTagIds.length + newTagNames.length;
+    if (totalTags >= 10) {
+      setError("You can select a maximum of 10 tags.");
+      return;
+    }
+    if (!selectedTagIds.includes(tagId)) {
+      setSelectedTagIds((prev) => [...prev, tagId]);
+      setError("");
+    }
+    setDropdownSearchValue("");
+    setShowDropdown(false);
+  };
+
+  const toggleTag = (tagId: Id<"tags">) => {
+    // Prevent deselecting the required tag
+    if (requiredTagId && tagId === requiredTagId) {
+      return;
+    }
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId],
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      // Upload main screenshot
+      let screenshotId: Id<"_storage"> | undefined = undefined;
+      if (screenshot) {
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": screenshot.type },
+          body: screenshot,
+        });
+        const { storageId } = await result.json();
+        screenshotId = storageId;
+      }
+
+      // Upload additional images
+      const additionalImageIds: Id<"_storage">[] = [];
+      for (const image of additionalImages) {
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": image.type },
+          body: image,
+        });
+        const { storageId } = await result.json();
+        additionalImageIds.push(storageId);
+      }
+
+      // Submit story with all fields
+      await submit({
+        title: formData.title,
+        tagline: formData.tagline,
+        longDescription: formData.longDescription || undefined,
+        submitterName: formData.submitterName || undefined,
+        url: formData.url,
+        videoUrl: formData.videoUrl || undefined,
+        email: formData.email || undefined,
+        tagIds: selectedTagIds,
+        newTagNames,
+        screenshotId,
+        additionalImageIds:
+          additionalImageIds.length > 0 ? additionalImageIds : undefined,
+        judgingGroupId, // Auto-add to judging group
+        // Dynamic form fields
+        linkedinUrl: dynamicFormData.linkedinUrl || undefined,
+        twitterUrl: dynamicFormData.twitterUrl || undefined,
+        githubUrl: dynamicFormData.githubUrl || undefined,
+        chefShowUrl: dynamicFormData.chefShowUrl || undefined,
+        chefAppUrl: dynamicFormData.chefAppUrl || undefined,
+        // Team info (always included if provided)
+        teamName: teamData.teamName ? teamData.teamName : undefined,
+        teamMemberCount: teamData.teamName
+          ? parseInt(teamData.teamSize) || undefined
+          : undefined,
+        teamMembers: teamData.teamName
+          ? teamData.teamMembers.filter((m) => m.name.trim() || m.email.trim())
+          : undefined,
+      });
+
+      onSuccess();
+    } catch (err) {
+      console.error("Submission error:", err);
+      setError(err instanceof Error ? err.message : "Failed to submit");
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* App Title */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          App Title*
+        </label>
+        <input
+          type="text"
+          value={formData.title}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, title: e.target.value }))
+          }
+          placeholder="Site name"
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          required
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Tagline */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          App/Project Tagline*
+        </label>
+        <input
+          type="text"
+          value={formData.tagline}
+          onChange={(e) => {
+            if (e.target.value.length <= MAX_TAGLINE_LENGTH) {
+              setFormData((prev) => ({ ...prev, tagline: e.target.value }));
+            }
+          }}
+          maxLength={MAX_TAGLINE_LENGTH}
+          placeholder="One sentence pitch or description"
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          required
+          disabled={isSubmitting}
+        />
+        <div className="text-xs text-right text-muted-foreground mt-1">
+          {formData.tagline.length}/{MAX_TAGLINE_LENGTH}
+        </div>
+      </div>
+
+      {/* Long Description */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Description (Markdown and fenced `code` blocks supported)
+        </label>
+        <textarea
+          value={formData.longDescription}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              longDescription: e.target.value,
+            }))
+          }
+          placeholder="- Problem you're solving&#10;- How the app works&#10;- Notable features&#10;- Why did you build this&#10;- Tech stack list&#10;- Challenges we ran into&#10;- Any success stories or metrics&#10;"
+          rows={8}
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          disabled={isSubmitting}
+        />
+        {formData.longDescription && (
+          <div className="mt-2">
+            <div className="text-xs text-muted-foreground mb-1">Preview</div>
+            <div className="prose prose-sm max-w-none text-muted-foreground bg-gray-50 border border-border rounded-md p-3">
+              <Markdown>{formData.longDescription}</Markdown>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* URL */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          App Website Link*
+        </label>
+        <div className="text-sm text-muted-foreground mb-2">
+          Enter your app url (ex: https://)
+        </div>
+        <input
+          type="url"
+          value={formData.url}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, url: e.target.value }))
+          }
+          placeholder="https://"
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          required
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* GitHub URL Field */}
+      <div>
+        <label
+          htmlFor="githubUrl"
+          className="block text-sm font-medium text-muted-foreground mb-1"
+        >
+          GitHub Repo URL (Optional)
+        </label>
+        <div className="text-sm text-muted-foreground mb-2">
+          GitHub repository URL for your project
+        </div>
+        <input
+          type="url"
+          id="githubUrl"
+          placeholder="https://github.com/username/repository"
+          value={dynamicFormData.githubUrl || ""}
+          onChange={(e) =>
+            setDynamicFormData((prev) => ({
+              ...prev,
+              githubUrl: e.target.value,
+            }))
+          }
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Dynamic Form Fields */}
+      {formFields
+        ?.filter((field) => field.key !== "githubUrl")
+        .map((field) => (
+          <div key={field.key}>
+            <label
+              htmlFor={field.key}
+              className="block text-sm font-medium text-muted-foreground mb-1"
+            >
+              {field.label}
+            </label>
+            {field.description && (
+              <div className="text-sm text-muted-foreground mb-2">
+                {field.description}
+              </div>
+            )}
+            <input
+              type={field.fieldType}
+              id={field.key}
+              placeholder={field.placeholder}
+              value={dynamicFormData[field.key] || ""}
+              onChange={(e) =>
+                setDynamicFormData((prev) => ({
+                  ...prev,
+                  [field.key]: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              required={field.isRequired}
+              disabled={isSubmitting}
+            />
+          </div>
+        ))}
+      {formFields === undefined && (
+        <div className="text-sm text-gray-500">Loading form fields...</div>
+      )}
+
+      {/* Video URL */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Video Demo (Recommended)
+        </label>
+        <div className="text-sm text-muted-foreground mb-2">
+          Share a video demo of your app (YouTube, Vimeo, etc.)
+        </div>
+        <input
+          type="url"
+          value={formData.videoUrl}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))
+          }
+          placeholder="https://youtube.com/..."
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Screenshot */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Screenshot or Image*
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          disabled={isSubmitting}
+          className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-[#D8E1EC]"
+          required
+        />
+      </div>
+
+      {/* Additional Images */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Additional Images (Optional, max 4)
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleAdditionalImagesChange}
+          disabled={isSubmitting || additionalImages.length >= 5}
+          className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-[#D8E1EC]"
+        />
+        {additionalImages.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {additionalImages.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between text-sm text-muted-foreground bg-gray-50 p-2 rounded"
+              >
+                <span className="truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeAdditionalImage(index)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Submitter Name */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Your Name*
+        </label>
+        <input
+          type="text"
+          value={formData.submitterName}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, submitterName: e.target.value }))
+          }
+          placeholder="Your name"
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          required
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Email (Optional)
+        </label>
+        <div className="text-sm text-muted-foreground mb-2">
+          Hidden and for hackathon notifications
+        </div>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, email: e.target.value }))
+          }
+          placeholder="your@email.com"
+          className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Hackathon Team Info - Always Shown */}
+      <div className="bg-muted p-4 rounded-md border border-border">
+        <h3 className="text-base font-medium text-foreground mb-3">
+          Hackathon Team Info (Optional)
+        </h3>
+
+        <div className="space-y-4">
+          {/* Team Name */}
+          <div>
+            <label
+              className="block text-sm font-medium text-muted-foreground mb-1"
+              htmlFor="teamName"
+            >
+              Team Name (Optional)
+            </label>
+            <input
+              type="text"
+              id="teamName"
+              placeholder="e.g., The Code Wizards"
+              value={teamData.teamName}
+              onChange={(e) =>
+                setTeamData((prev) => ({
+                  ...prev,
+                  teamName: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Team Size */}
+          {teamData.teamName && (
+            <div>
+              <label
+                className="block text-sm font-medium text-muted-foreground mb-1"
+                htmlFor="teamSize"
+              >
+                Team Size
+              </label>
+              <input
+                type="number"
+                id="teamSize"
+                min="1"
+                max="20"
+                placeholder="e.g., 4"
+                value={teamData.teamSize}
+                onChange={(e) =>
+                  setTeamData((prev) => ({
+                    ...prev,
+                    teamSize: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
+
+          {/* Team Members */}
+          {teamData.teamName && (
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Team Members (Optional)
+              </label>
+              <div className="space-y-2">
+                {teamData.teamMembers.map((member, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={member.name}
+                      onChange={(e) => {
+                        const newMembers = [...teamData.teamMembers];
+                        newMembers[index].name = e.target.value;
+                        setTeamData((prev) => ({
+                          ...prev,
+                          teamMembers: newMembers,
+                        }));
+                      }}
+                      className="flex-1 px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+                      disabled={isSubmitting}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={member.email}
+                      onChange={(e) => {
+                        const newMembers = [...teamData.teamMembers];
+                        newMembers[index].email = e.target.value;
+                        setTeamData((prev) => ({
+                          ...prev,
+                          teamMembers: newMembers,
+                        }));
+                      }}
+                      className="flex-1 px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+                      disabled={isSubmitting}
+                    />
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newMembers = teamData.teamMembers.filter(
+                            (_, i) => i !== index,
+                          );
+                          setTeamData((prev) => ({
+                            ...prev,
+                            teamMembers: newMembers,
+                          }));
+                        }}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                        disabled={isSubmitting}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTeamData((prev) => ({
+                      ...prev,
+                      teamMembers: [
+                        ...prev.teamMembers,
+                        { name: "", email: "" },
+                      ],
+                    }));
+                  }}
+                  className="w-full px-3 py-2 border border-border text-muted-foreground hover:bg-muted rounded-md transition-colors flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Team Member
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tags Section */}
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-2">
+          Select Tags *
+        </label>
+        <span className="ml-2 text-xs text-gray-600">
+          Select tags that best describe your app or hackathon participation
+        </span>
+
+        {/* Quick Select - Header Tags */}
+        <div className="flex flex-wrap gap-2 mb-4 mt-3">
+          {availableTags === undefined && (
+            <span className="text-sm text-gray-500">Loading tags...</span>
+          )}
+          {availableTags?.map((tag) => (
+            <button
+              key={tag._id}
+              type="button"
+              onClick={() => toggleTag(tag._id)}
+              disabled={
+                isSubmitting || !!(requiredTagId && tag._id === requiredTagId)
+              }
+              className={`px-3 py-1 rounded-md text-sm transition-colors border flex items-center gap-1 ${
+                selectedTagIds.includes(tag._id)
+                  ? "bg-muted text-foreground border-border"
+                  : "bg-white text-muted-foreground border-border hover:border-input hover:text-muted-foreground"
+              }`}
+              style={{
+                backgroundColor: selectedTagIds.includes(tag._id)
+                  ? tag.backgroundColor || "#F4F0ED"
+                  : "white",
+                color: selectedTagIds.includes(tag._id)
+                  ? (tag.textColor ?? "#292929")
+                  : "#545454",
+                borderColor: selectedTagIds.includes(tag._id)
+                  ? tag.borderColor ||
+                    (tag.backgroundColor ? "transparent" : "#D5D3D0")
+                  : "#D5D3D0",
+              }}
+            >
+              {tag.emoji && <span className="text-sm">{tag.emoji}</span>}
+              {tag.iconUrl && !tag.emoji && (
+                <img
+                  src={tag.iconUrl}
+                  alt=""
+                  className="w-4 h-4 rounded-sm object-cover"
+                />
+              )}
+              {tag.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Search All Tags Dropdown */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
+            Search All Available Tags
+          </label>
+          <span className="ml-2 text-xs text-gray-600 mb-2 block">
+            Find and select from all tags, including those not shown above
+          </span>
+          <div className="relative" ref={dropdownRef}>
+            <input
+              type="text"
+              value={dropdownSearchValue}
+              onChange={(e) => {
+                setDropdownSearchValue(e.target.value);
+                setShowDropdown(e.target.value.length > 0);
+              }}
+              onFocus={() => setShowDropdown(dropdownSearchValue.length > 0)}
+              placeholder="Type to search for tags..."
+              disabled={isSubmitting}
+              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border text-sm"
+            />
+
+            {/* Dropdown Results */}
+            {showDropdown && allTags && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                {(() => {
+                  const searchTerm = dropdownSearchValue.toLowerCase();
+                  const filteredTags = allTags
+                    .filter(
+                      (tag) =>
+                        tag.name.toLowerCase().includes(searchTerm) &&
+                        !selectedTagIds.includes(tag._id) &&
+                        !newTagNames.some(
+                          (newTag) =>
+                            newTag.toLowerCase() === tag.name.toLowerCase(),
+                        ),
+                    )
+                    .slice(0, 10);
+
+                  if (filteredTags.length === 0) {
+                    return (
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        No matching tags found
+                      </div>
+                    );
+                  }
+
+                  return filteredTags.map((tag) => (
+                    <button
+                      key={tag._id}
+                      type="button"
+                      onClick={() => handleSelectFromDropdown(tag._id)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none flex items-center gap-2"
+                    >
+                      {tag.emoji && (
+                        <span className="text-sm">{tag.emoji}</span>
+                      )}
+                      {tag.iconUrl && !tag.emoji && (
+                        <img
+                          src={tag.iconUrl}
+                          alt=""
+                          className="w-4 h-4 rounded-sm object-cover"
+                        />
+                      )}
+                      <span
+                        className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                        style={{
+                          backgroundColor: tag.backgroundColor || "#F4F0ED",
+                          color: tag.textColor || "#525252",
+                          border: `1px solid ${tag.backgroundColor ? "transparent" : "#D5D3D0"}`,
+                        }}
+                      >
+                        {tag.name}
+                      </span>
+                      {tag.isHidden && (
+                        <span className="text-xs text-gray-400">(Hidden)</span>
+                      )}
+                    </button>
+                  ));
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Create New Tag */}
+        <label className="block text-sm font-medium text-muted-foreground mb-2">
+          Add New Tags (optional)
+        </label>
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={newTagInputValue}
+            onChange={(e) => setNewTagInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddNewTag();
+              }
+            }}
+            placeholder={
+              selectedTagIds.length + newTagNames.length >= 10
+                ? "Maximum 10 tags reached"
+                : "Enter new tag name..."
+            }
+            disabled={
+              isSubmitting || selectedTagIds.length + newTagNames.length >= 10
+            }
+            className="flex-1 px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border text-sm"
+          />
+          <button
+            type="button"
+            onClick={handleAddNewTag}
+            disabled={
+              !newTagInputValue.trim() ||
+              isSubmitting ||
+              selectedTagIds.length + newTagNames.length >= 10
+            }
+            className="px-3 py-1 bg-muted text-muted-foreground rounded-md hover:bg-[#e5e1de] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            <Plus className="w-4 h-4" /> Add
+          </button>
+        </div>
+
+        {/* Tag Selection Hints */}
+        {selectedTagIds.length === 0 && newTagNames.length === 0 && (
+          <p className="text-xs text-red-500 mt-1">
+            Please select or add at least one tag.
+          </p>
+        )}
+        {selectedTagIds.length + newTagNames.length >= 10 && (
+          <p className="text-xs text-amber-600 mt-1">
+            Maximum of 10 tags reached. Remove a tag to add another.
+          </p>
+        )}
+      </div>
+
+      {/* Selected Tags - Always Visible */}
+      <div className="p-4">
+        <div className="text-sm font-medium text-muted-foreground mb-3">
+          Selected Tags ({selectedTagIds.length + newTagNames.length}/10)
+        </div>
+        {selectedTagIds.length > 0 || newTagNames.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {/* Show selected existing tags */}
+            {allTags &&
+              selectedTagIds.map((tagId) => {
+                const tag =
+                  availableTags?.find((t) => t._id === tagId) ||
+                  allTags.find((t) => t._id === tagId);
+                if (!tag) return null;
+                const isRequired = requiredTagId && tagId === requiredTagId;
+
+                return (
+                  <span
+                    key={tag._id}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm border transition-colors"
+                    style={{
+                      backgroundColor: tag.backgroundColor || "#F4F0ED",
+                      color: tag.textColor || "#292929",
+                      borderColor: tag.backgroundColor
+                        ? "transparent"
+                        : "#D5D3D0",
+                    }}
+                  >
+                    {tag.emoji && <span className="text-sm">{tag.emoji}</span>}
+                    {tag.iconUrl && !tag.emoji && (
+                      <img
+                        src={tag.iconUrl}
+                        alt=""
+                        className="w-4 h-4 rounded-sm object-cover"
+                      />
+                    )}
+                    {tag.name}
+                    {tag.isHidden && (
+                      <span className="text-xs opacity-70">(Hidden)</span>
+                    )}
+                    {isRequired && (
+                      <span title="Required tag">
+                        <Lock className="w-3 h-3 ml-1 opacity-50" />
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+
+            {/* Show new tags being created */}
+            {newTagNames.map((tagName) => (
+              <span
+                key={tagName}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm border border-blue-200"
+              >
+                {tagName}
+                <span className="text-xs opacity-70">(New)</span>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[#787672]">
+            No tags selected yet. Please select tags above.
+          </p>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full bg-foreground hover:opacity-90"
+      >
+        {isSubmitting ? "Submitting..." : "Submit App"}
+      </Button>
+    </form>
+  );
+}
+
