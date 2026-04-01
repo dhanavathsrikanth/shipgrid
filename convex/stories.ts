@@ -10,6 +10,13 @@ import { paginationOptsValidator } from "convex/server";
 import { Doc, Id, DataModel } from "./_generated/dataModel";
 import { api, internal } from "./_generated/api";
 import { GenericDatabaseReader, StorageReader } from "convex/server";
+
+export const getStoryByIdInternal = internalQuery({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.storyId);
+  },
+});
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserDoc,
@@ -559,6 +566,14 @@ export const submit = mutation({
     icpBudget: v.optional(v.string()),
     notFor: v.optional(v.string()),
     stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+    faqs: v.optional(
+      v.array(
+        v.object({
+          question: v.string(),
+          answer: v.string(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     await ensureUserNotBanned(ctx); // Check if user is banned
@@ -655,6 +670,7 @@ export const submit = mutation({
       notFor: args.notFor,
       stage: args.stage,
       betaOpenedAt: args.stage === "beta" ? Date.now() : undefined,
+      faqs: args.faqs,
     });
 
     // Log the submission
@@ -695,6 +711,18 @@ export const submit = mutation({
       }
     }
 
+    // Schedule embedding generation for semantic search
+    await ctx.scheduler.runAfter(0, internal.embeddings.generateProductEmbedding, {
+      storyId,
+    });
+
+    // Schedule AI FAQ generation if none were provided
+    if (!args.faqs || args.faqs.length === 0) {
+      await ctx.scheduler.runAfter(0, internal.seo.generateFaqs, {
+        storyId,
+      });
+    }
+
     return { storyId, slug };
   },
 });
@@ -724,6 +752,14 @@ export const submitAnonymous = mutation({
     icpBudget: v.optional(v.string()),
     notFor: v.optional(v.string()),
     stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+    faqs: v.optional(
+      v.array(
+        v.object({
+          question: v.string(),
+          answer: v.string(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     // No authentication required for anonymous submissions
@@ -816,6 +852,7 @@ export const submitAnonymous = mutation({
       notFor: args.notFor,
       stage: args.stage,
       betaOpenedAt: args.stage === "beta" ? Date.now() : undefined,
+      faqs: args.faqs,
     });
 
     // Log the anonymous submission
@@ -824,6 +861,18 @@ export const submitAnonymous = mutation({
       userId: undefined, // No user ID for anonymous submissions
       submissionTime: Date.now(),
     });
+
+    // Schedule embedding generation for semantic search
+    await ctx.scheduler.runAfter(0, internal.embeddings.generateProductEmbedding, {
+      storyId,
+    });
+
+    // Schedule AI FAQ generation if none were provided
+    if (!args.faqs || args.faqs.length === 0) {
+      await ctx.scheduler.runAfter(0, internal.seo.generateFaqs, {
+        storyId,
+      });
+    }
 
     return { storyId, slug };
   },
@@ -1336,6 +1385,22 @@ export const updateOwnStory = mutation({
     githubUrl: v.optional(v.string()),
     chefShowUrl: v.optional(v.string()),
     chefAppUrl: v.optional(v.string()),
+    // ICP Matching & Lifecycle Fields
+    icpRoles: v.optional(v.array(v.string())),
+    icpProblem: v.optional(v.string()),
+    icpBudget: v.optional(v.string()),
+    notFor: v.optional(v.string()),
+    stage: v.optional(
+      v.union(v.literal("building"), v.literal("beta"), v.literal("live")),
+    ),
+    faqs: v.optional(
+      v.array(
+        v.object({
+          question: v.string(),
+          answer: v.string(),
+        }),
+      ),
+    ),
     // Hackathon team info
     teamName: v.optional(v.string()),
     teamMemberCount: v.optional(v.number()),
@@ -1578,6 +1643,17 @@ export const updateOwnStory = mutation({
     if (args.chefShowUrl !== undefined)
       updateData.chefShowUrl = args.chefShowUrl;
     if (args.chefAppUrl !== undefined) updateData.chefAppUrl = args.chefAppUrl;
+    if (args.faqs !== undefined) updateData.faqs = args.faqs;
+    if (args.icpRoles !== undefined) updateData.icpRoles = args.icpRoles;
+    if (args.icpProblem !== undefined) updateData.icpProblem = args.icpProblem;
+    if (args.icpBudget !== undefined) updateData.icpBudget = args.icpBudget;
+    if (args.notFor !== undefined) updateData.notFor = args.notFor;
+    if (args.stage !== undefined) {
+      updateData.stage = args.stage;
+      if (args.stage === "beta" && !story.betaOpenedAt) {
+        updateData.betaOpenedAt = Date.now();
+      }
+    }
 
     // Handle team info
     if (args.teamName !== undefined) updateData.teamName = args.teamName;
@@ -1614,6 +1690,11 @@ export const updateOwnStory = mutation({
     }
 
     await ctx.db.patch(args.storyId, updateData);
+
+    // Schedule embedding generation for semantic search
+    await ctx.scheduler.runAfter(0, internal.embeddings.generateProductEmbedding, {
+      storyId: args.storyId,
+    });
     return { success: true, slug: updateData.slug || story.slug };
   },
 });
@@ -1648,6 +1729,22 @@ export const updateStoryAdmin = mutation({
         v.object({
           name: v.string(),
           email: v.string(),
+        }),
+      ),
+    ),
+    // ICP Matching & Lifecycle Fields
+    icpRoles: v.optional(v.array(v.string())),
+    icpProblem: v.optional(v.string()),
+    icpBudget: v.optional(v.string()),
+    notFor: v.optional(v.string()),
+    stage: v.optional(
+      v.union(v.literal("building"), v.literal("beta"), v.literal("live")),
+    ),
+    faqs: v.optional(
+      v.array(
+        v.object({
+          question: v.string(),
+          answer: v.string(),
         }),
       ),
     ),
@@ -1729,6 +1826,7 @@ export const updateStoryAdmin = mutation({
     if (args.chefShowUrl !== undefined)
       updateData.chefShowUrl = args.chefShowUrl;
     if (args.chefAppUrl !== undefined) updateData.chefAppUrl = args.chefAppUrl;
+    if (args.faqs !== undefined) updateData.faqs = args.faqs;
 
     // Handle team info
     if (args.teamName !== undefined) updateData.teamName = args.teamName;
@@ -1754,6 +1852,11 @@ export const updateStoryAdmin = mutation({
     }
 
     await ctx.db.patch(args.storyId, updateData);
+
+    // Schedule embedding generation for semantic search
+    await ctx.scheduler.runAfter(0, internal.embeddings.generateProductEmbedding, {
+      storyId: args.storyId,
+    });
     return { success: true, slug: updateData.slug || story.slug };
   },
 });
@@ -2704,3 +2807,16 @@ export const getAllMyProductsAnalytics = query({
     };
   },
 });
+export const getAllApprovedInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("stories")
+      .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .collect();
+  },
+});
+
+
+
+

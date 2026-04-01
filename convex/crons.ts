@@ -47,4 +47,12 @@ crons.cron(
   {},
 );
 
+// Daily backfill for vector embeddings at 12:00 AM UTC
+crons.cron(
+  "daily backfill embeddings",
+  "0 0 * * *",
+  internal.backfill.all,
+  {},
+);
+
 export default crons;

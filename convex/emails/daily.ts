@@ -691,8 +691,8 @@ export const sendDailyUserEmails = internalAction({
           endTime: endOfDayDM,
         },
       );
-      const totalDMs = inboxMessages.reduce(
-        (sum, dm) => sum + dm.messageCount,
+      const totalDMs = (inboxMessages as any[]).reduce(
+        (sum: number, dm: any) => sum + dm.messageCount,
         0,
       );
 

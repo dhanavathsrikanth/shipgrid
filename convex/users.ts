@@ -5,9 +5,17 @@ import {
   MutationCtx,
   internalMutation,
   action,
+  internalQuery,
 } from "./_generated/server";
 import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
+
+export const getUserByIdInternal = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userId);
+  },
+});
 import { api, internal } from "./_generated/api"; // Ensured internal is imported if needed by other funcs
 import {
   storyWithDetailsValidator,
@@ -836,6 +844,11 @@ export const updateIcpProfile = mutation({
       role: args.role,
       icpRoles: args.icpRoles,
       icpComplete: true,
+    });
+
+    // Schedule embedding generation for semantic search
+    await ctx.scheduler.runAfter(0, internal.embeddings.generateUserEmbedding, {
+      userId,
     });
   },
 });
@@ -2195,5 +2208,13 @@ export const getMyEmojiTheme = query({
     }
 
     return user.emojiTheme || "default";
+  },
+});
+
+export const getAllWithIcpInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+    return users.filter((u) => !!u.icpRoles);
   },
 });

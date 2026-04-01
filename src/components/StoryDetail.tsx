@@ -130,8 +130,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const currentUrl = window.location.href;
-    const imageUrl = story.screenshotUrl || "/vibe-apps-open-graphi-image.png";
-    document.title = `${story.title} | Vibe Coding`;
+    const imageUrl = story.screenshotUrl || "/shipgrid-og-image.png";
+    document.title = `${story.title} | Shipgrid`;
     const setMeta = (attr: string, val: string, prop = true) => {
       const key = prop ? "property" : "name";
       let el = document.querySelector(`meta[${key}="${attr}"]`) as HTMLMetaElement | null;
@@ -139,10 +139,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
       el.setAttribute("content", val);
     };
     setMeta("description", story.description, false);
-    setMeta("og:title", story.title);
+    setMeta("og:title", `${story.title} - Shipgrid`);
     setMeta("og:description", story.description);
     setMeta("og:image", imageUrl);
     setMeta("og:url", currentUrl);
+    setMeta("twitter:card", "summary_large_image", false);
     setMeta("twitter:title", story.title, false);
     setMeta("twitter:description", story.description, false);
     setMeta("twitter:image", imageUrl, false);
@@ -539,11 +540,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
     if (
       tagName &&
-      !newTagNames.some((t) => t.toLowerCase() === tagName.toLowerCase()) &&
+      !newTagNames.some((t: string) => t.toLowerCase() === tagName.toLowerCase()) &&
       !availableTags?.some(
-        (t) => t.name.toLowerCase() === tagName.toLowerCase(),
+        (t: any) => t.name.toLowerCase() === tagName.toLowerCase(),
       ) &&
-      !allTags?.some((t) => t.name.toLowerCase() === tagName.toLowerCase())
+      !allTags?.some((t: any) => t.name.toLowerCase() === tagName.toLowerCase())
     ) {
       setNewTagNames((prev) => [...prev, tagName]);
       setDropdownSearchValue("");
@@ -555,7 +556,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
   };
 
   const handleRemoveNewTag = (tagName: string) => {
-    setNewTagNames((prev) => prev.filter((t) => t !== tagName));
+    setNewTagNames((prev) => prev.filter((t: string) => t !== tagName));
   };
 
   // Screenshot handling functions
@@ -878,6 +879,36 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": story.title,
+            "description": story.description,
+            "image": story.screenshotUrl || "/shipgrid-og-image.png",
+            "url": typeof window !== "undefined" ? window.location.href : "",
+            "brand": {
+              "@type": "Brand",
+              "name": "Shipgrid"
+            },
+            ...(story.faqs && story.faqs.length > 0 ? {
+              "mainEntity": {
+                "@type": "FAQPage",
+                "mainEntity": story.faqs.map((faq: { question: string; answer: string }) => ({
+                  "@type": "Question",
+                  "name": faq.question,
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": faq.answer
+                  }
+                }))
+              }
+            } : {})
+          })
+        }}
+      />
       <DialogComponents />
       <div className="max-w-7xl mx-auto pb-10">
         <div className="flex gap-8">
@@ -929,8 +960,29 @@ export function StoryDetail({ story }: StoryDetailProps) {
                   altText={`${story.title} screenshot`}
                 />
                 {story.longDescription && (
-                  <div className="text-muted-foreground mb-4 prose prose-base max-w-none">
+                  <div className="text-muted-foreground mb-6 prose prose-base max-w-none">
                     <Markdown>{story.longDescription}</Markdown>
+                  </div>
+                )}
+
+                {/* FAQ Section for SEO and GEO */}
+                {story.faqs && story.faqs.length > 0 && (
+                  <div className="mt-8 mb-8 border-t border-border pt-6">
+                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                       FAQs
+                    </h2>
+                    <div className="space-y-4">
+                      {story.faqs.map((faq: { question: string; answer: string }, i: number) => (
+                        <div key={i} className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                          <h3 className="font-medium text-foreground mb-2">
+                            Q: {faq.question}
+                          </h3>
+                          <p className="text-muted-foreground text-sm leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap mb-3">
@@ -974,7 +1026,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
           story.videoUrl ||
           story.githubUrl ||
           enabledFormFields?.some(
-            (field) => (story as any)[field.storyPropertyName],
+            (field: any) => (story as any)[field.storyPropertyName],
           ) ||
           story.tags?.length > 0) && (
           <div className="w-80 flex-shrink-0 hidden lg:block self-start">
@@ -1031,8 +1083,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
                 {/* Dynamic Form Fields */}
                 {enabledFormFields
-                  ?.filter((field) => field.key !== "githubUrl")
-                  .map((field) => {
+                  ?.filter((field: any) => field.key !== "githubUrl")
+                  .map((field: any) => {
                     const fieldValue = (story as any)[field.storyPropertyName];
                     if (!fieldValue) return null;
 
@@ -1550,8 +1602,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
             {/* Dynamic Form Fields */}
             {enabledFormFields
-              ?.filter((field) => field.key !== "githubUrl")
-              .map((field) => (
+              ?.filter((field: any) => field.key !== "githubUrl")
+              .map((field: any) => (
                 <div key={field.key}>
                   <label
                     htmlFor={`edit-${field.key}`}
@@ -1737,11 +1789,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                 )}
                 {availableTags
                   ?.filter(
-                    (tag) =>
+                    (tag: any) =>
                       tag.name !== "resendhackathon" &&
                       tag.name !== "ychackathon",
                   )
-                  .map((tag) => (
+                  .map((tag: any) => (
                     <button
                       key={tag._id}
                       type="button"
@@ -1806,11 +1858,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                         if (allTags) {
                           const searchTerm = dropdownSearchValue.toLowerCase();
                           const filteredTags = allTags.filter(
-                            (tag) =>
+                            (tag: any) =>
                               tag.name.toLowerCase().includes(searchTerm) &&
                               !selectedTagIds.includes(tag._id) &&
                               !newTagNames.some(
-                                (newTag) =>
+                                (newTag: string) =>
                                   newTag.toLowerCase() ===
                                   tag.name.toLowerCase(),
                               ),
@@ -1835,11 +1887,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                         const searchTerm = dropdownSearchValue.toLowerCase();
                         const filteredTags = allTags
                           .filter(
-                            (tag) =>
+                            (tag: any) =>
                               tag.name.toLowerCase().includes(searchTerm) &&
                               !selectedTagIds.includes(tag._id) &&
                               !newTagNames.some(
-                                (newTag) =>
+                                (newTag: string) =>
                                   newTag.toLowerCase() ===
                                   tag.name.toLowerCase(),
                               ),
@@ -1871,7 +1923,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
                         return (
                           <>
-                            {filteredTags.map((tag) => (
+                            {filteredTags.map((tag: any) => (
                               <button
                                 key={tag._id}
                                 type="button"
@@ -1942,7 +1994,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     {/* Show selected existing tags */}
                     {allTags &&
                       selectedTagIds.map((tagId) => {
-                        const tag = allTags.find((t) => t._id === tagId);
+                        const tag = allTags.find((t: any) => t._id === tagId);
                         if (!tag) return null;
 
                         return (
@@ -1987,7 +2039,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       })}
 
                     {/* Show new tags being created */}
-                    {newTagNames.map((tagName) => (
+                    {newTagNames.map((tagName: string) => (
                       <span
                         key={tagName}
                         className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-md text-sm border border-primary/20"
@@ -2036,7 +2088,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
           story.videoUrl ||
           story.githubUrl ||
           enabledFormFields?.some(
-            (field) => (story as any)[field.storyPropertyName],
+            (field: any) => (story as any)[field.storyPropertyName],
           ) ||
           story.tags?.length > 0) && (
           <div className="mt-8 bg-card rounded-lg p-6 border border-border lg:hidden">
@@ -2092,8 +2144,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
               {/* Dynamic Form Fields */}
               {enabledFormFields
-                ?.filter((field) => field.key !== "githubUrl")
-                .map((field) => {
+                ?.filter((field: any) => field.key !== "githubUrl")
+                .map((field: any) => {
                   const fieldValue = (story as any)[field.storyPropertyName];
                   if (!fieldValue) return null;
 
@@ -2740,7 +2792,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
           <CommentForm onSubmit={handleCommentSubmit} />
           <div className="mt-8 space-y-6 border-t border-border pt-6">
             {comments === undefined && <div>Loading comments...</div>}
-            {comments?.map((commentData) => {
+            {comments?.map((commentData: any) => {
               // Rename variable to avoid conflict
               // Ensure commentData conforms to CommentType, though validation should happen in backend
               const comment = commentData as CommentType;

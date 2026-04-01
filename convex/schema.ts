@@ -119,6 +119,14 @@ export default defineSchema({
     notFor: v.optional(v.string()),
     stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
     betaOpenedAt: v.optional(v.number()),
+    faqs: v.optional(
+      v.array(
+        v.object({
+          question: v.string(),
+          answer: v.string(),
+        })
+      )
+    ),
   })
     .index("by_slug", ["slug"])
     .index("by_status", ["status"])
@@ -779,4 +787,48 @@ export default defineSchema({
     label: v.string(),
     order: v.number(),
   }).index("by_category_order", ["category", "order"]),
+
+  userEmbeddings: defineTable({
+    userId: v.id("users"),
+    embedding: v.array(v.float64()),
+  })
+    .index("by_user", ["userId"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+    }),
+
+  productEmbeddings: defineTable({
+    storyId: v.id("stories"),
+    embedding: v.array(v.float64()),
+  })
+    .index("by_story", ["storyId"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 1536,
+    }),
+
+  changelogs: defineTable({
+    storyId: v.id("stories"),
+    title: v.string(),
+    content: v.string(),
+    type: v.union(v.literal("feature"), v.literal("fix"), v.literal("improvement"), v.literal("announcement")),
+    publishedAt: v.number(),
+  }).index("by_storyId", ["storyId"]),
+
+  seoReports: defineTable({
+    storyId: v.id("stories"),
+    overallScore: v.number(), // 0-100
+    contentScore: v.number(),
+    schemaScore: v.number(),
+    brandScore: v.number(),
+    issues: v.array(
+      v.object({
+        type: v.string(),
+        severity: v.union(v.literal("critical"), v.literal("warning"), v.literal("suggestion")),
+        message: v.string(),
+      })
+    ),
+    scannedAt: v.number(),
+  }).index("by_storyId", ["storyId"]),
 });

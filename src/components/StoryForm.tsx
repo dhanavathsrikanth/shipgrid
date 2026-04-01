@@ -66,6 +66,10 @@ export function StoryForm() {
     teamMembers: [{ name: "", email: "" }],
   });
 
+  const [faqs, setFaqs] = React.useState<{ question: string; answer: string }[]>(
+    [],
+  );
+
   const MAX_TAGLINE_LENGTH = 140;
 
   const availableTags = useQuery(api.tags.listHeader);
@@ -87,11 +91,11 @@ export function StoryForm() {
 
     if (
       tagName &&
-      !newTagNames.some((t) => t.toLowerCase() === tagName.toLowerCase()) &&
+      !newTagNames.some((t: string) => t.toLowerCase() === tagName.toLowerCase()) &&
       !availableTags?.some(
-        (t) => t.name.toLowerCase() === tagName.toLowerCase(),
+        (t: Tag) => t.name.toLowerCase() === tagName.toLowerCase(),
       ) &&
-      !allTags?.some((t) => t.name.toLowerCase() === tagName.toLowerCase())
+      !allTags?.some((t: Tag) => t.name.toLowerCase() === tagName.toLowerCase())
     ) {
       setNewTagNames((prev) => [...prev, tagName]);
       setNewTagInputValue("");
@@ -102,7 +106,7 @@ export function StoryForm() {
   };
 
   const handleRemoveNewTag = (tagName: string) => {
-    setNewTagNames((prev) => prev.filter((t) => t !== tagName));
+    setNewTagNames((prev) => prev.filter((t: string) => t !== tagName));
   };
 
   const handleSelectFromDropdown = (tagId: Id<"tags">) => {
@@ -217,6 +221,10 @@ export function StoryForm() {
         icpBudget: formData.icpBudget || undefined,
         notFor: formData.notFor || undefined,
         stage: formData.stage,
+        faqs:
+          faqs.length > 0
+            ? faqs.filter((f) => f.question.trim() && f.answer.trim())
+            : undefined,
       });
 
       setShowSuccessMessage(true);
@@ -394,6 +402,24 @@ export function StoryForm() {
         i === index ? { ...member, [field]: value } : member,
       ),
     }));
+  };
+
+  const handleAddFaq = () => {
+    setFaqs([...faqs, { question: "", answer: "" }]);
+  };
+
+  const handleRemoveFaq = (index: number) => {
+    setFaqs((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFaqChange = (
+    index: number,
+    field: "question" | "answer",
+    value: string,
+  ) => {
+    setFaqs((prev) =>
+      prev.map((faq, i) => (i === index ? { ...faq, [field]: value } : faq)),
+    );
   };
 
   return (
@@ -690,8 +716,8 @@ export function StoryForm() {
           </div>
           {/* Dynamic Form Fields */}
           {formFields
-            ?.filter((field) => field.key !== "githubUrl")
-            .map((field) => (
+            ?.filter((field: any) => field.key !== "githubUrl")
+            .map((field: any) => (
               <div key={field.key}>
                 <label
                   htmlFor={field.key}
@@ -972,6 +998,67 @@ export function StoryForm() {
             </div>
           </div>
 
+          {/* AI SEO FAQ Section */}
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-lg font-medium text-foreground">Enhanced SEO: FAQs</h3>
+                <p className="text-sm text-muted-foreground italic">
+                  Boost visibility for AI search (ChatGPT, Perplexity, SGE). If left blank, we'll auto-generate them for you!
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddFaq}
+                className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium hover:bg-muted-foreground/10 transition-colors flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" /> Add Question
+              </button>
+            </div>
+
+            {faqs.length > 0 && (
+              <div className="space-y-4">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border relative group">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFaq(index)}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-destructive/90 transition-opacity"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Question {index + 1}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. How does Shipgrid improve SEO?"
+                          value={faq.question}
+                          onChange={(e) => handleFaqChange(index, "question", e.target.value)}
+                          className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Answer {index + 1}
+                        </label>
+                        <textarea
+                          placeholder="Provide a clear, concise answer for AI bots to index."
+                          value={faq.answer}
+                          onChange={(e) => handleFaqChange(index, "answer", e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
               Select Tags *
@@ -1051,7 +1138,7 @@ export function StoryForm() {
                       const searchTerm = dropdownSearchValue.toLowerCase();
                       const filteredTags = allTags
                         .filter(
-                          (tag) =>
+                          (tag: any) =>
                             tag.name.toLowerCase().includes(searchTerm) &&
                             !selectedTagIds.includes(tag._id) &&
                             !newTagNames.some(
@@ -1069,7 +1156,7 @@ export function StoryForm() {
                         );
                       }
 
-                      return filteredTags.map((tag) => (
+                      return filteredTags.map((tag: any) => (
                         <button
                           key={tag._id}
                           type="button"
@@ -1120,7 +1207,7 @@ export function StoryForm() {
                   {/* Show selected existing tags */}
                   {allTags &&
                     selectedTagIds.map((tagId) => {
-                      const tag = allTags.find((t) => t._id === tagId);
+                      const tag = allTags.find((t: any) => t._id === tagId);
                       if (!tag) return null;
 
                       return (

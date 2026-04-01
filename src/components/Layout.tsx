@@ -11,6 +11,7 @@ import {
   ThumbsUp,
   ChevronDown,
   Menu,
+  Sparkles,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -36,6 +37,8 @@ interface LayoutContextType {
   viewMode: "list" | "grid" | "vibe";
   selectedTagId?: Id<"tags">;
   sortPeriod: SortPeriod;
+  showMatchedOnly: boolean;
+  setShowMatchedOnly: (val: boolean) => void;
 }
 
 type SortPeriod =
@@ -53,6 +56,8 @@ type SortPeriod =
 const LayoutContext = createContext<LayoutContextType>({
   viewMode: "vibe",
   sortPeriod: "all",
+  showMatchedOnly: false,
+  setShowMatchedOnly: () => {},
 });
 
 export function useLayoutContext() {
@@ -72,6 +77,7 @@ export function Layout({ children }: { children?: ReactNode }) {
   const [userChangedSortPeriod, setUserChangedSortPeriod] = React.useState(false);
   const [sortPeriod, setSortPeriod] = React.useState<SortPeriod | undefined>(undefined);
   const [selectedTagId, setSelectedTagId] = React.useState<Id<"tags"> | undefined>(undefined);
+  const [showMatchedOnly, setShowMatchedOnly] = React.useState(false);
   const [showAuthDialog, setShowAuthDialog] = React.useState(false);
 
   const headerTags = useQuery(api.tags.listHeader);
@@ -163,6 +169,8 @@ export function Layout({ children }: { children?: ReactNode }) {
     viewMode: viewMode || "vibe",
     selectedTagId,
     sortPeriod: sortPeriod || "all",
+    showMatchedOnly,
+    setShowMatchedOnly,
   };
 
   return (
@@ -233,11 +241,19 @@ export function Layout({ children }: { children?: ReactNode }) {
               {headerTags && headerTags.filter((tag) => !tag.isHidden && tag.showInHeader).length > 0 && (
                 <div className="hidden md:flex flex-wrap items-center gap-2">
                   <button 
-                    onClick={() => { setSelectedTagId(undefined); if (pathname !== "/") router.push("/"); }} 
-                    className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all", selectedTagId === undefined ? "bg-foreground text-background" : "bg-muted hover:bg-muted/80")}
+                    onClick={() => { setSelectedTagId(undefined); setShowMatchedOnly(false); if (pathname !== "/") router.push("/"); }} 
+                    className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all", (selectedTagId === undefined && !showMatchedOnly) ? "bg-foreground text-background" : "bg-muted hover:bg-muted/80")}
                   >
                     All
                   </button>
+                  {isSignedIn && settings?.enableIcpMatching !== false && (
+                    <button 
+                      onClick={() => { setShowMatchedOnly(true); setSelectedTagId(undefined); if (pathname !== "/") router.push("/"); }} 
+                      className={cn("px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1", showMatchedOnly ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80 text-foreground")}
+                    >
+                      <Sparkles size={12} className={showMatchedOnly ? "animate-pulse" : ""} /> Matched
+                    </button>
+                  )}
                   {headerTags.filter((tag) => !tag.isHidden && tag.showInHeader && tag.name !== "resendhackathon" && tag.name !== "ychackathon").slice(0, 8).map((tag) => (
                     <Link 
                       key={tag._id} 

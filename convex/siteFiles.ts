@@ -18,6 +18,16 @@ function buildRobotsTxt(baseUrl: string): string {
   lines.push("User-agent: *");
   lines.push("Allow: /");
   lines.push("Crawl-delay: 5");
+  lines.push("");
+  lines.push("User-agent: GPTBot");
+  lines.push("Allow: /");
+  lines.push("");
+  lines.push("User-agent: ChatGPT-User");
+  lines.push("Allow: /");
+  lines.push("");
+  lines.push("User-agent: PerplexityBot");
+  lines.push("Allow: /");
+  lines.push("");
   lines.push(`Sitemap: ${baseUrl}/sitemap.xml`);
   lines.push(`LLMs: ${baseUrl}/llms.txt`);
   return lines.join("\n") + "\n";
@@ -25,10 +35,13 @@ function buildRobotsTxt(baseUrl: string): string {
 
 async function buildLlmsTxt(ctx: any, baseUrl: string): Promise<string> {
   const lines: string[] = [];
+  lines.push("# Shipgrid - The AI-First App Discovery Platform");
+  lines.push("Explore and launch innovative applications curated for AI-readability and semantic search.");
+  lines.push("");
   lines.push("User-agent: *");
   lines.push("Allow: /");
   lines.push("");
-  lines.push("# Story URLs for AI indexing");
+  lines.push("## Approved Product Stories");
 
   const stories = await ctx.db
     .query("stories")
@@ -42,7 +55,10 @@ async function buildLlmsTxt(ctx: any, baseUrl: string): Promise<string> {
 
   for (const story of stories) {
     const url = `${baseUrl}/s/${story.slug}`;
-    lines.push(url);
+    lines.push(`- [${story.title}](${url}): ${story.description}`);
+    if (story.faqs && story.faqs.length > 0) {
+      lines.push(`  - FAQ: ${url}/faq`);
+    }
   }
 
   return lines.join("\n") + "\n";
@@ -52,7 +68,7 @@ export const rebuild = internalMutation({
   args: { baseUrl: v.optional(v.string()) },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const baseUrl = (args.baseUrl || "https://vibeapps.dev").replace(/\/$/, "");
+    const baseUrl = (args.baseUrl || "https://shipgrid.dev").replace(/\/$/, "");
 
     const robots = buildRobotsTxt(baseUrl);
     const llms = await buildLlmsTxt(ctx, baseUrl);

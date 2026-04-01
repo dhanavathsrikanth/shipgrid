@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import { Sparkles, ChevronRight, TrendingUp } from "lucide-react";
@@ -9,12 +9,54 @@ import { cn } from "@/lib/utils";
 
 export function MatchedStoriesShelf() {
   const settings = useQuery(api.settings.get);
-  const matchedStories = useQuery(api.stories.listMatchedStories);
+  const [matchedStories, setMatchedStories] = React.useState<any[] | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const getMatchedStories = useAction(api.icpMatch.getMatchedStories);
 
-  // Don't show if disabled or no matches
-  if (settings?.enableIcpMatching === false || !matchedStories || matchedStories.length === 0) {
+  React.useEffect(() => {
+    let isMounted = true;
+    async function fetchMatches() {
+      try {
+        const results = await getMatchedStories();
+        if (isMounted) {
+          setMatchedStories(results);
+        }
+      } catch (error) {
+        console.error("Failed to fetch matched stories via vector search:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    fetchMatches();
+    return () => { isMounted = false; };
+  }, [getMatchedStories]);
+
+  // Don't show if settings are loading, feature is disabled, or no matches after loading
+  if (settings === undefined || settings?.enableIcpMatching === false) {
     return null;
   }
+
+  if (!isLoading && (!matchedStories || matchedStories.length === 0)) {
+    return null;
+  }
+
+  // Use a skeleton loading state
+  if (isLoading) {
+    return (
+      <div className="mb-8 animate-pulse px-1">
+        <div className="h-6 w-48 bg-muted rounded mb-4" />
+        <div className="flex gap-4 overflow-hidden">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex-none w-[280px] h-[200px] bg-muted rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const storiesToDisplay = matchedStories!;
 
   return (
     <div className="mb-8 overflow-hidden">
@@ -38,7 +80,7 @@ export function MatchedStoriesShelf() {
 
       <div className="relative group">
         <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x no-scrollbar">
-          {matchedStories.map((story) => (
+          {storiesToDisplay.map((story) => (
             <Link
               key={story._id}
               href={`/s/${story.slug}`}
@@ -63,14 +105,14 @@ export function MatchedStoriesShelf() {
                 <div className="relative z-10 p-4 h-full flex flex-col justify-end">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> {story.matchScore}% Match
+                      <Sparkles className="w-3 h-3" /> Personalized Match
                     </span>
-                    {story.stage === "live" && (
-                      <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold">LIVE</span>
+                    {story.status === "approved" && (
+                      <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase">Verified</span>
                     )}
                   </div>
                   <h3 className="font-bold text-foreground truncate">{story.title}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{story.tagline}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">{story.description}</p>
                 </div>
               </div>
             </Link>

@@ -34,6 +34,7 @@ export type Story = Doc<"stories"> & {
   // Calculated fields if needed:
   // voteScore?: number;
   // averageRating?: number;
+  faqs?: Array<{ question: string; answer: string }>;
 };
 
 // Represents a full Comment document fetched from Convex.
