@@ -11,11 +11,11 @@ export const metadata: Metadata = {
     title: "What is Vibe Coding? The Complete Guide (2025)",
     description:
       "The rise of AI-assisted 'vibe coding' is changing how indie builders ship products. Here's everything you need to know.",
-    url: "https://shipgrid.io/blog/what-is-vibe-coding",
+    url: "https://goshipgrid.app/blog/what-is-vibe-coding",
     type: "article",
     siteName: "Shipgrid",
   },
-  alternates: { canonical: "https://shipgrid.io/blog/what-is-vibe-coding" },
+  alternates: { canonical: "https://goshipgrid.app/blog/what-is-vibe-coding" },
 };
 
 const articleJsonLd = {
@@ -24,9 +24,9 @@ const articleJsonLd = {
   headline: "What is Vibe Coding? The Complete Guide for Builders (2025)",
   description:
     "Vibe coding is building software with AI assistance at every step, from idea to deployment. Learn how it works and discover apps built this way.",
-  url: "https://shipgrid.io/blog/what-is-vibe-coding",
-  author: { "@type": "Organization", name: "Shipgrid", url: "https://shipgrid.io" },
-  publisher: { "@type": "Organization", name: "Shipgrid", url: "https://shipgrid.io" },
+  url: "https://goshipgrid.app/blog/what-is-vibe-coding",
+  author: { "@type": "Organization", name: "Shipgrid", url: "https://goshipgrid.app" },
+  publisher: { "@type": "Organization", name: "Shipgrid", url: "https://goshipgrid.app" },
   datePublished: "2025-04-01",
   dateModified: "2025-04-01",
 };

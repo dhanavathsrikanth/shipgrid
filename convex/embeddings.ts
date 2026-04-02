@@ -18,7 +18,7 @@ export const generateEmbedding = internalAction({
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://shipgrid.io",
+        "HTTP-Referer": "https://goshipgrid.app",
         "X-Title": "Shipgrid",
       },
       body: JSON.stringify({

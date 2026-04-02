@@ -1,5 +1,5 @@
 # Shipgrid — robots.txt
-# https://shipgrid.io
+# https://goshipgrid.app
 
 # ─── Allow all search engines & AI crawlers ───────────────────────────────────
 User-agent: *
@@ -58,7 +58,7 @@ User-agent: Bingbot
 Allow: /
 
 # ─── Sitemaps ─────────────────────────────────────────────────────────────────
-Sitemap: https://shipgrid.io/sitemap.xml
+Sitemap: https://goshipgrid.app/sitemap.xml
 
 # ─── AI Content Guide ─────────────────────────────────────────────────────────
-# For AI agents: https://shipgrid.io/llms.txt
+# For AI agents: https://goshipgrid.app/llms.txt

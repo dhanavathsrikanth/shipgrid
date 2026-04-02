@@ -6,7 +6,7 @@ import UserProfileWrapper from "./UserProfileWrapper";
 export const dynamic = "force-dynamic";
 
 
-const SITE_URL = "https://shipgrid.io";
+const SITE_URL = "https://goshipgrid.app";
 
 type Props = {
   params: Promise<{ username: string }>;

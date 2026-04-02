@@ -37,7 +37,7 @@ export const generateFaqs = internalAction({
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
-          "HTTP-Referer": "https://shipgrid.io",
+          "HTTP-Referer": "https://goshipgrid.app",
           "X-Title": "Shipgrid AI SEO",
         },
         body: JSON.stringify({

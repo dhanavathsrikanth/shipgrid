@@ -10,11 +10,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Shipgrid Blog — For Builders & Founders",
     description: "Guides and insights for indie makers and SaaS founders.",
-    url: "https://shipgrid.io/blog",
+    url: "https://goshipgrid.app/blog",
     type: "website",
     siteName: "Shipgrid",
   },
-  alternates: { canonical: "https://shipgrid.io/blog" },
+  alternates: { canonical: "https://goshipgrid.app/blog" },
 };
 
 const posts = [

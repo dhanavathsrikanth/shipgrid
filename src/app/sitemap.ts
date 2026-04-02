@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const SITE_URL = "https://shipgrid.io";
+const SITE_URL = "https://goshipgrid.app";
 
 // Static routes always present
 const staticRoutes: MetadataRoute.Sitemap = [

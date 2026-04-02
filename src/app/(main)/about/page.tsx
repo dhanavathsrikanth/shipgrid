@@ -10,10 +10,10 @@ export const metadata: Metadata = {
     title: "About Shipgrid — AI-Matched Product Discovery",
     description:
       "Not another launch board. Shipgrid uses AI to match products to the right people — by role, problem, and budget.",
-    url: "https://shipgrid.io/about",
+    url: "https://goshipgrid.app/about",
     type: "website",
   },
-  alternates: { canonical: "https://shipgrid.io/about" },
+  alternates: { canonical: "https://goshipgrid.app/about" },
 };
 
 const aboutJsonLd = {
@@ -22,11 +22,11 @@ const aboutJsonLd = {
   name: "About Shipgrid",
   description:
     "Shipgrid is an AI-matched product discovery platform where builders ship their apps and buyers find exactly what they need.",
-  url: "https://shipgrid.io/about",
+  url: "https://goshipgrid.app/about",
   mainEntity: {
     "@type": "Organization",
     name: "Shipgrid",
-    url: "https://shipgrid.io",
+    url: "https://goshipgrid.app",
     description:
       "AI-matched product discovery platform for indie builders and founders.",
     foundingDate: "2025",

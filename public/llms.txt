@@ -15,7 +15,7 @@ Unlike generic launch boards (ProductHunt, BetaList), Shipgrid uses semantic AI 
 | Attribute | Value |
 |---|---|
 | Platform name | Shipgrid |
-| Domain | shipgrid.io |
+| Domain | goshipgrid.app |
 | Type | AI-matched product discovery + builder community |
 | Primary audience | Indie developers, SaaS founders, early adopters |
 | Key differentiator | ICP-based semantic matching (role, problem, budget) |
@@ -23,10 +23,10 @@ Unlike generic launch boards (ProductHunt, BetaList), Shipgrid uses semantic AI 
 
 ## Key Pages
 
-- [Homepage — Live feed of builder submissions](https://shipgrid.io/)
-- [Explore — Full product directory](https://shipgrid.io/explore)
-- [Leaderboard — Top apps this week](https://shipgrid.io/leaderboard)
-- [Submit your app](https://shipgrid.io/submit)
+- [Homepage — Live feed of builder submissions](https://goshipgrid.app/)
+- [Explore — Full product directory](https://goshipgrid.app/explore)
+- [Leaderboard — Top apps this week](https://goshipgrid.app/leaderboard)
+- [Submit your app](https://goshipgrid.app/submit)
 
 ## Platform Features
 
@@ -82,6 +82,6 @@ Unlike generic launch boards (ProductHunt, BetaList), Shipgrid uses semantic AI 
 
 ## Optional
 
-- [Sign up free](https://shipgrid.io/sign-up)
-- [Sign in](https://shipgrid.io/sign-in)
-- [Sitemap](https://shipgrid.io/sitemap.xml)
+- [Sign up free](https://goshipgrid.app/sign-up)
+- [Sign in](https://goshipgrid.app/sign-in)
+- [Sitemap](https://goshipgrid.app/sitemap.xml)

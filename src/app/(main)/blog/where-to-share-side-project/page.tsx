@@ -11,11 +11,11 @@ export const metadata: Metadata = {
     title: "Best Places to Share Your Side Project in 2025",
     description:
       "ProductHunt, Hacker News, Reddit, or Shipgrid? Here's where to actually share your side project to get real users.",
-    url: "https://shipgrid.io/blog/where-to-share-side-project",
+    url: "https://goshipgrid.app/blog/where-to-share-side-project",
     type: "article",
     siteName: "Shipgrid",
   },
-  alternates: { canonical: "https://shipgrid.io/blog/where-to-share-side-project" },
+  alternates: { canonical: "https://goshipgrid.app/blog/where-to-share-side-project" },
 };
 
 const articleJsonLd = {
@@ -24,9 +24,9 @@ const articleJsonLd = {
   headline: "Best Places to Share Your Side Project in 2025",
   description:
     "A founder's guide to where to share a side project and get real users — beyond ProductHunt.",
-  url: "https://shipgrid.io/blog/where-to-share-side-project",
-  author: { "@type": "Organization", name: "Shipgrid", url: "https://shipgrid.io" },
-  publisher: { "@type": "Organization", name: "Shipgrid", url: "https://shipgrid.io" },
+  url: "https://goshipgrid.app/blog/where-to-share-side-project",
+  author: { "@type": "Organization", name: "Shipgrid", url: "https://goshipgrid.app" },
+  publisher: { "@type": "Organization", name: "Shipgrid", url: "https://goshipgrid.app" },
   datePublished: "2025-04-01",
   dateModified: "2025-04-01",
 };
