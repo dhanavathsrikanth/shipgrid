@@ -7,9 +7,17 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id, Doc } from "../../convex/_generated/dataModel";
-import { Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, X, ChevronLeft, ChevronRight, Check, ChevronsUpDown } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { AuthRequiredDialog } from "./ui/AuthRequiredDialog";
+import { MultiSelect } from "./ui/multi-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface Tag extends Doc<"tags"> {
   // Inherits _id, _creationTime, name, showInHeader, isHidden?, backgroundColor?, textColor?
@@ -51,6 +59,7 @@ export function StoryForm() {
   const [dynamicFormData, setDynamicFormData] = React.useState<
     Record<string, string>
   >({});
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
@@ -73,9 +82,10 @@ export function StoryForm() {
   const MAX_TAGLINE_LENGTH = 140;
 
   const availableTags = useQuery(api.tags.listHeader);
-  const allTags = useQuery(api.tags.listAllForDropdown); // Fetch all tags including hidden ones
+  const allTags = useQuery(api.tags.listAllForDropdown);
   const formFields = useQuery(api.storyFormFields.listEnabled);
   const settings = useQuery(api.settings.get);
+  const icpOptions = useQuery(api.icp.getOptions);
 
   const generateUploadUrl = useMutation(api.stories.generateUploadUrl);
   const submitStory = useMutation(api.stories.submit);
@@ -140,6 +150,20 @@ export function StoryForm() {
       if (totalTagsSelected === 0) {
         setSubmitError("Please select or add at least one tag.");
       }
+      return;
+    }
+
+    // ICP mandatory field validation
+    if (formData.icpRoles.length === 0) {
+      setSubmitError("Please select at least one Target Role in the ICP section.");
+      return;
+    }
+    if (!formData.icpProblem) {
+      setSubmitError("Please select a Primary Pain Point in the ICP section.");
+      return;
+    }
+    if (!formData.icpBudget) {
+      setSubmitError("Please select a Target Budget Bracket in the ICP section.");
       return;
     }
 
@@ -423,7 +447,7 @@ export function StoryForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto w-full">
       <Link
         href="/"
         className="text-muted-foreground hover:text-foreground inline-block mb-6"
@@ -439,10 +463,10 @@ export function StoryForm() {
           <span className="ml-2 text-sm text-muted-foreground">
             What did you build?
           </span>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               App Title *
             </label>
@@ -454,15 +478,15 @@ export function StoryForm() {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               required
               disabled={isSubmitting}
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="tagline"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               App/Project Tagline*
             </label>
@@ -477,7 +501,7 @@ export function StoryForm() {
                 }
               }}
               maxLength={MAX_TAGLINE_LENGTH}
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               required
               disabled={isSubmitting}
             />
@@ -485,10 +509,10 @@ export function StoryForm() {
               {formData.tagline.length}/{MAX_TAGLINE_LENGTH}
             </div>
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="longDescription"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               Description (Markdown and fenced `code` blocks supported)
             </label>
@@ -515,16 +539,16 @@ export function StoryForm() {
                 </div>
               )}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="url"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               App Website Link *
             </label>
-            <div className="text-sm text-muted-foreground mb-2">
+            <p className="text-xs text-muted-foreground">
               Enter your app url (ex: https://)
-            </div>
+            </p>
             <input
               type="url"
               id="url"
@@ -533,21 +557,21 @@ export function StoryForm() {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, url: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               required
               disabled={isSubmitting}
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="videoUrl"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               Video Demo (Recommended)
             </label>
-            <div className="text-sm text-muted-foreground mb-2">
+            <p className="text-xs text-muted-foreground">
               Share a video demo of your app (YouTube, Vimeo, etc.)
-            </div>
+            </p>
             <input
               type="url"
               id="videoUrl"
@@ -556,14 +580,14 @@ export function StoryForm() {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               disabled={isSubmitting}
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="submitterName"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               Your Name *
             </label>
@@ -578,21 +602,21 @@ export function StoryForm() {
                   submitterName: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               required
               disabled={isSubmitting}
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               Email (Optional)
             </label>
-            <div className="text-sm text-muted-foreground mb-2">
+            <p className="text-xs text-muted-foreground">
               Hidden and for hackathon notifications
-            </div>
+            </p>
             <input
               type="email"
               id="email"
@@ -601,14 +625,14 @@ export function StoryForm() {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, email: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               disabled={isSubmitting}
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="image"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               Upload Screenshot (Recommended)
             </label>
@@ -617,32 +641,32 @@ export function StoryForm() {
               id="image"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-muted file:text-muted-foreground hover:file:bg-[#e5e1de]"
+              className="w-full px-3 h-10 py-1 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-muted file:text-muted-foreground hover:file:bg-[#e5e1de]"
               disabled={isSubmitting}
             />
             {formData.image && (
-              <div className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground">
                 Selected: {formData.image.name}
-              </div>
+              </p>
             )}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="additionalImages"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               Additional Images (Optional)
             </label>
-            <div className="text-sm text-muted-foreground mb-2">
+            <p className="text-xs text-muted-foreground">
               Upload up to 4 additional images to showcase your app
-            </div>
+            </p>
             <input
               type="file"
               id="additionalImages"
               accept="image/*"
               multiple
               onChange={handleAdditionalImagesChange}
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-muted file:text-muted-foreground hover:file:bg-[#e5e1de]"
+              className="w-full px-3 h-10 py-1 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-muted file:text-muted-foreground hover:file:bg-[#e5e1de]"
               disabled={isSubmitting || additionalImages.length >= 4}
             />
             {additionalImages.length > 0 && (
@@ -689,16 +713,16 @@ export function StoryForm() {
             )}
           </div>
           {/* GitHub URL Field - Always Shown */}
-          <div>
+          <div className="space-y-1.5">
             <label
               htmlFor="githubUrl"
-              className="block text-sm font-medium text-muted-foreground mb-1"
+              className="block text-sm font-medium text-foreground"
             >
               GitHub Repo URL (Optional)
             </label>
-            <div className="text-sm text-muted-foreground mb-2">
+            <p className="text-xs text-muted-foreground">
               GitHub repository URL for your project
-            </div>
+            </p>
             <input
               type="url"
               id="githubUrl"
@@ -710,7 +734,7 @@ export function StoryForm() {
                   githubUrl: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+              className="w-full px-3 h-10 py-2 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               disabled={isSubmitting}
             />
           </div>
@@ -718,17 +742,17 @@ export function StoryForm() {
           {formFields
             ?.filter((field: any) => field.key !== "githubUrl")
             .map((field: any) => (
-              <div key={field.key}>
+              <div key={field.key} className="space-y-1.5">
                 <label
                   htmlFor={field.key}
-                  className="block text-sm font-medium text-muted-foreground mb-1"
+                  className="block text-sm font-medium text-foreground"
                 >
                   {field.label}
                 </label>
                 {field.description && (
-                  <div className="text-sm text-muted-foreground mb-2">
+                  <p className="text-xs text-muted-foreground">
                     {field.description}
-                  </div>
+                  </p>
                 )}
                 <input
                   type={field.fieldType}
@@ -741,7 +765,7 @@ export function StoryForm() {
                       [field.key]: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
+                  className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                   required={field.isRequired}
                   disabled={isSubmitting}
                 />
@@ -775,10 +799,10 @@ export function StoryForm() {
               {showTeamInfo && (
                 <div className="space-y-4 p-4 bg-muted rounded-lg border border-border mb-4">
                   {/* Team Name */}
-                  <div>
+                  <div className="space-y-1.5">
                     <label
                       htmlFor="teamName"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
+                      className="block text-sm font-medium text-foreground"
                     >
                       Team Name
                     </label>
@@ -793,16 +817,16 @@ export function StoryForm() {
                           teamName: e.target.value,
                         }))
                       }
-                      className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
+                      className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                       disabled={isSubmitting}
                     />
                   </div>
 
                   {/* Number of Team Members */}
-                  <div>
+                  <div className="space-y-1.5">
                     <label
                       htmlFor="teamMemberCount"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
+                      className="block text-sm font-medium text-foreground"
                     >
                       Number of Team Members
                     </label>
@@ -817,10 +841,10 @@ export function StoryForm() {
                           parseInt(e.target.value) || 1,
                         )
                       }
-                      className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border max-w-[120px]"
+                      className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border max-w-[120px]"
                       disabled={isSubmitting}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground">
                       Maximum 10 team members
                     </p>
                   </div>
@@ -836,10 +860,10 @@ export function StoryForm() {
                           key={index}
                           className="grid grid-cols-1 md:grid-cols-2 gap-3"
                         >
-                          <div>
+                          <div className="space-y-1.5">
                             <label
                               htmlFor={`member-name-${index}`}
-                              className="block text-xs font-medium text-muted-foreground mb-1"
+                              className="block text-xs font-medium text-foreground"
                             >
                               Member {index + 1} Name
                             </label>
@@ -855,14 +879,14 @@ export function StoryForm() {
                                   e.target.value,
                                 )
                               }
-                              className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                              className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                               disabled={isSubmitting}
                             />
                           </div>
-                          <div>
+                          <div className="space-y-1.5">
                             <label
                               htmlFor={`member-email-${index}`}
-                              className="block text-xs font-medium text-muted-foreground mb-1"
+                              className="block text-xs font-medium text-foreground"
                             >
                               Member {index + 1} Email
                             </label>
@@ -878,7 +902,7 @@ export function StoryForm() {
                                   e.target.value,
                                 )
                               }
-                              className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                              className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                               disabled={isSubmitting}
                             />
                           </div>
@@ -890,8 +914,7 @@ export function StoryForm() {
               )}
             </div>
           )}
-          {/* ICP & Lifecycle Section */}
-          <div className="space-y-6 pt-4 border-t border-border">
+          <div className="space-y-5 pt-4 border-t border-border">
             <div className="flex flex-col gap-1">
               <h3 className="text-lg font-medium text-foreground">Target Audience (ICP)</h3>
               <p className="text-sm text-muted-foreground">
@@ -899,101 +922,95 @@ export function StoryForm() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Project Stage *
-                </label>
-                <select
-                  value={formData.stage}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stage: e.target.value as any }))}
-                  className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
-                  required
-                >
-                  <option value="building">🏗️ Just Building (Ideation/Dev)</option>
-                  <option value="beta">🧪 Beta (Waitlist/Early Access)</option>
-                  <option value="live">🚀 Live (Publicly Available)</option>
-                </select>
-              </div>
+            {/* Project Stage */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                Project Stage <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={formData.stage}
+                onValueChange={(v) => setFormData(prev => ({ ...prev, stage: v as "building" | "beta" | "live" }))}
+              >
+                <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
+                  <SelectValue placeholder="Select your project stage..." />
+                </SelectTrigger>
+                <SelectContent className="border shadow-md">
+                  <SelectItem value="building" className="text-sm py-2">🏗️ Just Building (Ideation / Dev)</SelectItem>
+                  <SelectItem value="beta" className="text-sm py-2">🧪 Beta (Waitlist / Early Access)</SelectItem>
+                  <SelectItem value="live" className="text-sm py-2">🚀 Live (Publicly Available)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Target Roles (Select Multiple)
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {["founder", "investor", "marketer", "engineer", "designer", "enthusiast"].map(role => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          icpRoles: prev.icpRoles.includes(role)
-                            ? prev.icpRoles.filter(r => r !== role)
-                            : [...prev.icpRoles, role]
-                        }))
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        formData.icpRoles.includes(role)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-muted text-muted-foreground border-border hover:border-muted-foreground/30"
-                      }`}
-                    >
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
-                    </button>
+            {/* Target Roles — multi-select with checkboxes */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                Target Roles <span className="text-destructive">*</span>
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground">(Select all that apply)</span>
+              </label>
+              <MultiSelect
+                options={icpOptions?.roles ?? []}
+                selected={formData.icpRoles}
+                onChange={(roles) => setFormData(prev => ({ ...prev, icpRoles: roles }))}
+                placeholder={icpOptions === undefined ? "Loading roles..." : "Select roles your product is built for..."}
+              />
+              {formData.icpRoles.length === 0 && icpOptions !== undefined && (
+                <p className="text-xs text-destructive">Please select at least one role.</p>
+              )}
+            </div>
+
+            {/* Primary Pain Point */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                Primary Pain Point Solved <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={formData.icpProblem}
+                onValueChange={(v) => setFormData(prev => ({ ...prev, icpProblem: v }))}
+              >
+                <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
+                  <SelectValue placeholder="Select a challenge your product solves..." />
+                </SelectTrigger>
+                <SelectContent className="border shadow-md">
+                  {(icpOptions?.challenges ?? []).map(c => (
+                    <SelectItem key={c} value={c} className="text-sm py-2">{c}</SelectItem>
                   ))}
-                </div>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Primary Pain Point Solved
-                </label>
-                <select
-                  value={formData.icpProblem}
-                  onChange={(e) => setFormData(prev => ({ ...prev, icpProblem: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
-                >
-                  <option value="">Select a challenge...</option>
-                  <option value="acquisition">User Acquisition</option>
-                  <option value="scaling">Technical Scaling</option>
-                  <option value="funding">Raising Capital</option>
-                  <option value="hiring">Hiring Talent</option>
-                  <option value="monetization">Monetization</option>
-                  <option value="productivity">General Productivity</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Target Budget Bracket
-                </label>
-                <select
-                  value={formData.icpBudget}
-                  onChange={(e) => setFormData(prev => ({ ...prev, icpBudget: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
-                >
-                  <option value="">Select budget range...</option>
-                  <option value="zero">$0 (Free tools)</option>
-                  <option value="low">$1 - $50 / mo</option>
-                  <option value="mid">$50 - $500 / mo</option>
-                  <option value="high">$500+ / mo</option>
-                </select>
-              </div>
+            {/* Spending Tier (formerly Target Budget Bracket) */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                Spending Tier <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={formData.icpBudget}
+                onValueChange={(v) => setFormData(prev => ({ ...prev, icpBudget: v }))}
+              >
+                <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
+                  <SelectValue placeholder="Select typical subscription budget..." />
+                </SelectTrigger>
+                <SelectContent className="border shadow-md">
+                  {(icpOptions?.budgets ?? []).map(b => (
+                    <SelectItem key={b} value={b} className="text-sm py-2">{b}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Who this is NOT for (Anti-Persona)
+            {/* Anti-Persona — optional */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                Who this is NOT for
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground">(Optional)</span>
               </label>
               <input
                 type="text"
-                placeholder="e.g. Enterprise users, Web3 haters, etc."
+                placeholder="e.g. Enterprise users, non-technical users..."
                 value={formData.notFor}
                 onChange={(e) => setFormData(prev => ({ ...prev, notFor: e.target.value }))}
-                className="w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
+                className="w-full px-3 py-2 h-10 bg-white rounded-md text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border"
               />
             </div>
           </div>
@@ -1027,9 +1044,9 @@ export function StoryForm() {
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-medium text-foreground">
                           Question {index + 1}
                         </label>
                         <input
@@ -1037,11 +1054,11 @@ export function StoryForm() {
                           placeholder="e.g. How does Shipgrid improve SEO?"
                           value={faq.question}
                           onChange={(e) => handleFaqChange(index, "question", e.target.value)}
-                          className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                          className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-medium text-foreground">
                           Answer {index + 1}
                         </label>
                         <textarea
@@ -1049,7 +1066,7 @@ export function StoryForm() {
                           value={faq.answer}
                           onChange={(e) => handleFaqChange(index, "answer", e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                          className="w-full px-3 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                         />
                       </div>
                     </div>
@@ -1059,14 +1076,13 @@ export function StoryForm() {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">
               Select Tags *
-            </label>{" "}
-            <span className="ml-2 text-xs text-muted-foreground">
-              Select tags that best describe your app or hackathon
-              participation?
-            </span>
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Select tags that best describe your app or hackathon participation?
+            </p>
             <div className="flex flex-wrap gap-2 mb-4">
               {availableTags === undefined && (
                 <span className="text-sm text-muted-foreground">Loading tags...</span>
@@ -1108,13 +1124,13 @@ export function StoryForm() {
                 ))}
             </div>
             {/* Dropdown Search for All Tags */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
+            <div className="space-y-1.5 mb-6">
+              <label className="block text-sm font-medium text-foreground">
                 Search All Available Tags
               </label>
-              <span className="ml-2 text-xs text-muted-foreground mb-2 block">
+              <p className="text-xs text-muted-foreground">
                 Find and select from all tags, including those not shown above
-              </span>
+              </p>
               <div className="relative tag-dropdown-container">
                 <input
                   type="text"
@@ -1127,7 +1143,7 @@ export function StoryForm() {
                     setShowDropdown(dropdownSearchValue.length > 0)
                   }
                   placeholder="Type to search for tags..."
-                  className="w-full px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
+                  className="w-full px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
                   disabled={isSubmitting}
                 />
 
@@ -1271,31 +1287,32 @@ export function StoryForm() {
                 </div>
               </div>
             )}
-            <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Add New Tags (optional)
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={newTagInputValue}
-                onChange={(e) => setNewTagInputValue(e.target.value)}
-                placeholder={
-                  selectedTagIds.length + newTagNames.length >= 10
-                    ? "Maximum 10 tags reached"
-                    : "Enter new tag name..."
-                }
-                className="flex-1 px-3 py-2 bg-card rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border text-sm"
-                disabled={
-                  isSubmitting ||
-                  selectedTagIds.length + newTagNames.length >= 10
-                }
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddNewTag();
+            <div className="space-y-1.5 mb-2">
+              <label className="block text-sm font-medium text-foreground">
+                Add New Tags (optional)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTagInputValue}
+                  onChange={(e) => setNewTagInputValue(e.target.value)}
+                  placeholder={
+                    selectedTagIds.length + newTagNames.length >= 10
+                      ? "Maximum 10 tags reached"
+                      : "Enter new tag name..."
                   }
-                }}
-              />
+                  className="flex-1 px-3 h-10 py-2 bg-card rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border"
+                  disabled={
+                    isSubmitting ||
+                    selectedTagIds.length + newTagNames.length >= 10
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddNewTag();
+                    }
+                  }}
+                />
               <button
                 type="button"
                 onClick={handleAddNewTag}
@@ -1337,6 +1354,7 @@ export function StoryForm() {
                 Maximum of 10 tags reached. Remove a tag to add another.
               </p>
             )}
+            </div>
           </div>
           <div className="flex gap-4 items-center pt-4 border-t border-border">
             <button
@@ -1348,7 +1366,10 @@ export function StoryForm() {
                 !formData.tagline ||
                 formData.tagline.length > MAX_TAGLINE_LENGTH ||
                 !formData.url ||
-                !formData.submitterName
+                !formData.submitterName ||
+                formData.icpRoles.length === 0 ||
+                !formData.icpProblem ||
+                !formData.icpBudget
               }
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

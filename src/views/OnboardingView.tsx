@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { User, ArrowRight, CheckCircle2, X, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 export default function OnboardingView() {
   const [username, setUsername] = useState("");
@@ -74,77 +75,51 @@ export default function OnboardingView() {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
-        <div className="relative p-1 rounded-[40px] bg-gradient-to-b from-indigo-500/20 to-transparent">
-          <div className="bg-card border shadow-2xl rounded-[38px] p-8 md:p-12 overflow-hidden">
-            <div className="relative z-10">
-              <div className="flex justify-center mb-8">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full" />
-                  <div className="relative p-5 rounded-[24px] bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
-                    <User size={48} />
-                  </div>
-                </div>
-              </div>
-              
-              <h1 className="text-4xl font-extrabold text-center mb-3 tracking-tight text-foreground">Pick your handle</h1>
-              <p className="text-muted-foreground text-center mb-10 text-lg">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <Card className="bg-card border-border shadow-sm rounded-lg p-8 md:p-10 relative overflow-hidden">
+          <div className="relative z-10">
+            <div className="flex flex-col gap-1 mb-8">
+              <h1 className="text-lg font-medium tracking-tight text-foreground">Pick your handle</h1>
+              <p className="text-sm text-muted-foreground">
                 This is how you'll be known in the Shipgrid community.
               </p>
-
-              <form onSubmit={handleUsernameSubmit} className="space-y-8">
-                <div className="space-y-3">
-                  <Label htmlFor="username" className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Unique Username</Label>
-                  <div className="relative group">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-500/50 font-bold text-2xl group-focus-within:text-indigo-600 transition-colors">@</span>
-                    <Input
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                      className="pl-14 bg-muted/30 border-2 border-transparent focus:border-indigo-500/50 h-16 text-xl rounded-[24px] transition-all font-bold placeholder:text-muted-foreground/30"
-                      placeholder="super_builder"
-                      required
-                      disabled={isLoading}
-                      autoFocus
-                    />
-                  </div>
-                  {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-3 text-red-500 animate-in fade-in slide-in-from-top-2">
-                      <X size={18} />
-                      <p className="text-sm font-bold">{error}</p>
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full h-16 text-xl font-black rounded-[24px] bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/20 group transition-all active:scale-95"
-                  disabled={isLoading || !username.trim()}
-                >
-                  {isLoading ? "Checking availability..." : "Continue Onboarding"}
-                  <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </form>
             </div>
-            
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-indigo-500/5 rounded-full blur-[60px]" />
-            <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-purple-500/5 rounded-full blur-[60px]" />
-          </div>
-        </div>
 
-        <div className="mt-10 px-6 py-4 rounded-2xl bg-muted/30 border border-border/50 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-            <CheckCircle2 size={16} className="text-green-500" />
-            Verified by Shipgrid Auth
+            <form onSubmit={handleUsernameSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-sm font-medium text-foreground">Unique Username</Label>
+                <div className="relative group">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 font-medium text-sm transition-colors group-focus-within:text-primary">@</span>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                    className="pl-8 h-10 text-sm rounded-md border-border bg-background focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/30"
+                    placeholder="super_builder"
+                    required
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                </div>
+                {error && (
+                  <div className="mt-2 text-xs font-medium text-destructive animate-in fade-in slide-in-from-top-1">
+                    {error}
+                  </div>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-10 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all active:scale-[0.98]"
+                disabled={isLoading || !username.trim()}
+              >
+                {isLoading ? "Checking..." : "Continue"}
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </form>
           </div>
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-background bg-muted" />
-            ))}
-          </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

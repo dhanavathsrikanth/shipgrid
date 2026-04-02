@@ -40,26 +40,24 @@ export function Footer() {
   return (
     <footer className="bg-background border-t border-border pt-16 pb-12 mt-20">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Column 1: Brand & About */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           <div className="space-y-4">
             <Link href="/" className="inline-block text-xl font-bold text-foreground hover:opacity-80 transition-opacity">
               {siteTitle}
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              The premier platform to share, discover, and vibe on the latest indie apps and weekend builds. Join our community of builders.
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The ultimate grid for discovering, sharing, and vibing on the best indie apps. Join our community of builders.
             </p>
             <div className="flex items-center gap-4 pt-2">
-              <a href="https://github.com/waynesutton/vibeapps" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+              <a href="https://github.com/dhanavathsrikanth/shipgrid" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
                 <Github className="w-5 h-5" />
               </a>
-              <a href="https://twitter.com/waynesutton" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Twitter">
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
           </div>
 
-          {/* Column 2: Platform */}
           <div>
             <h3 className="font-semibold text-foreground mb-4">Platform</h3>
             <ul className="space-y-3 text-sm">
@@ -67,32 +65,31 @@ export function Footer() {
                 <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</Link>
               </li>
               <li>
+                <Link href="/explore" className="text-muted-foreground hover:text-foreground transition-colors">Explore</Link>
+              </li>
+              <li>
                 <Link href="/leaderboard" className="text-muted-foreground hover:text-foreground transition-colors">Leaderboard</Link>
+              </li>
+              <li>
+                <Link href="/submit" className="text-muted-foreground hover:text-foreground transition-colors font-medium text-primary">Submit App</Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Resources</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/personalize" className="text-muted-foreground hover:text-foreground transition-colors">Personalize</Link>
               </li>
               <li>
                 <Link href="/notifications" className="text-muted-foreground hover:text-foreground transition-colors">Notifications</Link>
               </li>
               <li>
-                <button onClick={() => setShowAboutModal(true)} className="text-muted-foreground hover:text-foreground transition-colors">About the Project</button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 3: Resources */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-4">Resources</h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a href="https://convex.dev?utm_source=vibeapps-dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Docs</a>
+                <Link href="/inbox" className="text-muted-foreground hover:text-foreground transition-colors">Inbox</Link>
               </li>
               <li>
-                <a href="https://convex.dev/legal/tos/v2022-03-02" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a>
-              </li>
-              <li>
-                <a href="https://convex.dev/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a>
-              </li>
-              <li>
-                <a href="https://convex.dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Powered by Convex</a>
+                <button onClick={() => setShowAboutModal(true)} className="text-muted-foreground hover:text-foreground transition-colors text-left">About the Project</button>
               </li>
             </ul>
           </div>
@@ -135,7 +132,11 @@ export function Footer() {
           <div className="flex items-center gap-4">
             <span>© {new Date().getFullYear()} {siteTitle}. All rights reserved.</span>
           </div>
-          <p>Hand-crafted with vibe coding.</p>
+          <div className="flex items-center gap-1.5">
+            <span>Made with</span>
+            <span className="text-red-500 inline-flex">❤️</span>
+            <span>for the builder community.</span>
+          </div>
         </div>
       </div>
 
@@ -146,9 +147,9 @@ export function Footer() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <Dialog.Title className="text-2xl font-bold text-foreground mb-1">
-                  About {siteTitle}
+                  About Shipgrid
                 </Dialog.Title>
-                <div className="h-1 w-12 bg-foreground rounded-full"></div>
+                <div className="h-1 w-12 bg-primary rounded-full"></div>
               </div>
               <Dialog.Close className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground">
                 <X className="w-5 h-5" />
@@ -156,7 +157,7 @@ export function Footer() {
             </div>
             <div className="prose prose-sm text-muted-foreground space-y-4">
               <p className="text-base">
-                Welcome to <span className="font-semibold text-foreground">{siteTitle}</span>, the community where builders showcase their projects and discover inspiration.
+                Welcome to <span className="font-semibold text-foreground">Shipgrid</span>, the definitive community platform for builders to showcase their apps, discover builders, and define their audience.
               </p>
               
               <p>
@@ -174,14 +175,9 @@ export function Footer() {
               </div>
 
               <div className="pt-4 flex flex-col gap-3">
-                <p className="text-sm">Built and maintained by <a href="https://www.linkedin.com/in/waynesutton/" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground hover:underline">Wayne Sutton</a></p>
+                <p className="text-sm">Built for the community of indie builders.</p>
                 <div className="flex gap-4">
-                  <a href="https://github.com/waynesutton" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    <Github className="w-4 h-4" /> waynesutton
-                  </a>
-                  <a href="https://twitter.com/waynesutton" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    <Twitter className="w-4 h-4" /> @waynesutton
-                  </a>
+                  <span className="text-xs text-muted-foreground">© {new Date().getFullYear()} Shipgrid</span>
                 </div>
               </div>
             </div>

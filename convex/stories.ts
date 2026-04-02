@@ -392,6 +392,80 @@ export const listApproved = query({
   },
 });
 
+// Query to list stories from users that the current user follows
+export const listFollowing = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    page: StoryWithDetails[];
+    isDone: boolean;
+    continueCursor: string;
+  }> => {
+    const userId = await getAuthenticatedUserId(ctx);
+    if (!userId) {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+
+    const follows = await ctx.db
+      .query("follows")
+      .withIndex("by_followerId", (q) => q.eq("followerId", userId))
+      .collect();
+
+    const followedIds = follows.map((f) => f.followingId);
+
+    if (followedIds.length === 0) {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+
+    // Optimization: Fetch most recent approved stories for each followed user using an index
+    // This is significantly faster than collecting all approved stories and filtering in memory
+    const storiesByFollowedUsers = await Promise.all(
+      followedIds.map(async (fId) => {
+        return await ctx.db
+          .query("stories")
+          .withIndex("by_user", (q) => q.eq("userId", fId))
+          .filter((q) => 
+            q.and(
+              q.eq(q.field("status"), "approved"),
+              q.neq(q.field("isHidden"), true)
+            )
+          )
+          .order("desc")
+          .take(50); // Fetch top 50 recent stories per followed user
+      })
+    );
+
+    const followedStories = storiesByFollowedUsers.flat();
+
+    // Sort the combined list by creation time descending
+    followedStories.sort((a, b) => b._creationTime - a._creationTime);
+
+    // Apply manual pagination over the combined recent stories
+    const startIndex = args.paginationOpts.cursor
+      ? parseInt(args.paginationOpts.cursor, 10)
+      : 0;
+    const endIndex = startIndex + args.paginationOpts.numItems;
+    const pageStories = followedStories.slice(startIndex, endIndex);
+    const isDone = endIndex >= followedStories.length;
+    const continueCursor = isDone ? null : endIndex.toString();
+
+    const storiesWithDetails = await fetchTagsAndCountsForStories(
+      ctx,
+      pageStories,
+    );
+
+    return {
+      page: storiesWithDetails,
+      isDone,
+      continueCursor: continueCursor ?? "",
+    };
+  },
+});
+
 // Query to list stories pending moderation
 export const listPending = query({
   args: { paginationOpts: paginationOptsValidator },

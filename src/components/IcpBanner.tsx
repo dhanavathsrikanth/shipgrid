@@ -19,9 +19,9 @@ export function IcpBanner() {
 
   return (
     <Banner1 
-      title="Personalize your feed!"
-      description="Help us show you products and founders that match your professional identity by"
-      linkText="starting your discovery here"
+      title="Tune your discovery."
+      description="Help us tailor your feed. Complete your profile to see more relevant builders and projects"
+      linkText="here"
       linkUrl="/personalize"
       defaultVisible={true}
     />

@@ -162,7 +162,7 @@ export function Layout({ children }: { children?: ReactNode }) {
     settings &&
     !isStoryDetailPage && !isJudgingPage && !isYCHackFormPage &&
     !isDynamicSubmitFormPage && !isCustomFormPage && !isPublicResultsPage && !isAdminFormPage &&
-    (viewMode === "vibe" || viewMode === "list") &&
+    (viewMode === "vibe" || viewMode === "list" || pathname === "/submit") &&
     (settings.showListView || settings.showVibeView);
 
   const contextValue: LayoutContextType = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuIcon, PlusCircle, Bell, Inbox, Search, LogOut, Settings, User, LayoutGrid, List, ThumbsUp, ChevronDown } from "lucide-react";
+import { MenuIcon, PlusCircle, Bell, Inbox, Search, LogOut, Settings, User, LayoutGrid, List, ThumbsUp, ChevronDown, Sparkles } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -172,6 +172,13 @@ export const Navbar5 = ({
                       ))}
                     </div>
                   </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                    <Link href="/browse">
+                      Browse
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
@@ -395,6 +402,9 @@ export const Navbar5 = ({
                     </Accordion>
 
                     <div className="flex flex-col gap-4 py-2">
+                       <Link href="/browse" className="font-semibold text-sm px-1 text-primary flex items-center gap-2">
+                         <Sparkles size={16} /> Browse
+                       </Link>
                        <Link href="/leaderboard" className="font-semibold text-sm px-1">Leaderboard</Link>
                        {settings?.showHackathon && <Link href="/hackathon" className="font-semibold text-sm px-1">Hackathon</Link>}
                        {settings?.showJudging && <Link href="/judging" className="font-semibold text-sm px-1">Judging</Link>}

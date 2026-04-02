@@ -140,8 +140,12 @@ export const userInProfileValidator = v.object({
   bluesky: v.optional(v.string()),
   linkedin: v.optional(v.string()),
   isVerified: v.optional(v.boolean()),
-  // role is not on the user doc in DB currently
-  // isBanned & isPaused are usually admin-facing, but can be included if profile needs it
+  // New ICP fields
+  primaryProblem: v.optional(v.string()),
+  budgetRange: v.optional(v.string()),
+  region: v.optional(v.string()),
+  icpComplete: v.optional(v.boolean()),
+  icpRoles: v.optional(v.array(v.string())),
 });
 
 // Validator for Vote object with story details in profile data

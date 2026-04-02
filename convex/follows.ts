@@ -103,6 +103,12 @@ export const getFollowers = query({
       inboxEnabled: v.optional(v.boolean()),
       emojiTheme: v.optional(v.string()),
       role: v.optional(v.string()),
+      // New ICP fields
+      primaryProblem: v.optional(v.string()),
+      budgetRange: v.optional(v.string()),
+      region: v.optional(v.string()),
+      icpComplete: v.optional(v.boolean()),
+      icpRoles: v.optional(v.array(v.string())),
     }),
   ),
   handler: async (ctx, args) => {
@@ -149,6 +155,12 @@ export const getFollowing = query({
       inboxEnabled: v.optional(v.boolean()),
       emojiTheme: v.optional(v.string()),
       role: v.optional(v.string()),
+      // New ICP fields
+      primaryProblem: v.optional(v.string()),
+      budgetRange: v.optional(v.string()),
+      region: v.optional(v.string()),
+      icpComplete: v.optional(v.boolean()),
+      icpRoles: v.optional(v.array(v.string())),
     }),
   ),
   handler: async (ctx, args) => {
