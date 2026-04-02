@@ -28,6 +28,31 @@ const staticRoutes: MetadataRoute.Sitemap = [
     changeFrequency: "monthly",
     priority: 0.6,
   },
+  // Content pages — high priority for GEO & SEO
+  {
+    url: `${SITE_URL}/about`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.9,
+  },
+  {
+    url: `${SITE_URL}/blog`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.8,
+  },
+  {
+    url: `${SITE_URL}/blog/what-is-vibe-coding`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.85,
+  },
+  {
+    url: `${SITE_URL}/blog/where-to-share-side-project`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.85,
+  },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
