@@ -32,6 +32,7 @@ import { RecentVibers } from "./RecentVibers";
 import { AuthRequiredDialog } from "./ui/AuthRequiredDialog";
 import { formatDistanceToNow } from "date-fns";
 import { Navbar5 } from "./ui/navbar-5";
+import { cn } from "@/lib/utils";
 
 interface LayoutContextType {
   viewMode: "list" | "grid" | "vibe";
@@ -178,7 +179,7 @@ export function Layout({ children }: { children?: ReactNode }) {
       <div className="flex flex-col min-h-screen bg-background text-foreground">
         <Navbar5 
           siteTitle={siteTitle}
-          isSignedIn={isSignedIn}
+          isSignedIn={isSignedIn ?? false}
           isClerkLoaded={isClerkLoaded}
           clerkUser={clerkUser}
           hasUnreadAlerts={hasUnreadAlerts || false}

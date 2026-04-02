@@ -3,30 +3,37 @@ import { Metadata } from "next";
 import { api } from "../../../../../../convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
-import { Markdown } from "@/components/Markdown";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
+// Prevent static build-time generation — requires live Convex at runtime
+export const dynamic = "force-dynamic";
+
 interface FAQPageProps {
-  params: {
+  params: Promise<{
     storySlug: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: FAQPageProps): Promise<Metadata> {
-  const story = await fetchQuery(api.stories.getBySlug, { slug: params.storySlug });
+  const { storySlug } = await params;
+
+  let story: any = null;
+  try {
+    story = await fetchQuery(api.stories.getBySlug, { slug: storySlug });
+  } catch {
+    // fallback if Convex unavailable
+  }
 
   if (!story) {
-    return {
-      title: "Story Not Found",
-    };
+    return { title: "Story Not Found" };
   }
 
   return {
     title: `Frequently Asked Questions - ${story.title} | Shipgrid`,
     description: `Common questions and answers about ${story.title}. Learn more about features, building process, and more on Shipgrid.`,
     alternates: {
-      canonical: `/s/${params.storySlug}/faq`,
+      canonical: `/s/${storySlug}/faq`,
     },
     openGraph: {
       title: `FAQ: ${story.title}`,
@@ -37,18 +44,23 @@ export async function generateMetadata({ params }: FAQPageProps): Promise<Metada
 }
 
 export default async function FAQPage({ params }: FAQPageProps) {
-  const story = await fetchQuery(api.stories.getBySlug, { slug: params.storySlug });
+  const { storySlug } = await params;
 
-  if (!story || !story.faqs || story.faqs.length === 0) {
-    // If no FAQs, let's still show the page but maybe a message, or just 404
-    // Usually, we want to show the page if it's indexed.
-    if (!story) notFound();
+  let story: any = null;
+  try {
+    story = await fetchQuery(api.stories.getBySlug, { slug: storySlug });
+  } catch {
+    notFound();
   }
+
+  if (!story) notFound();
+
+  const faqs: Array<{ question: string; answer: string }> = story.faqs ?? [];
 
   return (
     <main className="max-w-3xl mx-auto py-12 px-4">
-      <Link 
-        href={`/s/${params.storySlug}`}
+      <Link
+        href={`/s/${storySlug}`}
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
       >
         <ChevronLeft className="w-4 h-4" />
@@ -65,8 +77,8 @@ export default async function FAQPage({ params }: FAQPageProps) {
       </div>
 
       <div className="space-y-8">
-        {story.faqs && story.faqs.length > 0 ? (
-          story.faqs.map((faq: { question: string; answer: string }, index: number) => (
+        {faqs.length > 0 ? (
+          faqs.map((faq, index) => (
             <section key={index} className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h2 className="text-xl font-bold text-foreground mb-3 flex gap-3">
                 <span className="text-primary opacity-50">Q:</span>
@@ -86,31 +98,31 @@ export default async function FAQPage({ params }: FAQPageProps) {
 
       <div className="mt-16 pt-8 border-t border-border text-center">
         <h3 className="text-lg font-medium mb-4">Want to learn more about {story.title}?</h3>
-        <Link 
-          href={`/s/${params.storySlug}`}
+        <Link
+          href={`/s/${storySlug}`}
           className="inline-flex items-center justify-center rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background hover:bg-muted-foreground transition-colors"
         >
           View Project Details
         </Link>
       </div>
 
-      {/* Structured Data for Google/SGE */}
-      {story.faqs && story.faqs.length > 0 && (
+      {/* Structured Data for Google/AI Engines */}
+      {faqs.length > 0 && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "FAQPage",
-              "mainEntity": story.faqs.map((faq: { question: string; answer: string }) => ({
+              mainEntity: faqs.map((faq) => ({
                 "@type": "Question",
-                "name": faq.question,
-                "acceptedAnswer": {
+                name: faq.question,
+                acceptedAnswer: {
                   "@type": "Answer",
-                  "text": faq.answer
-                }
-              }))
-            })
+                  text: faq.answer,
+                },
+              })),
+            }).replace(/</g, "\\u003c"),
           }}
         />
       )}
