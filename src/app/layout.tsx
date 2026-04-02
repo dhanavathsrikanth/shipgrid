@@ -6,29 +6,64 @@ import "@/index.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title:
-    "Vibe Apps - The community where you go to show off what you've built, and see what others are building.",
+// ─── Global JSON-LD (WebSite + Organization) ─────────────────────────────────
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Shipgrid",
+  url: "https://shipgrid.io",
   description:
-    "Discover and share apps and see what others are building. Powered by Convex.",
+    "Shipgrid is an AI-matched product discovery platform where builders showcase their apps and buyers find exactly what they need — matched by role, problem, and budget.",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://shipgrid.io/search?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Shipgrid",
+  url: "https://shipgrid.io",
+  logo: "https://shipgrid.io/favicon-196x196.png",
+  description:
+    "AI-matched product discovery platform for builders and indie founders.",
+  sameAs: [
+    "https://twitter.com/shipgrid",
+  ],
+};
+
+export const metadata: Metadata = {
+  title: {
+    default: "Shipgrid — AI-Matched Product Discovery for Builders",
+    template: "%s | Shipgrid",
+  },
+  description:
+    "Discover and ship apps on Shipgrid — the builder community with AI-matched product discovery. Find tools tailored to your role, problem, and budget.",
   keywords:
-    "vibe, vibe coding, app, hackathons, hackathon apps, startups, developers,convex hackathon, vibe coding apps, dev mode, community, vibeapps.dev, ship, build, directory, product launches",
-  authors: [{ name: "Vibe Apps" }],
+    "product discovery, indie apps, builder community, ship, vibe coding, AI tools, SaaS, startups, developers, founder tools, Shipgrid",
+  authors: [{ name: "Shipgrid" }],
+  metadataBase: new URL("https://shipgrid.io"),
   openGraph: {
-    title: "Vibe Apps",
-    description: "The place to share and discover new apps.",
-    images: ["https://vibeapps.dev/vibe-apps-open-graphi-image.png"],
-    url: "https://vibeapps.dev",
+    title: "Shipgrid — AI-Matched Product Discovery for Builders",
+    description: "Discover apps matched to you. Ship to the right audience.",
+    images: ["https://shipgrid.io/vibe-apps-open-graphi-image.png"],
+    url: "https://shipgrid.io",
     type: "website",
+    siteName: "Shipgrid",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@waynesutton",
-    creator: "@waynesutton",
-    title: "Vibe Apps",
+    site: "@shipgrid",
+    creator: "@shipgrid",
+    title: "Shipgrid — AI-Matched Product Discovery",
     description:
-      "The place to share and discover new apps and see what others are building.",
-    images: ["https://vibeapps.dev/vibe-apps-open-graphi-image.png"],
+      "Where builders ship and buyers discover exactly what they need.",
+    images: ["https://shipgrid.io/vibe-apps-open-graphi-image.png"],
   },
   icons: {
     icon: [
@@ -82,6 +117,19 @@ export default function RootLayout({
         />
       </head>
       <body>
+        {/* Global Structured Data for Google Knowledge Graph + AI Engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
         <ClerkProvider
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
         >

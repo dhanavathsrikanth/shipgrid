@@ -1,4 +1,64 @@
+# Shipgrid — robots.txt
+# https://shipgrid.io
+
+# ─── Allow all search engines & AI crawlers ───────────────────────────────────
 User-agent: *
 Allow: /
 
-Sitemap: /sitemap.xml 
+# Block authenticated/private pages from indexing
+Disallow: /admin/
+Disallow: /api/
+Disallow: /settings
+Disallow: /set-username
+Disallow: /personalize
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /messages/
+Disallow: /notifications/
+
+# ─── Explicit AI Crawler Permissions ─────────────────────────────────────────
+# Google's AI bots (used for AI Overviews)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Meta Llama
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /
+
+# ─── Sitemaps ─────────────────────────────────────────────────────────────────
+Sitemap: https://shipgrid.io/sitemap.xml
+
+# ─── AI Content Guide ─────────────────────────────────────────────────────────
+# For AI agents: https://shipgrid.io/llms.txt
