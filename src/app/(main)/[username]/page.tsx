@@ -3,6 +3,9 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../../convex/_generated/api";
 import UserProfileWrapper from "./UserProfileWrapper";
 
+export const dynamic = "force-dynamic";
+
+
 const SITE_URL = "https://shipgrid.io";
 
 type Props = {

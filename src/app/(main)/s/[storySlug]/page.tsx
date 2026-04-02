@@ -4,7 +4,10 @@ import { api } from "../../../../../convex/_generated/api";
 import { StoryDetail } from "@/components/StoryDetail";
 import type { Story } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 const SITE_URL = "https://shipgrid.io";
+
 
 type Props = {
   params: Promise<{ storySlug: string }>;
