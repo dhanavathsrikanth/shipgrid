@@ -1,0 +1,44 @@
+
+> my-app@0.0.0 build
+> next build
+
+ΓÜá `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+ΓÜá Invalid next.config.ts options detected: 
+ΓÜá     Unrecognized key(s) in object: 'eslint'
+ΓÜá See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ΓÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\ratho\OneDrive\Desktop\shipgridv5\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\package-lock.json
+
+Γû▓ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./src/index.css
+Error evaluating Node.js code
+CssSyntaxError: C:\Users\ratho\OneDrive\Desktop\shipgridv5\src\index.css:3:1: The `bg-background` class does not exist. If `bg-background` is a custom class, make sure it is defined within a `@layer` directive.
+    at Input.error (my-app/node_modules/postcss/lib/input.js:135:16) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\01ee_0yh66jd._.js:4651:22]
+    at error (my-app/node_modules/postcss/lib/node.js:146:32) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\01ee_0yh66jd._.js:928:38]
+    [at processApply (C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\node_modules\tailwindcss\lib\lib\expandApplyAtRules.js:380:29)]
+    [at C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\node_modules\tailwindcss\lib\lib\expandApplyAtRules.js:551:9]
+    [at C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\node_modules\tailwindcss\lib\processTailwindFeatures.js:55:50]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:105:5)]
+    [at async plugins (C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\node_modules\tailwindcss\lib\plugin.js:38:17)]
+    at async LazyResult.runAsync (my-app/node_modules/postcss/lib/lazy-result.js:293:11) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\01ee_0yh66jd._.js:6214:21]
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\[root-of-the-server]__0rj7_e8._.js:172:36]
+    at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\[root-of-the-server]__02wvwde._.js:443:31]
+
+Import trace:
+  Client Component Browser:
+    ./src/index.css [Client Component Browser]
+    ./my-app/src/app/layout.tsx [Server Component]
+
+
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\[root-of-the-server]__0rj7_e8._.js:172:36])
+    at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23) [C:\Users\ratho\OneDrive\Desktop\shipgridv5\my-app\.next\build\chunks\[root-of-the-server]__02wvwde._.js:443:31])

@@ -22,52 +22,63 @@ export const getOptions = query({
  * This can be called once to populate the categories.
  */
 export const seedOptions = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const existing = await ctx.db.query("icpOptions").first();
-    if (existing) {
-      // Clear old options if you want to re-seed, or just return
-      // For now, let's just return if any exist to avoid duplicates
-      return "Options already seeded.";
+  args: { clear: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    if (args.clear) {
+      const existing = await ctx.db.query("icpOptions").collect();
+      for (const item of existing) {
+        await ctx.db.delete(item._id);
+      }
+    } else {
+      const existing = await ctx.db.query("icpOptions").first();
+      if (existing) {
+        return "Options already seeded. Use { clear: true } to re-seed.";
+      }
     }
 
     const roles = [
-      "Founder / Co-Founder",
-      "Product Manager",
-      "Growth / Marketing Specialist",
+      "SaaS Founder",
+      "Indie Hacker",
+      "Solopreneur",
       "Full-Stack Developer",
-      "UI/UX Designer",
-      "VC / Angel Investor",
-      "Sales / BusDev",
-      "Tech Consultant",
+      "Frontend Engineer",
+      "Backend Engineer",
       "AI / ML Engineer",
-      "Student / Aspiring Builder",
+      "Product Manager",
+      "UI/UX Designer",
+      "Growth Marketer",
       "Content Creator",
-      "Operations / HR"
+      "VC / Angel Investor",
+      "No-Code Builder",
+      "Engineering Manager",
+      "Student / Aspiring Builder"
     ];
 
     const challenges = [
-      "Validating a new idea",
-      "Acquiring first 100 customers",
-      "Scaling infrastructure",
-      "Raising Capital",
-      "Improving retention",
-      "Automating workflows",
-      "Building personal brand",
-      "Finding co-founder",
-      "Optimizing conversion",
-      "Exploring tech stacks",
-      "Monetizing product",
-      "Market expansion"
+      "Validating a product idea",
+      "Getting first 100 customers",
+      "Scaling to 1,000+ users",
+      "Finding a Co-Founder",
+      "Building a technical MVP",
+      "Raising early-stage capital",
+      "Improving user retention",
+      "Automating manual workflows",
+      "Building a personal brand",
+      "Optimizing SEO / Growth",
+      "Monetizing a side project",
+      "Market / Niche research",
+      "Tech stack consultation",
+      "Hiring first employees"
     ];
 
     const budgets = [
-      "$0 (Bootstrap)",
-      "$1 - $50 / mo",
-      "$50 - $250 / mo",
-      "$250 - $1,000 / mo",
-      "$1,000 - $5,000 / mo",
-      "$5,000+ / mo"
+      "$0 (Bootstrap / Free)",
+      "$1 - $50 / month",
+      "$50 - $250 / month",
+      "$250 - $1,000 / month",
+      "$1,000 - $5,000 / month",
+      "$5,000+ / month",
+      "Enterprise Level"
     ];
 
     let order = 0;
@@ -86,6 +97,6 @@ export const seedOptions = mutation({
       await ctx.db.insert("icpOptions", { category: "budget", label: b, order: order++ });
     }
 
-    return "Successfully seeded 30+ options.";
+    return "Successfully seeded " + (roles.length + challenges.length + budgets.length) + " options.";
   },
 });

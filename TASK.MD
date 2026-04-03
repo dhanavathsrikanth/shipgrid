@@ -79,6 +79,11 @@ Brief description of the feature and its purpose.
 - [x] send email alerts to admins/managers when users are reported in inbox
 - [x] add block user feature in inbox conversation header with Ban icon (light grey, hover black)
 - [x] blocked users cannot send messages to users who blocked them
+- [x] [Backend] Verify and stabilize clerkSync.ts for automatic profile fetching
+- [x] [Frontend] Update UserSyncer.tsx in my-app with automatic background sync trigger
+- [x] [Frontend] Confirm /personalise dropdowns are correctly pulling from icpOptions
+- [x] [Frontend] Confirm Admin Dashboard accurately displays user emails
+- [x] [Cleanup] Consolidate backend logic and eliminate redundancy
 - [x] block button shows block/unblock state and allows toggling
 - [x] replace browser alerts/prompts with custom modals matching site design
 - [x] add error banner for blocked user messages instead of console errors

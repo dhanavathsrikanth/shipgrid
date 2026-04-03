@@ -5,11 +5,21 @@ import { requireAdminRole } from "./users";
 
 /**
  * Public action to sync a specific user's email.
+ * Users can sync their own data, or admins can sync any user.
  */
 export const syncUserEmail = action({
   args: { clerkId: v.string() },
   handler: async (ctx, args) => {
-    await requireAdminRole(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Allow if the user is syncing their own Clerk ID, or if they are an admin
+    if (identity.subject !== args.clerkId) {
+      await requireAdminRole(ctx);
+    }
+
     await ctx.runAction(internal.clerkSync.syncUserEmailByClerkId, {
       clerkId: args.clerkId,
     });
