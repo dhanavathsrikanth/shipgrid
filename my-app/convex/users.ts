@@ -67,16 +67,16 @@ export const ensureUser = mutation({
     }
 
     let candidateUsername: string | null = null;
-    if (
-      typeof identity.username === "string" &&
-      identity.username.trim() !== ""
-    ) {
-      candidateUsername = identity.username.trim();
+    const jwtUsername_any = (identity as any).username || identity.nickname || identity.preferredUsername;
+    if (typeof jwtUsername_any === "string" && jwtUsername_any.trim() !== "") {
+      candidateUsername = jwtUsername_any.trim();
     }
 
     let clerkImageUrl: string | undefined = undefined;
-    if (typeof identity.imageUrl === "string") {
-      clerkImageUrl = identity.imageUrl || undefined; // Ensure empty string becomes undefined if desired, or just identity.imageUrl
+    if (typeof identity.pictureUrl === "string") {
+      clerkImageUrl = identity.pictureUrl || undefined;
+    } else if (typeof (identity as any).imageUrl === "string") {
+      clerkImageUrl = (identity as any).imageUrl || undefined;
     }
 
     if (existingUser) {
@@ -111,7 +111,7 @@ export const ensureUser = mutation({
       // }
 
       // Handle username update for existing user
-      if (!existingUser.username && candidateUsername) {
+      if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
         const conflictingUsers = await ctx.db
           .query("users")
           .withIndex("by_username", (q) => q.eq("username", candidateUsername))

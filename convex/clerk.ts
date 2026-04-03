@@ -22,7 +22,8 @@ const clerkUserPayload = v.object({
   ),
   primary_email_address_id: v.optional(v.union(v.string(), v.null())),
   public_metadata: v.optional(v.any()), // Using v.any() for flexibility, or define a stricter object
-  // Add other fields like 'username', 'created_at', 'updated_at' as needed
+  username: v.optional(v.union(v.string(), v.null())),
+  // Add other fields like 'created_at', 'updated_at' as needed
 });
 
 // Type for the overall webhook event payload from Clerk
@@ -101,6 +102,7 @@ export const handleClerkWebhook = internalAction({
           firstName: userData.first_name,
           lastName: userData.last_name,
           imageUrl: userData.image_url,
+          username: userData.username,
           publicMetadata: userData.public_metadata,
         });
         break;

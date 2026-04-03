@@ -111,7 +111,7 @@ export const ensureUser = mutation({
       // }
 
       // Handle username update for existing user
-      if (existingUser.username === null && candidateUsername !== null) {
+      if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
         const conflictingUser = await ctx.db
           .query("users")
           .withIndex("by_username", (q) => q.eq("username", candidateUsername!))
@@ -126,9 +126,9 @@ export const ensureUser = mutation({
           );
         }
       } else if (
-        candidateUsername &&
         candidateUsername !== existingUser.username &&
-        existingUser.username !== null
+        existingUser.username !== null &&
+        existingUser.username !== undefined
       ) {
         console.warn(
           `User ${existingUser._id} username ('${existingUser.username}') differs from Clerk username ('${candidateUsername}'). Not updating automatically.`,
@@ -2191,6 +2191,7 @@ export const syncUserFromClerkWebhook = internalMutation({
     firstName: v.optional(v.union(v.string(), v.null())),
     lastName: v.optional(v.union(v.string(), v.null())),
     imageUrl: v.optional(v.union(v.string(), v.null())),
+    username: v.optional(v.union(v.string(), v.null())),
     publicMetadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
@@ -2220,6 +2221,20 @@ export const syncUserFromClerkWebhook = internalMutation({
         updates.imageUrl = args.imageUrl;
         changed = true;
       }
+      
+      if (args.username && args.username !== existingUser.username) {
+        // Ensure username is unique before setting it
+        const conflictingUser = await ctx.db
+          .query("users")
+          .withIndex("by_username", (q) => q.eq("username", args.username!))
+          .filter((q) => q.neq(q.field("_id"), existingUser._id))
+          .first();
+          
+        if (!conflictingUser) {
+          updates.username = args.username;
+          changed = true;
+        }
+      }
 
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
@@ -2236,8 +2251,8 @@ export const syncUserFromClerkWebhook = internalMutation({
           name: name || "Anonymous",
           imageUrl: args.imageUrl || undefined,
           role: "user", // Default role
-          // Add other required fields if any (e.g., username: null)
-          username: undefined,
+          // Add other required fields if any
+          username: args.username || undefined,
         });
         console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
       }
