@@ -49,36 +49,29 @@ export const ensureUser = mutation({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
 
-    // Sync role from Clerk publicMetadata
-    const publicMetadata = identity.publicMetadata as { role?: string } | undefined;
-    const clerkRole = publicMetadata?.role;
+    // Check both potential role locations: top-level claim (from JWT template) and publicMetadata
+    const clerkRole = (identity as any).role || (identity.publicMetadata as any)?.role;
 
     let clerkEmail: string | undefined = undefined;
-    // Try multiple possible email field names for robustness
     if (typeof identity.email === "string") {
       clerkEmail = identity.email;
     } else if (typeof identity.emailAddress === "string") {
       clerkEmail = identity.emailAddress;
-    } else if (
-      typeof (identity as any).primaryEmailAddress?.emailAddress === "string"
-    ) {
+    } else if (typeof (identity as any).primaryEmailAddress?.emailAddress === "string") {
       clerkEmail = (identity as any).primaryEmailAddress.emailAddress;
     }
 
     let candidateUsername: string | null = null;
-    const jwtUsername_any =
-      (identity as any).username ||
-      identity.nickname ||
-      identity.preferredUsername;
+    const jwtUsername_any = (identity as any).username || identity.nickname || identity.preferredUsername;
     if (typeof jwtUsername_any === "string" && jwtUsername_any.trim() !== "") {
       candidateUsername = jwtUsername_any.trim();
     }
 
     let clerkImageUrl: string | undefined = undefined;
-    if (typeof identity.pictureUrl === "string") {
-      clerkImageUrl = identity.pictureUrl || undefined;
-    } else if (typeof (identity as any).imageUrl === "string") {
+    if (typeof (identity as any).imageUrl === "string") {
       clerkImageUrl = (identity as any).imageUrl || undefined;
+    } else if (typeof identity.pictureUrl === "string") {
+      clerkImageUrl = identity.pictureUrl || undefined;
     }
 
     const nameToStore =
@@ -95,7 +88,7 @@ export const ensureUser = mutation({
         updates.name = nameToStore;
         changed = true;
       }
-      if (clerkEmail !== existingUser.email) {
+      if (clerkEmail && clerkEmail !== existingUser.email) {
         updates.email = clerkEmail;
         changed = true;
       }
@@ -103,18 +96,13 @@ export const ensureUser = mutation({
         updates.imageUrl = clerkImageUrl;
         changed = true;
       }
-      
-      // Update role if it's different and present in Clerk
       if (clerkRole && clerkRole !== existingUser.role) {
         updates.role = clerkRole;
         changed = true;
       }
 
-      // Handle username update for existing user if they don't have one
-      if (
-        (existingUser.username === undefined || existingUser.username === null) &&
-        candidateUsername !== null
-      ) {
+      // Handle username update if missing
+      if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
         const conflictingUser = await ctx.db
           .query("users")
           .withIndex("by_username", (q) => q.eq("username", candidateUsername!))
@@ -152,7 +140,7 @@ export const ensureUser = mutation({
       role: clerkRole || "user",
     });
 
-    // Initialize email settings for new user
+    // Guaranteed email settings initialization
     await ctx.db.insert("emailSettings", {
       userId,
       dailyEngagementEmails: true,
@@ -162,7 +150,6 @@ export const ensureUser = mutation({
       mentionNotifications: true,
     });
 
-    // Schedule welcome email
     if (clerkEmail) {
       await ctx.scheduler.runAfter(
         5000,
@@ -174,6 +161,7 @@ export const ensureUser = mutation({
     return userId;
   },
 });
+
 
 
 /**
@@ -2153,7 +2141,7 @@ export const syncUserFromClerkWebhook = internalMutation({
       .first();
 
     const userRole = args.publicMetadata?.role as string | undefined;
-    const name = [args.firstName, args.lastName].filter(Boolean).join(" ") || undefined;
+    const name = [args.firstName, args.lastName].filter(Boolean).join(" ") || "Anonymous";
 
     if (existingUser) {
       const updates: Partial<Doc<"users">> = {};
@@ -2163,7 +2151,7 @@ export const syncUserFromClerkWebhook = internalMutation({
         updates.email = args.email;
         changed = true;
       }
-      if (name && name !== (existingUser as any).name) {
+      if (name !== (existingUser as any).name) {
         updates.name = name;
         changed = true;
       }
@@ -2185,7 +2173,7 @@ export const syncUserFromClerkWebhook = internalMutation({
       const userId = await ctx.db.insert("users", {
         clerkId: args.clerkId,
         email: args.email,
-        name: name || "Anonymous",
+        name: name,
         imageUrl: args.imageUrl || undefined,
         role: userRole || "user",
         username: undefined,
@@ -2202,7 +2190,16 @@ export const syncUserFromClerkWebhook = internalMutation({
       });
 
       console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
+
+      if (args.email) {
+        await ctx.scheduler.runAfter(
+          10000,
+          internal.emails.welcome.sendWelcomeEmail,
+          { userId },
+        );
+      }
     }
   },
 });
+
 
