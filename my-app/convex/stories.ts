@@ -565,9 +565,9 @@ export const getBySlug = query({
       changeLog: storyWithDetails.changeLog,
       // Mapped fields
       authorName: storyWithDetails.authorName,
-      authorUsername: storyWithDetails.authorUsername,
-      authorImageUrl: storyWithDetails.authorImageUrl,
-      authorEmail: storyWithDetails.authorEmail,
+      authorUsername: storyWithDetails.authorUsername ?? undefined,
+      authorImageUrl: storyWithDetails.authorImageUrl ?? undefined,
+      authorEmail: storyWithDetails.authorEmail ?? undefined,
       tags: storyWithDetails.tags,
       screenshotUrl: storyWithDetails.screenshotUrl,
       additionalImageUrls: storyWithDetails.additionalImageUrls,
@@ -2213,9 +2213,9 @@ export const _getStoryDetailsBatch = internalQuery({
 
         // Joined and calculated data, ensuring alignment with StoryWithDetailsPublic
         authorName: story.authorName,
-        authorUsername: story.authorUsername,
-        authorImageUrl: story.authorImageUrl,
-        authorEmail: story.authorEmail,
+        authorUsername: story.authorUsername ?? undefined,
+        authorImageUrl: story.authorImageUrl ?? undefined,
+        authorEmail: story.authorEmail ?? undefined,
         tags: story.tags,
         screenshotUrl: story.screenshotUrl,
         additionalImageUrls: story.additionalImageUrls,
