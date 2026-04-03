@@ -889,8 +889,8 @@ export const setUsername = mutation({
       const userId = await ctx.db.insert("users", {
         name: identity.name || identity.nickname || "Anonymous",
         clerkId: identity.subject,
-        email: identity.emailAddress || identity.email || (identity as any).primaryEmailAddress?.emailAddress,
-        imageUrl: identity.imageUrl,
+        email: (identity.emailAddress || identity.email || (identity as any).primaryEmailAddress?.emailAddress || undefined) as string | undefined,
+        imageUrl: (identity.imageUrl ?? undefined) as string | undefined,
       });
       user = await ctx.db.get(userId);
     }
