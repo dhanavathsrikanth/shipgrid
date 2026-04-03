@@ -1,0 +1,35 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Layout } from "@/components/Layout";
+
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Render a minimal shell on the server / before hydration to avoid mismatch
+  if (!mounted) {
+    return (
+      <div className="flex flex-col min-h-screen bg-muted">
+        <div className="flex-grow">{children}</div>
+      </div>
+    );
+  }
+
+  const isAdminPage = pathname.startsWith("/admin");
+
+  if (isAdminPage) {
+    return <div className="min-h-screen bg-background">{children}</div>;
+  }
+
+  return <Layout>{children}</Layout>;
+}

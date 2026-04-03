@@ -34,7 +34,9 @@ const commentWithAuthorValidator = v.object({
   isHidden: v.optional(v.boolean()),
   // Added author details
   authorName: v.optional(v.string()),
-  authorUsername: v.optional(v.string()),
+  authorUsername: v.union(v.string(), v.null()),
+  authorRole: v.optional(v.union(v.string(), v.null())),
+  authorBio: v.optional(v.union(v.string(), v.null())),
 });
 
 // Query to list APPROVED comments for a specific story, now with author details
@@ -62,7 +64,9 @@ export const listApprovedByStory = query({
         return {
           ...comment,
           authorName: author?.name,
-          authorUsername: author?.username,
+          authorUsername: author?.username ?? null,
+          authorRole: author?.role ?? null,
+          authorBio: author?.bio ?? null,
         };
       }),
     );
@@ -168,7 +172,9 @@ export const listAllCommentsAdmin = query({
           return {
             ...comment,
             authorName: author?.name,
-            authorUsername: author?.username,
+            authorUsername: author?.username ?? null,
+            authorRole: author?.role ?? null,
+            authorBio: author?.bio ?? null,
           };
         }),
       );
@@ -266,7 +272,9 @@ export const listAllCommentsAdmin = query({
           return {
             ...comment,
             authorName: author?.name,
-            authorUsername: author?.username,
+            authorUsername: author?.username ?? null,
+            authorRole: author?.role ?? null,
+            authorBio: author?.bio ?? null,
           };
         }),
       );

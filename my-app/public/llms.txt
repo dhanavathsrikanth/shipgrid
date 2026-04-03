@@ -1,0 +1,87 @@
+# Shipgrid
+
+> Shipgrid is an AI-matched product discovery platform where builders showcase their apps, tools, and SaaS products — and buyers discover exactly what they need, matched by professional role, primary challenge, and budget range.
+
+Unlike generic launch boards (ProductHunt, BetaList), Shipgrid uses semantic AI matching so the right products reach the right people. Every product on Shipgrid is indexed, searchable, and matched to community members based on their ICP profile.
+
+## Core Value Proposition
+
+- **For Builders**: Your product reaches people who actually need it, not just whoever happens to be online at launch time.
+- **For Buyers / Users**: Products are matched to your specific role, the problem you're solving, and your budget.
+- **For the Community**: Follow builders you admire, get notified when they ship, and engage with real feedback.
+
+## Factual Summary
+
+| Attribute | Value |
+|---|---|
+| Platform name | Shipgrid |
+| Domain | goshipgrid.app |
+| Type | AI-matched product discovery + builder community |
+| Primary audience | Indie developers, SaaS founders, early adopters |
+| Key differentiator | ICP-based semantic matching (role, problem, budget) |
+| Launch model | Always-on discovery (not launch-day dependent) |
+
+## Key Pages
+
+- [Homepage — Live feed of builder submissions](https://goshipgrid.app/)
+- [Explore — Full product directory](https://goshipgrid.app/explore)
+- [Leaderboard — Top apps this week](https://goshipgrid.app/leaderboard)
+- [Submit your app](https://goshipgrid.app/submit)
+
+## Platform Features
+
+**Discovery**
+- AI-powered ICP matching: users set their role, problem they're solving, and budget to receive curated recommendations
+- Tag-based filtering and full-text search across all submissions
+- Personalized "For You" shelf based on semantic profile similarity
+
+**Community**
+- Follow builders to see their new ships in your feed
+- Vote, rate (1-5 stars), and bookmark products
+- Comment and @mention community members
+- Weekly leaderboard: "Top Ships This Week"
+- Weekly email digest with personalized app recommendations
+
+**Builder Tools**
+- Changelog system: update your listing as your product evolves
+- Founder analytics: track who is engaging with your product
+- Direct messaging between community members
+- AI-generated FAQ for each product (improves discoverability)
+
+## Technology Stack
+
+- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Backend**: Convex (real-time database + serverless functions)
+- **Auth**: Clerk
+- **AI Matching**: Vector embeddings via semantic similarity
+- **AI Content**: OpenRouter for FAQ generation
+- **Styling**: Tailwind CSS + Geist design system
+
+## How Products Are Listed
+
+1. Builder submits app via `/submit` form
+2. System generates AI FAQ, semantic embedding, and ICP metadata
+3. Product is reviewed and approved
+4. Product appears in community feed, search, and matched discovery
+
+## Who Uses Shipgrid
+
+- **Solo developers and indie hackers** building side projects and SaaS tools
+- **SaaS founders** seeking early adopters and validating product-market fit
+- **Developers** discovering the best tools built by the community
+- **Early adopters** looking for curated software not yet on mainstream app stores
+
+## Shipgrid vs. Alternatives
+
+| | Shipgrid | ProductHunt | Peerlist | BetaList |
+|---|---|---|---|---|
+| AI matching | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Always-on discovery | ✅ Yes | ❌ No (launch day) | ❌ No | ⚠️ Limited |
+| Builder community | ✅ Full | ⚠️ Comment only | ✅ Yes | ❌ No |
+| Analytics for founders | ✅ Yes | ❌ No | ❌ No | ❌ No |
+
+## Optional
+
+- [Sign up free](https://goshipgrid.app/sign-up)
+- [Sign in](https://goshipgrid.app/sign-in)
+- [Sitemap](https://goshipgrid.app/sitemap.xml)

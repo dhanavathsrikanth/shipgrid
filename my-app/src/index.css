@@ -1,0 +1,108 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+}
+
+@layer base {
+  html {
+    font-family: "Geist", "Suisse", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 18px;
+  }
+  
+  :root {
+    --background: 240 14% 97%;
+    --foreground: 240 7% 8%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 240 7% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 7% 8%;
+    
+    --primary: 252 100% 64%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 7% 8%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 240 5% 92%;
+    --muted-foreground: 233 7% 49%;
+    --accent: 252 100% 64%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 252 100% 64%;
+    --link: 252 100% 64%;
+    
+    --radius: 6px;
+  }
+
+  h1 { @apply tracking-tight; font-size: 64px; font-family: "Geist", "Suisse", system-ui; }
+  h2 { font-size: 13px; font-family: "Geist", "Suisse", system-ui; }
+}
+
+.cl-cardBox,
+.cl-internal-17dpwu0 {
+  background-color: #f2f4f7;
+  box-shadow: none;
+  border: none;
+}
+
+.title-font {
+  font-family: "Geist", "Suisse", system-ui, sans-serif;
+  font-weight: 500;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  a {
+    transition: opacity 0.2s;
+    color: hsl(var(--link));
+  }
+  a:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Button custom stylings from JSON */
+button.bg-primary, a.bg-primary {
+  border-radius: 6px;
+  box-shadow: rgba(255, 255, 255, 0.07) 0px 1px 0px 0px inset, rgba(33, 33, 38, 0.2) 0px 1px 3px 0px, rgb(108, 71, 255) 0px 0px 0px 1px;
+}
+
+button.bg-secondary, a.bg-secondary {
+  border-radius: 0px !important;
+  box-shadow: none;
+}

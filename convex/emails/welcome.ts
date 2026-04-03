@@ -47,9 +47,9 @@ export const sendWelcomeEmail = internalAction({
       internal.emails.templates.generateWelcomeEmail,
       {
         userId: args.userId,
-        userName: user.name || "New User",
+        userName: user.name || "there",
         userEmail: user.email,
-        userUsername: user.username,
+        userUsername: user.username ?? undefined,
         unsubscribeToken,
       },
     );

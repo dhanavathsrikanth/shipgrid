@@ -65,9 +65,10 @@ export const getUserWithEmail = internalQuery({
     v.null(),
     v.object({
       _id: v.id("users"),
-      name: v.optional(v.string()),
+      _creationTime: v.number(),
       email: v.string(),
-      username: v.optional(v.string()),
+      name: v.optional(v.union(v.string(), v.null())),
+      username: v.optional(v.union(v.string(), v.null())),
     }),
   ),
   handler: async (ctx, args) => {
@@ -76,6 +77,7 @@ export const getUserWithEmail = internalQuery({
 
     return {
       _id: user._id,
+      _creationTime: user._creationTime,
       name: user.name,
       email: user.email,
       username: user.username,

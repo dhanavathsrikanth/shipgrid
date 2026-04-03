@@ -75,8 +75,9 @@ export const sendMentionNotifications = internalAction({
           internal.emails.templates.generateMentionEmail,
           {
             userId: target.userId,
-            userName: targetUser.name || "VibeApps User",
-            userUsername: targetUser.username,
+            userName: targetUser.name || "there",
+            userEmail: targetUser.email,
+            userUsername: targetUser.username ?? undefined,
             mentionAuthor: author.name || "Someone",
             storyTitle: story.title,
             contentExcerpt: args.rawText.slice(0, 200),
@@ -141,16 +142,22 @@ export const getUserDetails = internalQuery({
   returns: v.union(
     v.null(),
     v.object({
+      _id: v.id("users"),
       name: v.optional(v.string()),
+      email: v.string(),
       username: v.optional(v.string()),
+      role: v.optional(v.string()),
     }),
   ),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) return null;
     return {
+      _id: user._id,
       name: user.name,
-      username: user.username,
+      email: user.email,
+      username: user.username ?? undefined,
+      role: user.role ?? undefined,
     };
   },
 });

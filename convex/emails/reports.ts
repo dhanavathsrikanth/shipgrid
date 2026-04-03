@@ -159,9 +159,9 @@ export const getUserDetails = internalQuery({
 
     return {
       _id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
+      name: user.name ?? undefined,
+      email: user.email ?? undefined,
+      username: user.username ?? undefined,
       _creationTime: user._creationTime,
     };
   },
@@ -302,12 +302,12 @@ export const sendUserReportNotificationEmails = internalAction({
         {
           adminUserId: adminUserId,
           adminName: admin.name || "Admin",
-          adminUsername: admin.username,
+          adminUsername: admin.username ?? undefined,
           reporterName: reporter.name || "Anonymous User",
-          reporterUsername: reporter.username,
+          reporterUsername: reporter.username ?? undefined,
           reporterEmail: reporter.email,
           reportedUserName: reportedUser.name || "Unknown User",
-          reportedUsername: reportedUser.username,
+          reportedUsername: reportedUser.username ?? undefined,
           reportReason: report.reason,
           reportTimestamp: report._creationTime,
           userJoinDate: reportedUser._creationTime,
