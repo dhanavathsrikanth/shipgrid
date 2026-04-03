@@ -44,10 +44,12 @@ export const ensureUser = mutation({
       throw new Error("Called ensureUser without authentication");
     }
 
+    console.log(`ensureUser: Checking for user with Clerk ID ${identity.subject}`);
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
+
 
     // Check both potential role locations: top-level claim (from JWT template) and publicMetadata
     const clerkRole = (identity as any).role || (identity.publicMetadata as any)?.role;
@@ -245,7 +247,7 @@ export const getMyUserDocument = query({
   returns: v.union(
     v.null(),
     v.object({
-      /* define user fields here */ _id: v.id("users"),
+      _id: v.id("users"),
       _creationTime: v.number(),
       clerkId: v.string(),
       email: v.optional(v.string()),
@@ -258,26 +260,38 @@ export const getMyUserDocument = query({
       twitter: v.optional(v.union(v.string(), v.null())),
       bluesky: v.optional(v.union(v.string(), v.null())),
       linkedin: v.optional(v.union(v.string(), v.null())),
+      isBanned: v.optional(v.boolean()),
+      isPaused: v.optional(v.boolean()),
+      isVerified: v.optional(v.boolean()),
       inboxEnabled: v.optional(v.boolean()),
-      // ICP Fields
+      emojiTheme: v.optional(v.union(v.string(), v.null())),
       primaryProblem: v.optional(v.union(v.string(), v.null())),
       budgetRange: v.optional(v.union(v.string(), v.null())),
       region: v.optional(v.union(v.string(), v.null())),
       icpComplete: v.optional(v.boolean()),
       icpRoles: v.optional(v.array(v.string())),
-      // add other fields from your users table if any
     }),
   ),
+
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
+      console.log("getMyUserDocument: No identity found");
       return null;
     }
+    console.log(`getMyUserDocument: Searching for Clerk ID ${identity.subject}`);
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)) // Ensured correct index name
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
+    
+    if (!user) {
+      console.log(`getMyUserDocument: No user record found in database for ID ${identity.subject}`);
+    } else {
+      console.log(`getMyUserDocument: Found user ${user.name} (${user._id})`);
+    }
     return user;
+
   },
 });
 
@@ -2135,10 +2149,12 @@ export const syncUserFromClerkWebhook = internalMutation({
     publicMetadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    console.log(`syncUserFromClerkWebhook: Processing update for Clerk ID ${args.clerkId}`);
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .first();
+
 
     const userRole = args.publicMetadata?.role as string | undefined;
     const name = [args.firstName, args.lastName].filter(Boolean).join(" ") || "Anonymous";
