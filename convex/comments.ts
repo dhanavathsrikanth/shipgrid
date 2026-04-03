@@ -46,9 +46,7 @@ export const listApprovedByStory = query({
   handler: async (
     ctx,
     args,
-  ): Promise<
-    Array<Doc<"comments"> & { authorName?: string; authorUsername?: string }>
-  > => {
+  ) => {
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_storyId_status", (q) =>
@@ -111,13 +109,7 @@ export const listAllCommentsAdmin = query({
   handler: async (
     ctx,
     args,
-  ): Promise<{
-    page: Array<
-      Doc<"comments"> & { authorName?: string; authorUsername?: string }
-    >;
-    isDone: boolean;
-    continueCursor: string;
-  }> => {
+  ) => {
     await requireAdminRole(ctx);
     let queryBuilder;
     if (args.searchTerm && args.searchTerm.trim() !== "") {

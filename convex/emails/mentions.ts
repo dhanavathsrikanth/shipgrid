@@ -76,7 +76,6 @@ export const sendMentionNotifications = internalAction({
           {
             userId: target.userId,
             userName: targetUser.name || "there",
-            userEmail: targetUser.email,
             userUsername: targetUser.username ?? undefined,
             mentionAuthor: author.name || "Someone",
             storyTitle: story.title,
@@ -155,7 +154,7 @@ export const getUserDetails = internalQuery({
     return {
       _id: user._id,
       name: user.name,
-      email: user.email,
+      email: user.email ?? "",
       username: user.username ?? undefined,
       role: user.role ?? undefined,
     };
