@@ -872,15 +872,34 @@ export const listUserStoryRatings = query({
 
 export const setUsername = mutation({
   args: { newUsername: v.string() },
-  handler: async (ctx, args) => {
-    const userId = await getAuthenticatedUserId(ctx); // Ensures user is authenticated
-    const existingUserDoc = await getAuthenticatedUserDoc(ctx);
-
-    if (!existingUserDoc) {
-      throw new Error(
-        "Authenticated user not found in DB. Cannot set username.",
-      );
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("User not authenticated to set username.");
     }
+
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) {
+      // Just-in-time sync: if user record is missing, create it now
+      // This logic mirrors ensureUser but is simplified for this specific mutation
+      const userId = await ctx.db.insert("users", {
+        name: identity.name || identity.nickname || "Anonymous",
+        clerkId: identity.subject,
+        email: identity.emailAddress || identity.email || (identity as any).primaryEmailAddress?.emailAddress,
+        imageUrl: identity.imageUrl,
+      });
+      user = await ctx.db.get(userId);
+    }
+
+    if (!user) {
+      throw new Error("Failed to initialize user record. Please try again.");
+    }
+
+    const userId = user._id;
+    const existingUserDoc = user;
 
     // Basic validation for username (e.g., length, allowed characters)
     const trimmedUsername = args.newUsername.trim();
