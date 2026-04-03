@@ -9,10 +9,16 @@ export const getOptions = query({
   handler: async (ctx) => {
     const options = await ctx.db.query("icpOptions").collect();
     
+    const roles = options.filter(o => o.category === "role").sort((a, b) => a.order - b.order).map(o => o.label);
+    const challenges = options.filter(o => o.category === "challenge").sort((a, b) => a.order - b.order).map(o => o.label);
+    const budgets = options.filter(o => o.category === "budget").sort((a, b) => a.order - b.order).map(o => o.label);
+
+    console.log(`ICP Options: Fetching ${roles.length} roles, ${challenges.length} challenges, ${budgets.length} budgets.`);
+    
     return {
-      roles: options.filter(o => o.category === "role").sort((a, b) => a.order - b.order).map(o => o.label),
-      challenges: options.filter(o => o.category === "challenge").sort((a, b) => a.order - b.order).map(o => o.label),
-      budgets: options.filter(o => o.category === "budget").sort((a, b) => a.order - b.order).map(o => o.label),
+      roles,
+      challenges,
+      budgets,
     };
   },
 });

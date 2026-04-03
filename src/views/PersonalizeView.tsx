@@ -31,8 +31,16 @@ export default function PersonalizeView() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.icpRoles && selectedRoles.length === 0) {
-      setSelectedRoles(user.icpRoles);
+    if (user) {
+      if (user.icpRoles && selectedRoles.length === 0) {
+        setSelectedRoles(user.icpRoles);
+      }
+      if (user.primaryProblem && !problem) {
+        setProblem(user.primaryProblem);
+      }
+      if (user.budgetRange && !budget) {
+        setBudget(user.budgetRange);
+      }
     }
   }, [user]);
 
