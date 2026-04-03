@@ -291,7 +291,7 @@ export const add = mutation({
   handler: async (ctx, args) => {
     await ensureUserNotBanned(ctx);
     const userId = await getAuthenticatedUserId(ctx);
-    
+
     // Validate story exists and get parent comment if needed (read operations first)
     const story = await ctx.db.get(args.storyId);
     if (!story) {
@@ -487,7 +487,7 @@ export const deleteOwnComment = mutation({
       .query("comments")
       .filter((q) => q.eq(q.field("parentId"), args.commentId))
       .collect();
-    
+
     if (replies.length > 0) {
       // For now, allow deletion and replies will be orphaned
       // Alternative: throw new Error("Cannot delete comment with replies");
@@ -495,10 +495,10 @@ export const deleteOwnComment = mutation({
 
     // Get story for comment count update
     const story = await ctx.db.get(comment.storyId);
-    
+
     // Perform deletes
     await ctx.db.delete(args.commentId);
-    
+
     // Update story comment count if story exists and comment was approved
     if (story && comment.status === "approved") {
       await ctx.db.patch(story._id, {

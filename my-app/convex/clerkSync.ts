@@ -61,8 +61,8 @@ export const syncUserEmailByClerkId = internalAction({
 
       if (primaryEmail) {
         // Find user in Convex
-        const user = await ctx.runQuery(internal.users.getUserByClerkIdInternal, { 
-          clerkId: args.clerkId 
+        const user = await ctx.runQuery(internal.users.getUserByClerkIdInternal, {
+          clerkId: args.clerkId
         });
 
         if (user) {
@@ -85,22 +85,22 @@ export const syncAllMissingEmails = internalAction({
   args: {},
   handler: async (ctx) => {
     const usersMissingEmail = await ctx.runQuery(internal.users.getUsersMissingEmailInternal);
-    
+
     console.log(`Found ${usersMissingEmail.length} users missing emails.`);
-    
+
     // Process in small batches
     const BATCH_SIZE = 5;
     for (let i = 0; i < usersMissingEmail.length; i += BATCH_SIZE) {
       const batch = usersMissingEmail.slice(i, i + BATCH_SIZE);
-      
+
       await Promise.all(
-        batch.map((user) => 
-          ctx.runAction(internal.clerkSync.syncUserEmailByClerkId, { 
-            clerkId: user.clerkId 
+        batch.map((user) =>
+          ctx.runAction(internal.clerkSync.syncUserEmailByClerkId, {
+            clerkId: user.clerkId
           })
         )
       );
-      
+
       if (i + BATCH_SIZE < usersMissingEmail.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }

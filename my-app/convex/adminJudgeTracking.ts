@@ -153,7 +153,7 @@ export const getGroupJudgeTracking = query({
         const averageScore =
           scoresCount > 0
             ? judgeScores.reduce((sum, score) => sum + score.score, 0) /
-              scoresCount
+            scoresCount
             : undefined;
         const lastScoreAt =
           judgeScores.length > 0

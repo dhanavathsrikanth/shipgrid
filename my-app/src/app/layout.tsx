@@ -3,7 +3,6 @@ import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { PostHogProvider } from "./providers";
-import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/index.css";
@@ -150,7 +149,6 @@ export default function RootLayout({
           data-site-id="656"
           strategy="afterInteractive"
         />
-        <Toaster position="top-right" richColors />
         <Analytics />
         <SpeedInsights />
       </body>

@@ -352,7 +352,7 @@ export async function isUserAdmin(
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
-      
+
     return user?.role === "admin";
   } catch (error) {
     return false;
@@ -400,12 +400,12 @@ export async function requireAdminRole(
   // Fallback: Check the database directly for the role attribute
   const user = ("db" in ctx)
     ? await ctx.db
-        .query("users")
-        .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
-        .first()
-    : await ctx.runQuery(internal.users.getUserByClerkIdInternal, { 
-        clerkId: identity.subject 
-      });
+      .query("users")
+      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
+      .first()
+    : await ctx.runQuery(internal.users.getUserByClerkIdInternal, {
+      clerkId: identity.subject
+    });
 
   if (user && user.role === "admin") {
     console.log("[requireAdminRole] 'admin' role FOUND in Database. Access GRANTED.");
@@ -653,11 +653,11 @@ export const getUserProfileByUsername = query({
         const averageRating =
           ratingsData.length > 0
             ? parseFloat(
-                (
-                  ratingsData.reduce((sum, r) => sum + r.value, 0) /
-                  ratingsData.length
-                ).toFixed(1),
-              )
+              (
+                ratingsData.reduce((sum, r) => sum + r.value, 0) /
+                ratingsData.length
+              ).toFixed(1),
+            )
             : 0;
         const commentsCount = commentsData.length;
         const votesCount = votesData.length;
@@ -669,11 +669,11 @@ export const getUserProfileByUsername = query({
         // Resolve additional image URLs
         const additionalImageUrls = storyDoc.additionalImageIds
           ? await Promise.all(
-              storyDoc.additionalImageIds.map(async (imageId) => {
-                const url = await ctx.storage.getUrl(imageId);
-                return url || "";
-              }),
-            ).then((urls) => urls.filter((url) => url !== ""))
+            storyDoc.additionalImageIds.map(async (imageId) => {
+              const url = await ctx.storage.getUrl(imageId);
+              return url || "";
+            }),
+          ).then((urls) => urls.filter((url) => url !== ""))
           : [];
 
         const tagsDocsIntermediate = storyDoc.tagIds
