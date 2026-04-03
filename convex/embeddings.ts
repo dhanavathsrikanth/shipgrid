@@ -45,10 +45,15 @@ export const generateUserEmbedding = internalAction({
     if (!user) return;
 
     const roles = user.icpRoles?.join(", ") || user.role || "Builder";
-    const problem = user.primaryProblem || "Scaling SaaS";
+    const problem = user.primaryProblem || "Unknown Challenge";
     const budget = user.budgetRange || "Bootstrap";
     
-    const text = `User Profile: Roles are [${roles}]. Primary challenge is [${problem}]. Monthly budget range is [${budget}].`;
+    // Create a rich semantic description of the user's professional interests
+    const text = `User Profile:
+Roles/Interests: ${roles}
+Primary Challenge/Pain Point: ${problem}
+Investment Capacity: ${budget}
+This user is looking for solutions that solve ${problem} and align with being a ${roles}.`;
 
     const embedding = await ctx.runAction(internal.embeddings.generateEmbedding, { text });
 
@@ -63,13 +68,20 @@ export const generateProductEmbedding = internalAction({
   args: { storyId: v.id("stories") },
   handler: async (ctx, args) => {
     const story = await ctx.runQuery(internal.stories.getStoryByIdInternal, { storyId: args.storyId });
-    if (!story) return;
+    if (!story || !story.isApproved) return;
 
-    const roles = story.icpRoles?.join(", ") || "Founders";
+    const roles = story.icpRoles?.join(", ") || "Founders and Developers";
     const problem = story.icpProblem || story.description;
     const stage = story.stage || "beta";
+    const notFor = story.notFor ? ` It is explicitly NOT for ${story.notFor}.` : "";
     
-    const text = `Product: ${story.title}. Description: ${story.description}. Targeted Roles: [${roles}]. Problem it solves: [${problem}]. Recommended for: [${story.notFor ? "Not for " + story.notFor : "Anyone facing this problem"}]. Stage: [${stage}].`;
+    // Create a rich semantic description of the product and its Target Audience (ICP)
+    const text = `Product Listing: ${story.title}
+Tagline: ${story.description}
+Problem Solved: ${problem}
+Target Audience Roles: ${roles}
+Product Stage: ${stage}${notFor}
+This product is designed for ${roles} facing the challenge of ${problem}.`;
 
     const embedding = await ctx.runAction(internal.embeddings.generateEmbedding, { text });
 

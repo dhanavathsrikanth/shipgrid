@@ -1,15 +1,29 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Sparkles, ChevronLeft, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function MatchedPage() {
-  const matchedStories = useQuery(api.stories.listMatchedStories);
+  const [matchedStories, setMatchedStories] = React.useState<any[] | undefined>(undefined);
+  const getMatches = useAction(api.icpMatch.getMatchedStoriesAction);
   const user = useQuery(api.users.getMyUserDocument);
+
+  React.useEffect(() => {
+    async function fetchMatches() {
+      try {
+        const results = await getMatches();
+        setMatchedStories(results);
+      } catch (error) {
+        console.error("Match error:", error);
+        setMatchedStories([]);
+      }
+    }
+    fetchMatches();
+  }, [getMatches]);
 
   if (matchedStories === undefined) {
     return (
@@ -31,7 +45,7 @@ export default function MatchedPage() {
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-5 h-5 text-primary" />
               <h1 className="text-3xl font-extrabold tracking-tight title-font text-foreground italic">
-                Matched for {user?.username || "You"}
+                Matched for {user?.username ?? "You"}
               </h1>
             </div>
             <p className="text-sm text-muted-foreground font-medium">

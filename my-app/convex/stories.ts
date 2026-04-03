@@ -17,6 +17,17 @@ export const getStoryByIdInternal = internalQuery({
     return await ctx.db.get(args.storyId);
   },
 });
+
+export const getStoriesByIdsInternal = internalQuery({
+  args: { storyIds: v.array(v.id("stories")) },
+  handler: async (ctx, args) => {
+    const stories = await Promise.all(
+      args.storyIds.map((id) => ctx.db.get(id))
+    );
+    const validStories = stories.filter((s): s is Doc<"stories"> => s !== null);
+    return await fetchTagsAndCountsForStories(ctx, validStories);
+  },
+});
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserDoc,

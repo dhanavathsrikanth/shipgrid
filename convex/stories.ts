@@ -17,6 +17,17 @@ export const getStoryByIdInternal = internalQuery({
     return await ctx.db.get(args.storyId);
   },
 });
+
+export const getStoriesByIdsInternal = internalQuery({
+  args: { storyIds: v.array(v.id("stories")) },
+  handler: async (ctx, args) => {
+    const stories = await Promise.all(
+      args.storyIds.map((id) => ctx.db.get(id))
+    );
+    const validStories = stories.filter((s): s is Doc<"stories"> => s !== null);
+    return await fetchTagsAndCountsForStories(ctx, validStories);
+  },
+});
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserDoc,
@@ -50,13 +61,12 @@ export type StoryWithDetails = Doc<"stories"> & {
     isHidden?: boolean;
     backgroundColor?: string;
     textColor?: string;
-    // Add any other fields from tagDocValidator if they were part of the local type before and are needed
   }>;
   commentsCount: number;
   authorName?: string;
-  authorUsername?: string;
-  authorImageUrl?: string;
-  authorEmail?: string;
+  authorUsername?: string | null;
+  authorImageUrl?: string | null;
+  authorEmail?: string | null;
   authorIsVerified?: boolean;
   averageRating: number;
   votesCount: number;
@@ -1912,13 +1922,13 @@ export const updateStoryAdmin = mutation({
     // Update slug if title changed
     if (args.title && args.title !== story.title) {
       const newSlug = generateSlug(args.title);
-      const existingWithSlug = await ctx.db
+      const existingSlugs = await ctx.db
         .query("stories")
         .withIndex("by_slug", (q) => q.eq("slug", newSlug))
-        .filter((q) => q.neq(q.field("_id"), args.storyId))
-        .first();
+        .take(2);
+      const slugConflict = existingSlugs.some((s) => s._id !== args.storyId);
 
-      if (existingWithSlug) {
+      if (slugConflict) {
         throw new Error(`Slug "${newSlug}" already exists for another story.`);
       }
 
@@ -2372,7 +2382,7 @@ export const leaderboardStoryValidator = v.object({
   title: v.string(),
   slug: v.string(),
   votes: v.number(),
-  authorUsername: v.optional(v.string()),
+  authorUsername: v.optional(v.union(v.string(), v.null())),
   authorName: v.optional(v.string()),
   // Add _creationTime if you plan to display it
 });
@@ -2404,7 +2414,7 @@ export const getWeeklyLeaderboardStories = query({
     // Fetch author details for these stories
     const storiesToReturn: LeaderboardStory[] = [];
     for (const story of recentTopStoriesRaw) {
-      let authorUsername: string | undefined = undefined;
+      let authorUsername: string | null | undefined = undefined;
       let authorName: string | undefined = undefined;
       if (story.userId) {
         const author = await ctx.db.get(story.userId);
