@@ -45,14 +45,10 @@ export const ensureUser = mutation({
     }
 
     console.log(`ensureUser: Checking for user with Clerk ID ${identity.subject}`);
-    const existingUser = await ctx.db
+    let existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
-
-
-    // Check both potential role locations: top-level claim (from JWT template) and publicMetadata
-    const clerkRole = (identity as any).role || (identity.publicMetadata as any)?.role;
 
     let clerkEmail: string | undefined = undefined;
     if (typeof identity.email === "string") {
@@ -62,6 +58,22 @@ export const ensureUser = mutation({
     } else if (typeof (identity as any).primaryEmailAddress?.emailAddress === "string") {
       clerkEmail = (identity as any).primaryEmailAddress.emailAddress;
     }
+
+    // IDENTITY HEALING: If not found by Clerk ID, try to find a user by email
+    if (!existingUser && clerkEmail) {
+      console.log(`ensureUser: ID match failed. Attempting healing via email: ${clerkEmail}`);
+      existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", clerkEmail!))
+        .first();
+      
+      if (existingUser) {
+        console.log(`ensureUser: Identity Healed! Linked Clerk ID ${identity.subject} to existing user record ${existingUser._id}`);
+        // Immediately patch the clerkId so from now on it finds the user by ID
+        await ctx.db.patch(existingUser._id, { clerkId: identity.subject });
+      }
+    }
+
 
     let candidateUsername: string | null = null;
     const jwtUsername_any = (identity as any).username || identity.nickname || identity.preferredUsername;
@@ -81,6 +93,9 @@ export const ensureUser = mutation({
       [identity.givenName, identity.familyName].filter(Boolean).join(" ") ||
       identity.nickname ||
       "Anonymous";
+
+    // Check both potential role locations: top-level claim (from JWT template) and publicMetadata
+    const clerkRole = (identity as any).role || (identity.publicMetadata as any)?.role;
 
     if (existingUser) {
       const updates: Partial<Doc<"users">> = {};
@@ -163,6 +178,31 @@ export const ensureUser = mutation({
     return userId;
   },
 });
+
+/**
+ * DEEP DIAGNOSTIC: Returns the raw identity object from Convex'sperspective.
+ * This is used to debug exactly why ID matching might be failing.
+ */
+export const debugMyIdentity = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.auth.getUserIdentity();
+  },
+});
+
+/**
+ * DIAGNOSTIC: Find a user document by Clerk ID explicitly.
+ */
+export const debugGetUserByClerkId = query({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+  },
+});
+
 
 
 
