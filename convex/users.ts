@@ -872,6 +872,7 @@ export const listUserStoryRatings = query({
 
 export const setUsername = mutation({
   args: { newUsername: v.string() },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("User not authenticated to set username.");
