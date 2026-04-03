@@ -1,0 +1,77 @@
+- Preparing Convex functions...
+
+Γ£û TypeScript typecheck via `tsc` failed.
+To ignore failing typecheck, use `--typecheck=disable`.
+- Collecting TypeScript errors
+
+convex/comments.ts:46:3 - error TS2719: Type '(ctx: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/server/registration").GenericQueryCtx<{ users: { document: { _id: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/values/value").Id<"users">; _creationTime: number; email?: string | undef...' is not assignable to type '(ctx: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/server/registration").GenericQueryCtx<{ users: { document: { _id: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/values/value").Id<"users">; _creationTime: number; email?: string | undef...'. Two different types with this name exist, but they are unrelated.
+  Type 'Promise<({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]>' is not assignable to type 'ValidatorTypeToReturnType<{ isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; authorName?: string | undefined; authorRole?: string | null | undefined; authorBio?: string | null | undefined; ... 7 more ...; authorUsername: string | null; }[]>'.
+    Type 'Promise<({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]>' is not assignable to type 'Promise<{ isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; authorName?: string | undefined; authorRole?: string | null | undefined; authorBio?: string | null | undefined; ... 7 more ...; authorUsername: string | null; }[]>'.
+      Type '({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]' is not assignable to type '{ isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; authorName?: string | undefined; authorRole?: string | null | undefined; authorBio?: string | null | undefined; ... 7 more ...; authorUsername: string | null; }[]'.
+        Type '{ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; }' is not assignable to type '{ isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; authorName?: string | undefined; authorRole?: string | null | undefined; authorBio?: string | null | undefined; ... 7 more ...; authorUsername: string | null; }'.
+          Types of property 'authorUsername' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string | null'.
+              Type 'undefined' is not assignable to type 'string | null'.
+
+46   handler: async (
+     ~~~~~~~
+convex/comments.ts:73:5 - error TS2322: Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }[]' is not assignable to type '({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]'.
+  Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }' is not assignable to type '{ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; }'.
+    Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }' is not assignable to type '{ authorName?: string | undefined; authorUsername?: string | undefined; }'.
+      Types of property 'authorUsername' are incompatible.
+        Type 'string | null' is not assignable to type 'string | undefined'.
+          Type 'null' is not assignable to type 'string | undefined'.
+
+73     return commentsWithAuthors;
+       ~~~~~~
+convex/comments.ts:183:9 - error TS2322: Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }[]' is not assignable to type '({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]'.
+  Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }' is not assignable to type '{ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; }'.
+    Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }' is not assignable to type '{ authorName?: string | undefined; authorUsername?: string | undefined; }'.
+      Types of property 'authorUsername' are incompatible.
+        Type 'string | null' is not assignable to type 'string | undefined'.
+          Type 'null' is not assignable to type 'string | undefined'.
+
+183         page: commentsWithAuthors,
+            ~~~~
+
+  convex/comments.ts:115:5
+    115     page: Array<
+            ~~~~
+    The expected type comes from property 'page' which is declared here on type '{ page: ({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]; isDone: boolean; continueCursor: string; }'
+convex/comments.ts:283:9 - error TS2322: Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }[]' is not assignable to type '({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]'.
+  Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }' is not assignable to type '{ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; }'.
+    Type '{ authorName: string | undefined; authorUsername: string | null; authorRole: string | null; authorBio: string | null; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; ... 5 more ...; storyId: Id<...>; }' is not assignable to type '{ authorName?: string | undefined; authorUsername?: string | undefined; }'.
+      Types of property 'authorUsername' are incompatible.
+        Type 'string | null' is not assignable to type 'string | undefined'.
+          Type 'null' is not assignable to type 'string | undefined'.
+
+283         page: commentsWithAuthors,
+            ~~~~
+
+  convex/comments.ts:115:5
+    115     page: Array<
+            ~~~~
+    The expected type comes from property 'page' which is declared here on type '{ page: ({ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; })[]; isDone: boolean; continueCursor: string; }'
+convex/emails/mentions.ts:79:13 - error TS2353: Object literal may only specify known properties, and 'userEmail' does not exist in type '{ userId?: Id<"users"> | undefined; unsubscribeToken?: string | undefined; userUsername?: string | undefined; context: "comment" | "judge_note"; contentExcerpt: string; storyTitle: string; permalink: string; userName: string; mentionAuthor: string; }'.
+
+79             userEmail: targetUser.email,
+               ~~~~~~~~~
+
+convex/emails/mentions.ts:152:3 - error TS2719: Type '(ctx: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/server/registration").GenericQueryCtx<{ users: { document: { _id: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/values/value").Id<"users">; _creationTime: number; email?: string | undef...' is not assignable to type '(ctx: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/server/registration").GenericQueryCtx<{ users: { document: { _id: import("C:/Users/ratho/OneDrive/Desktop/shipgridv5/node_modules/convex/dist/esm-types/values/value").Id<"users">; _creationTime: number; email?: string | undef...'. Two different types with this name exist, but they are unrelated.
+  Type 'Promise<{ _id: Id<"users">; name: string; email: string | undefined; username: string | undefined; role: string | undefined; } | null>' is not assignable to type 'ValidatorTypeToReturnType<{ name?: string | undefined; username?: string | undefined; role?: string | undefined; email: string; _id: Id<"users">; } | null>'.
+    Type 'Promise<{ _id: Id<"users">; name: string; email: string | undefined; username: string | undefined; role: string | undefined; } | null>' is not assignable to type 'Promise<void | { name?: string | undefined; username?: string | undefined; role?: string | undefined; email: string; _id: Id<"users">; } | null | undefined>'.
+      Type '{ _id: Id<"users">; name: string; email: string | undefined; username: string | undefined; role: string | undefined; } | null' is not assignable to type 'void | { name?: string | undefined; username?: string | undefined; role?: string | undefined; email: string; _id: Id<"users">; } | null | undefined'.
+        Type '{ _id: Id<"users">; name: string; email: string | undefined; username: string | undefined; role: string | undefined; }' is not assignable to type 'void | { name?: string | undefined; username?: string | undefined; role?: string | undefined; email: string; _id: Id<"users">; } | null | undefined'.
+          Type '{ _id: Id<"users">; name: string; email: string | undefined; username: string | undefined; role: string | undefined; }' is not assignable to type '{ name?: string | undefined; username?: string | undefined; role?: string | undefined; email: string; _id: Id<"users">; }'.
+            Types of property 'email' are incompatible.
+              Type 'string | undefined' is not assignable to type 'string'.
+                Type 'undefined' is not assignable to type 'string'.
+
+152   handler: async (ctx, args) => {
+      ~~~~~~~
+
+Found 6 errors in 2 files.
+
+Errors  Files
+     4  convex/comments.ts:46
+     2  convex/emails/mentions.ts:79

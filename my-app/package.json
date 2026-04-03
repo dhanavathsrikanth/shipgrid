@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "npx convex deploy && next build",
+    "vercel-build": "npx convex deploy && npm run build",
     "start": "next start",
     "lint": "eslint ."
   },
