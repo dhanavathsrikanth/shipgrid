@@ -49,13 +49,12 @@ export const ensureUser = mutation({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
 
-    // Role is no longer synced from Clerk to Convex user document here
-    // const publicMetadata = identity.publicMetadata as { role?: string } | undefined;
-    // const clerkRole = publicMetadata?.role;
+    // Sync role from Clerk publicMetadata
+    const publicMetadata = identity.publicMetadata as { role?: string } | undefined;
+    const clerkRole = publicMetadata?.role;
 
     let clerkEmail: string | undefined = undefined;
-
-    // Try multiple possible email field names
+    // Try multiple possible email field names for robustness
     if (typeof identity.email === "string") {
       clerkEmail = identity.email;
     } else if (typeof identity.emailAddress === "string") {
@@ -67,7 +66,10 @@ export const ensureUser = mutation({
     }
 
     let candidateUsername: string | null = null;
-    const jwtUsername_any = (identity as any).username || identity.nickname || identity.preferredUsername;
+    const jwtUsername_any =
+      (identity as any).username ||
+      identity.nickname ||
+      identity.preferredUsername;
     if (typeof jwtUsername_any === "string" && jwtUsername_any.trim() !== "") {
       candidateUsername = jwtUsername_any.trim();
     }
@@ -79,16 +81,13 @@ export const ensureUser = mutation({
       clerkImageUrl = (identity as any).imageUrl || undefined;
     }
 
-    if (existingUser) {
-      let nameToStore = existingUser.name;
-      if (identity.givenName && identity.familyName) {
-        nameToStore = `${identity.givenName} ${identity.familyName}`;
-      } else if (identity.name) {
-        nameToStore = identity.name;
-      } else if (identity.nickname) {
-        nameToStore = identity.nickname;
-      }
+    const nameToStore =
+      identity.name ||
+      [identity.givenName, identity.familyName].filter(Boolean).join(" ") ||
+      identity.nickname ||
+      "Anonymous";
 
+    if (existingUser) {
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
@@ -104,46 +103,26 @@ export const ensureUser = mutation({
         updates.imageUrl = clerkImageUrl;
         changed = true;
       }
-      // Removed role update: Convex user document will no longer store the role from Clerk
-      // if (clerkRole !== existingUser.role) {
-      //   updates.role = clerkRole;
-      //   changed = true;
-      // }
+      
+      // Update role if it's different and present in Clerk
+      if (clerkRole && clerkRole !== existingUser.role) {
+        updates.role = clerkRole;
+        changed = true;
+      }
 
-      // Handle username update for existing user
-      if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
-        const conflictingUsers = await ctx.db
+      // Handle username update for existing user if they don't have one
+      if (
+        (existingUser.username === undefined || existingUser.username === null) &&
+        candidateUsername !== null
+      ) {
+        const conflictingUser = await ctx.db
           .query("users")
-          .withIndex("by_username", (q) => q.eq("username", candidateUsername))
-          .take(2);
-        const hasConflict = conflictingUsers.some((u) => u._id !== existingUser._id);
-        if (!hasConflict) {
+          .withIndex("by_username", (q) => q.eq("username", candidateUsername!))
+          .first();
+        if (!conflictingUser) {
           updates.username = candidateUsername;
           changed = true;
-        } else {
-          console.warn(
-            `Clerk username '${candidateUsername}' is already taken. User ${existingUser._id} will need to set username manually.`,
-          );
         }
-      } else if (
-        candidateUsername &&
-        candidateUsername !== existingUser.username &&
-        existingUser.username
-      ) {
-        console.warn(
-          `User ${existingUser._id} username ('${existingUser.username}') differs from Clerk username ('${candidateUsername}'). Not updating automatically.`,
-        );
-      }
-      // No change to username if existingUser.username is present and candidateUsername is null
-      // or if candidateUsername is same as existingUser.username
-
-      // Always check and update email if it's missing or different
-      if (clerkEmail && clerkEmail !== existingUser.email) {
-        updates.email = clerkEmail;
-        changed = true;
-        console.log(
-          `Updating email for existing user ${existingUser.name}: ${clerkEmail}`,
-        );
       }
 
       if (changed) {
@@ -153,15 +132,6 @@ export const ensureUser = mutation({
     }
 
     // New user insertion
-    let nameToStoreOnInsert = "Anonymous";
-    if (identity.givenName && identity.familyName) {
-      nameToStoreOnInsert = `${identity.givenName} ${identity.familyName}`;
-    } else if (identity.name) {
-      nameToStoreOnInsert = identity.name;
-    } else if (identity.nickname) {
-      nameToStoreOnInsert = identity.nickname;
-    }
-
     let usernameForDbInsert: string | undefined = undefined;
     if (candidateUsername !== null) {
       const conflictingUser = await ctx.db
@@ -170,26 +140,32 @@ export const ensureUser = mutation({
         .first();
       if (!conflictingUser) {
         usernameForDbInsert = candidateUsername;
-      } else {
-        console.warn(
-          `Clerk username '${candidateUsername}' is already taken for new user. New user will need to set username manually.`,
-        );
       }
     }
 
     const userId = await ctx.db.insert("users", {
-      name: nameToStoreOnInsert,
+      name: nameToStore,
       clerkId: identity.subject,
-      // role: clerkRole, // Role is no longer stored on the Convex user document
       email: clerkEmail,
       username: usernameForDbInsert,
       imageUrl: clerkImageUrl,
+      role: clerkRole || "user",
     });
 
-    // Schedule welcome email for new user
+    // Initialize email settings for new user
+    await ctx.db.insert("emailSettings", {
+      userId,
+      dailyEngagementEmails: true,
+      messageNotifications: true,
+      marketingEmails: false,
+      weeklyDigestEmails: true,
+      mentionNotifications: true,
+    });
+
+    // Schedule welcome email
     if (clerkEmail) {
       await ctx.scheduler.runAfter(
-        5000, // 5 second delay to ensure user setup is complete
+        5000,
         internal.emails.welcome.sendWelcomeEmail,
         { userId },
       );
@@ -198,6 +174,7 @@ export const ensureUser = mutation({
     return userId;
   },
 });
+
 
 /**
  * Retrieves the Convex user ID of the currently authenticated user.
@@ -2175,10 +2152,8 @@ export const syncUserFromClerkWebhook = internalMutation({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .first();
 
-    const name =
-      args.firstName && args.lastName
-        ? `${args.firstName} ${args.lastName}`
-        : args.firstName || args.lastName || undefined;
+    const userRole = args.publicMetadata?.role as string | undefined;
+    const name = [args.firstName, args.lastName].filter(Boolean).join(" ") || undefined;
 
     if (existingUser) {
       const updates: Partial<Doc<"users">> = {};
@@ -2188,12 +2163,16 @@ export const syncUserFromClerkWebhook = internalMutation({
         updates.email = args.email;
         changed = true;
       }
-      if (name && name !== existingUser.name) {
+      if (name && name !== (existingUser as any).name) {
         updates.name = name;
         changed = true;
       }
       if (args.imageUrl && args.imageUrl !== existingUser.imageUrl) {
         updates.imageUrl = args.imageUrl;
+        changed = true;
+      }
+      if (userRole && userRole !== (existingUser as any).role) {
+        updates.role = userRole;
         changed = true;
       }
 
@@ -2202,21 +2181,28 @@ export const syncUserFromClerkWebhook = internalMutation({
         console.log(`Synced user ${args.clerkId} from Clerk webhook.`);
       }
     } else {
-      // If user doesn't exist, we could potentially create them here,
-      // but usually ensureUser handles the first login.
-      // However, for consistency, we can pre-create the user if we have an email.
-      if (args.email) {
-        await ctx.db.insert("users", {
-          clerkId: args.clerkId,
-          email: args.email,
-          name: name || "Anonymous",
-          imageUrl: args.imageUrl || undefined,
-          role: "user", // Default role
-          // Add other required fields if any (e.g., username: null)
-          username: undefined,
-        });
-        console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
-      }
+      // Create user if they don't exist
+      const userId = await ctx.db.insert("users", {
+        clerkId: args.clerkId,
+        email: args.email,
+        name: name || "Anonymous",
+        imageUrl: args.imageUrl || undefined,
+        role: userRole || "user",
+        username: undefined,
+      });
+
+      // Initialize email settings for new user
+      await ctx.db.insert("emailSettings", {
+        userId,
+        dailyEngagementEmails: true,
+        messageNotifications: true,
+        marketingEmails: false,
+        weeklyDigestEmails: true,
+        mentionNotifications: true,
+      });
+
+      console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
     }
   },
 });
+
