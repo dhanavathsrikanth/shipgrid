@@ -8,7 +8,7 @@ import {
   action,
   internalQuery,
 } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 
 export const getUserByIdInternal = internalQuery({
@@ -875,7 +875,7 @@ export const setUsername = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("User not authenticated to set username.");
+      throw new ConvexError({ message: "User not authenticated to set username." });
     }
 
     let user = await ctx.db
@@ -896,7 +896,7 @@ export const setUsername = mutation({
     }
 
     if (!user) {
-      throw new Error("Failed to initialize user record. Please try again.");
+      throw new ConvexError({ message: "Failed to initialize user record. Please try again." });
     }
 
     const userId = user._id;
@@ -905,12 +905,12 @@ export const setUsername = mutation({
     // Basic validation for username (e.g., length, allowed characters)
     const trimmedUsername = args.newUsername.trim();
     if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
-      throw new Error("Username must be between 3 and 20 characters.");
+      throw new ConvexError({ message: "Username must be between 3 and 20 characters." });
     }
     if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
-      throw new Error(
-        "Username can only contain letters, numbers, and underscores.",
-      );
+      throw new ConvexError({
+        message: "Username can only contain letters, numbers, and underscores.",
+      });
     }
 
     // Check for uniqueness
@@ -921,9 +921,9 @@ export const setUsername = mutation({
       .first();
 
     if (conflictingUser) {
-      throw new Error(
-        `Username "${trimmedUsername}" is already taken. Please choose another.`,
-      );
+      throw new ConvexError({
+        message: `Username "${trimmedUsername}" is already taken. Please choose another.`,
+      });
     }
 
     // Update the user's username
@@ -950,7 +950,7 @@ export const setUserProfileImage = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("User not authenticated to set profile image.");
+      throw new ConvexError({ message: "User not authenticated to set profile image." });
     }
 
     const user = await ctx.db
@@ -959,16 +959,16 @@ export const setUserProfileImage = mutation({
       .unique();
 
     if (!user) {
-      throw new Error("User record not found.");
+      throw new ConvexError({ message: "User record not found." });
     }
 
     const imageUrl = await ctx.storage.getUrl(args.storageId);
     if (!imageUrl) {
       // This could happen if the storageId is invalid or the file doesn\'t exist.
       console.error(`Failed to get URL for storageId: ${args.storageId}`);
-      throw new Error(
-        "Could not retrieve image URL from storage. The file might not have been uploaded correctly.",
-      );
+      throw new ConvexError({
+        message: "Could not retrieve image URL from storage. The file might not have been uploaded correctly.",
+      });
     }
 
     await ctx.db.patch(user._id, { imageUrl: imageUrl });
@@ -982,19 +982,19 @@ export const updateUsername = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("User not authenticated to update username.");
+      throw new ConvexError({ message: "User not authenticated to update username." });
     }
 
     const trimmedUsername = args.newUsername.trim();
 
     // Basic username validation (adjust as needed)
     if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
-      throw new Error("Username must be between 3 and 20 characters.");
+      throw new ConvexError({ message: "Username must be between 3 and 20 characters." });
     }
     if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
-      throw new Error(
-        "Username can only contain letters, numbers, and underscores.",
-      );
+      throw new ConvexError({
+        message: "Username can only contain letters, numbers, and underscores.",
+      });
     }
 
     const currentUser = await ctx.db
@@ -1003,7 +1003,7 @@ export const updateUsername = mutation({
       .unique();
 
     if (!currentUser) {
-      throw new Error("Current user record not found.");
+      throw new ConvexError({ message: "Current user record not found." });
     }
 
     // If username is the same as current, no need to update or check uniqueness
@@ -1025,9 +1025,9 @@ export const updateUsername = mutation({
       existingUserWithNewUsername &&
       existingUserWithNewUsername._id.toString() !== currentUser._id.toString()
     ) {
-      throw new Error(
-        "This username is already taken. Please choose another one.",
-      );
+      throw new ConvexError({
+        message: "This username is already taken. Please choose another one.",
+      });
     }
 
     await ctx.db.patch(currentUser._id, { username: trimmedUsername });
