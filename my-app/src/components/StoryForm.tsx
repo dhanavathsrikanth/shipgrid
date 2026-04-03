@@ -969,7 +969,7 @@ export function StoryForm() {
                 onValueChange={(v) => setFormData(prev => ({ ...prev, icpProblem: v }))}
               >
                 <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
-                  <SelectValue placeholder="Select a challenge your product solves..." />
+                  <SelectValue placeholder={icpOptions === undefined ? "Loading challenges..." : "Select a challenge your product solves..."} />
                 </SelectTrigger>
                 <SelectContent className="border shadow-md">
                   {(icpOptions?.challenges ?? []).map(c => (
@@ -989,7 +989,7 @@ export function StoryForm() {
                 onValueChange={(v) => setFormData(prev => ({ ...prev, icpBudget: v }))}
               >
                 <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
-                  <SelectValue placeholder="Select typical subscription budget..." />
+                  <SelectValue placeholder={icpOptions === undefined ? "Loading spending tiers..." : "Select typical subscription budget..."} />
                 </SelectTrigger>
                 <SelectContent className="border shadow-md">
                   {(icpOptions?.budgets ?? []).map(b => (
