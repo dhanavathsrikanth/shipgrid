@@ -2152,7 +2152,7 @@ export const getUsersMissingEmailInternal = internalQuery({
   handler: async (ctx) => {
     return await ctx.db
       .query("users")
-      .filter((q) => q.eq(q.field("email"), undefined))
+      .filter((q) => q.or(q.eq(q.field("email"), undefined), q.eq(q.field("email"), "")))
       .collect();
   },
 });

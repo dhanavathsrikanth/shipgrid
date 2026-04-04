@@ -65,9 +65,13 @@ export const syncUserEmailByClerkId = internalAction({
       }
 
       const userData = await response.json();
-      const primaryEmail = userData.email_addresses.find(
+      let primaryEmail = userData.email_addresses?.find(
         (e: any) => e.id === userData.primary_email_address_id
       )?.email_address;
+
+      if (!primaryEmail && userData.email_addresses && userData.email_addresses.length > 0) {
+        primaryEmail = userData.email_addresses[0].email_address;
+      }
 
       if (primaryEmail) {
         // Find user in Convex
