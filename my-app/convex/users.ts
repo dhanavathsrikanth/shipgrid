@@ -94,29 +94,11 @@ export const ensureUser = mutation({
       identity.nickname ||
       "Anonymous";
 
-    // Check both potential role locations: top-level claim (from JWT template) and publicMetadata
     const clerkRole = (identity as any).role || (identity.publicMetadata as any)?.role;
 
     if (existingUser) {
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
-
-      if (nameToStore !== existingUser.name) {
-        updates.name = nameToStore;
-        changed = true;
-      }
-      if (clerkEmail !== existingUser.email) {
-        updates.email = clerkEmail;
-        changed = true;
-      }
-      if (clerkImageUrl !== undefined && clerkImageUrl !== existingUser.imageUrl) {
-        updates.imageUrl = clerkImageUrl;
-        changed = true;
-      }
-      if (clerkRole !== undefined && clerkRole !== existingUser.role) {
-        updates.role = clerkRole;
-        changed = true;
-      }
 
       // Handle username update if missing
       if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
