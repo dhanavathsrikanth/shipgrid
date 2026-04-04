@@ -50,7 +50,8 @@ export function UserSyncer() {
       !isSyncedAndChecked
     ) {
       if (convexUserDoc === null) {
-        console.warn("UserSyncer: Convex user document is null after ensureUser ran.");
+        console.warn("UserSyncer: Convex user document is null after ensureUser ran. Waiting for reactivity update...");
+        return;
       } else {
         // AUTOMATIC SYNC: If email is missing in Convex, trigger a background sync from Clerk API
         if (!convexUserDoc.email) {

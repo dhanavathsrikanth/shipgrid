@@ -105,15 +105,15 @@ export const ensureUser = mutation({
         updates.name = nameToStore;
         changed = true;
       }
-      if (clerkEmail && clerkEmail !== existingUser.email) {
+      if (clerkEmail !== existingUser.email) {
         updates.email = clerkEmail;
         changed = true;
       }
-      if (clerkImageUrl && clerkImageUrl !== existingUser.imageUrl) {
+      if (clerkImageUrl !== undefined && clerkImageUrl !== existingUser.imageUrl) {
         updates.imageUrl = clerkImageUrl;
         changed = true;
       }
-      if (clerkRole && clerkRole !== existingUser.role) {
+      if (clerkRole !== undefined && clerkRole !== existingUser.role) {
         updates.role = clerkRole;
         changed = true;
       }
@@ -2203,7 +2203,7 @@ export const syncUserFromClerkWebhook = internalMutation({
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
-      if (args.email && args.email !== existingUser.email) {
+      if (args.email !== existingUser.email) {
         updates.email = args.email;
         changed = true;
       }
@@ -2211,7 +2211,7 @@ export const syncUserFromClerkWebhook = internalMutation({
         updates.name = name;
         changed = true;
       }
-      if (args.imageUrl && args.imageUrl !== existingUser.imageUrl) {
+      if (args.imageUrl !== undefined && args.imageUrl !== existingUser.imageUrl) {
         updates.imageUrl = args.imageUrl;
         changed = true;
       }
