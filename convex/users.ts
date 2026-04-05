@@ -374,12 +374,14 @@ export async function isUserAdmin(
   try {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
+      console.log("[isUserAdmin] False: No identity found");
       return false;
     }
 
     // Access role directly from the identity object
     const clerkTokenRole = (identity as any).role;
     if (clerkTokenRole === "admin") {
+      console.log("[isUserAdmin] True: Clerk token has admin role");
       return true;
     }
 
@@ -389,8 +391,11 @@ export async function isUserAdmin(
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .unique();
       
-    return user?.role === "admin";
+    const isDbAdmin = user?.role === "admin";
+    console.log(`[isUserAdmin] DB Role check for ${identity.subject}: userFound=${!!user}, role="${user?.role}", result=${isDbAdmin}`);
+    return isDbAdmin;
   } catch (error) {
+    console.error("[isUserAdmin] Error occurred:", error);
     return false;
   }
 }
