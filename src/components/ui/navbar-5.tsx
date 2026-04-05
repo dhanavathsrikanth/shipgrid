@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery, useConvexAuth } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
   Accordion,
@@ -81,6 +81,8 @@ export const Navbar5 = ({
   const router = useRouter();
   const pathname = usePathname();
   const clerk = useClerk();
+  const { isAuthenticated } = useConvexAuth();
+  const isAdminUser = useQuery(api.users.checkIsUserAdmin, isAuthenticated ? {} : "skip");
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -334,7 +336,7 @@ export const Navbar5 = ({
                       <Link href={profileUrl} className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted" onClick={() => setShowProfileDropdown(false)}>
                         <User size={16} /> My Profile
                       </Link>
-                      {convexUserDoc?.role === "admin" && (
+                      {isAdminUser && (
                         <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted" onClick={() => setShowProfileDropdown(false)}>
                           <LayoutGrid size={16} /> Admin Panel
                         </Link>
