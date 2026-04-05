@@ -38,44 +38,18 @@ export function NumbersView() {
 
   const skip = authIsLoading || !isAuthenticated;
 
-  const totalSubmissions = useQuery(
-    api.adminQueries.getTotalSubmissions,
+  const overview = useQuery(
+    api.adminQueries.getAdminOverview,
     skip ? "skip" : {},
   );
-  const totalUsers = useQuery(
-    api.adminQueries.getTotalUsers,
-    skip ? "skip" : {},
-  );
-  const totalVotes = useQuery(
-    api.adminQueries.getTotalVotes,
-    skip ? "skip" : {},
-  );
-  const totalComments = useQuery(
-    api.adminQueries.getTotalComments,
-    skip ? "skip" : {},
-  );
-  const totalReportsData = useQuery(
-    api.adminQueries.getTotalReports,
-    skip ? "skip" : {},
-  );
-  const solvedReportsData = useQuery(
-    api.adminQueries.getTotalSolvedReports,
-    skip ? "skip" : {},
-  );
-  const totalBookmarksData = useQuery(
-    api.adminQueries.getTotalBookmarks,
-    skip ? "skip" : {},
-  );
-  const totalRatingsData = useQuery(
-    api.adminQueries.getTotalRatings,
+
+  // Growth stats are still needed for the growth chart
+  const userGrowthData = useQuery(
+    api.adminQueries.getUserGrowthData,
     skip ? "skip" : {},
   );
 
   // Add new queries for follow stats
-  const totalFollowRelationships = useQuery(
-    api.adminFollowsQueries.getTotalFollowRelationships,
-    skip ? "skip" : {},
-  );
   const topFollowers = useQuery(
     api.adminFollowsQueries.getTopUsersByFollowers,
     skip ? "skip" : { limit: 100 },
@@ -83,12 +57,6 @@ export function NumbersView() {
   const topFollowing = useQuery(
     api.adminFollowsQueries.getTopUsersByFollowing,
     skip ? "skip" : { limit: 100 },
-  );
-  
-  // Get user growth data for chart
-  const userGrowthData = useQuery(
-    api.adminQueries.getUserGrowthData,
-    skip ? "skip" : {},
   );
 
   // Format data for display - show last 30 days or all data if less
@@ -124,19 +92,41 @@ export function NumbersView() {
     );
   }
 
+  const s = overview?.stats;
+  const breakdown = overview?.stageBreakdown;
+
   return (
     <div>
-      <h2 className="text-xl font-semibold text-foreground mb-6">Key Metrics</h2>
+      <h2 className="text-xl font-semibold text-foreground mb-6">Platform Overview</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Submissions" value={totalSubmissions} />
-        <StatCard title="Total Users" value={totalUsers} />
-        <StatCard title="Total Votes" value={totalVotes} />
-        <StatCard title="Total Comments" value={totalComments} />
-        <StatCard title="Total Reports" value={totalReportsData} />
-        <StatCard title="Solved Reports" value={solvedReportsData} />
-        <StatCard title="Total Bookmarks" value={totalBookmarksData} />
-        <StatCard title="Total Ratings" value={totalRatingsData} />
-        <StatCard title="Total Follows" value={totalFollowRelationships} />
+        <StatCard title="Total Submissions" value={s?.totalStories} />
+        <StatCard title="Total Users" value={s?.totalUsers} />
+        <StatCard title="Total Votes" value={s?.totalVotes} />
+        <StatCard title="Total Comments" value={s?.totalComments} />
+        <StatCard title="Pending Reports" value={s?.pendingReports} />
+        <StatCard title="Total Product Follows" value={s?.totalProductFollows} />
+      </div>
+
+      {/* Product Lifecycle Breakdown */}
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold text-foreground mb-6">Product Lifecycle Stages</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+           <div className="bg-card border border-border rounded-lg p-6 shadow-sm border-l-4 border-l-orange-500">
+              <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-1">Building</h3>
+              <p className="text-3xl font-bold">{breakdown?.building ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-2">Private builds in progress</p>
+           </div>
+           <div className="bg-card border border-border rounded-lg p-6 shadow-sm border-l-4 border-l-blue-500">
+              <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-1">Beta</h3>
+              <p className="text-3xl font-bold">{breakdown?.beta ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-2">Open for testing & feedback</p>
+           </div>
+           <div className="bg-card border border-border rounded-lg p-6 shadow-sm border-l-4 border-l-green-500">
+              <h3 className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Live</h3>
+              <p className="text-3xl font-bold">{breakdown?.live ?? 0}</p>
+              <p className="text-xs text-muted-foreground mt-2">Publicly launched products</p>
+           </div>
+        </div>
       </div>
 
       {/* User Growth Chart */}

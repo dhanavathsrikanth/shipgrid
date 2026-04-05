@@ -12,7 +12,7 @@ import type { Story } from "@/types";
 export default function HomePage() {
   const { viewMode, selectedTagId, sortPeriod, showMatchedOnly } = useLayoutContext();
   const settings = useQuery(api.settings.get);
-  const getMatchedStories = useAction(api.icpMatch.getMatchedStories);
+  const getMatchedStories = useAction(api.icpMatch.getMatchedStoriesAction);
   
   const [matchedStories, setMatchedStories] = useState<any[] | null>(null);
   const [isMatching, setIsMatching] = useState(false);

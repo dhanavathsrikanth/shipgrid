@@ -103,18 +103,18 @@ export function UserModeration() {
   }, [debouncedSearchTerm, statusFilter]);
 
   const { results, status, loadMore, isLoading } = usePaginatedQuery(
-    api.users.listAllUsersAdmin,
+    api.adminQueries.adminListAllUsers,
     authIsLoading || !isAuthenticated ? "skip" : queryArgs,
     { initialNumItems: 20 }
   );
 
-  const banUserMutation = useMutation(api.users.banUserByAdmin);
-  const unbanUserMutation = useMutation(api.users.unbanUserByAdmin);
+  const banUserMutation = useMutation(api.admin.adminActions.adminBanUser);
+  const verifyUserMutation = useMutation(api.admin.adminActions.adminVerifyUser);
+  const setUserRoleMutation = useMutation(api.admin.adminActions.adminSetUserRole);
+
   const deleteUserMutation = useMutation(api.users.deleteUserByAdmin);
   const pauseUserMutation = useMutation(api.users.pauseUserByAdmin);
   const unpauseUserMutation = useMutation(api.users.unpauseUserByAdmin);
-  const verifyUserMutation = useMutation(api.users.verifyUserByAdmin);
-  const unverifyUserMutation = useMutation(api.users.unverifyUserByAdmin);
   const syncAllMissingAction = useAction(api.clerkSync.syncAllMissing);
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -147,7 +147,7 @@ export function UserModeration() {
   };
 
   // Use results directly since search is now handled by backend
-  const filteredResults = results || [];
+  const filteredResults = (results || []) as any[];
 
   const handleAction = async () => {
     if (!confirmingAction) return;
@@ -155,10 +155,10 @@ export function UserModeration() {
     const { userId, action, userName } = confirmingAction;
     try {
       if (action === "ban") {
-        await banUserMutation({ userId });
+        await banUserMutation({ userId, isBanned: true });
         toast.success(`User "${userName}" has been banned.`);
       } else if (action === "unban") {
-        await unbanUserMutation({ userId });
+        await banUserMutation({ userId, isBanned: false });
         toast.success(`User "${userName}" has been unbanned.`);
       } else if (action === "delete") {
         await deleteUserMutation({ userId });
@@ -170,10 +170,10 @@ export function UserModeration() {
         await unpauseUserMutation({ userId });
         toast.success(`User "${userName}" has been unpaused.`);
       } else if (action === "verify") {
-        await verifyUserMutation({ userId });
+        await verifyUserMutation({ userId, isVerified: true });
         toast.success(`User "${userName}" has been verified.`);
       } else if (action === "unverify") {
-        await unverifyUserMutation({ userId });
+        await verifyUserMutation({ userId, isVerified: false });
         toast.success(`User "${userName}" has been unverified.`);
       }
     } catch (error: any) {
@@ -181,6 +181,16 @@ export function UserModeration() {
       toast.error(`Failed to ${action} user: ${error.data?.message || error.message}`);
     }
     setConfirmingAction(null);
+  };
+
+  const toggleAdminRole = async (userId: Id<"users">, currentRole: string | undefined) => {
+    const newRole = currentRole === "admin" ? undefined : "admin";
+    try {
+      await setUserRoleMutation({ userId, role: newRole });
+      toast.success(`User role updated to ${newRole || "user"}`);
+    } catch (err: any) {
+      toast.error(`Failed to update role: ${err.message}`);
+    }
   };
 
   const openConfirmModal = (
@@ -262,6 +272,7 @@ export function UserModeration() {
                   <th className={thClass}>User</th>
                   <th className={thClass}>Email</th>
                   <th className={thClass}>Username</th>
+                  <th className={thClass}>Role</th>
                   <th className={thClass}>Joined</th>
                   <th className={thClass}>Status</th>
                   <th className={`${thClass} text-right`}>Actions</th>
@@ -311,6 +322,13 @@ export function UserModeration() {
                       <td className={tdClass}>{user.email || "N/A"}</td>
                       <td className={tdClass}>{user.username || "N/A"}</td>
                       <td className={tdClass}>
+                         <div className="flex items-center gap-2">
+                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-gray-100 text-gray-600'}`}>
+                             {user.role || 'user'}
+                           </span>
+                         </div>
+                      </td>
+                      <td className={tdClass}>
                         {formatDistanceToNow(user._creationTime, { addSuffix: true })}
                       </td>
                       <td className={tdClass}>
@@ -320,6 +338,14 @@ export function UserModeration() {
                         </span>
                       </td>
                       <td className={`${tdClass} text-right space-x-1 space-y-1 sm:space-y-0`}>
+                        <button
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-all font-medium ${user.role === 'admin' ? 'text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100' : 'text-gray-700 bg-white border-gray-200 hover:bg-gray-50'}`}
+                          onClick={() => toggleAdminRole(user._id, user.role)}
+                          title={user.role === 'admin' ? "Revoke Admin" : "Make Admin"}
+                        >
+                          {user.role === 'admin' ? <ShieldOff className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                          <span>{user.role === 'admin' ? "Demote" : "Promote"}</span>
+                        </button>
                         {user.isVerified ? (
                           <button
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all font-medium"

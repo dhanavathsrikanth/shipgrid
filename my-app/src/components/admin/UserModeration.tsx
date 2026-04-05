@@ -35,12 +35,13 @@ type AdminUserView = {
   _id: Id<"users">;
   _creationTime: number;
   name: string;
-  email?: string;
-  username?: string;
-  imageUrl?: string;
+  email?: string | null;
+  username?: string | null;
+  imageUrl?: string | null;
   isBanned: boolean;
   isPaused: boolean;
   isVerified: boolean;
+  clerkId?: string;
 };
 
 type StatusFilter =
@@ -298,7 +299,7 @@ export function UserModeration() {
                           )}
                           <span
                             className={`${user.username ? "cursor-pointer hover:text-blue-600 hover:underline transition-colors" : "cursor-default text-gray-500"}`}
-                            onClick={() => handleUserClick(user.username)}
+                            onClick={() => handleUserClick(user.username ?? undefined)}
                             title={
                               user.username
                                 ? `View ${user.username}'s profile`

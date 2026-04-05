@@ -364,7 +364,8 @@ export function ReportManagement() {
                               </Button>
                               {confirmingAction.action === "delete" && storyExists && (
                                 <Button
-                                  variant="destructive_outline"
+                                  variant="outline"
+                                  className="text-red-600 border-red-300 hover:bg-red-50"
                                   size="sm"
                                   onClick={() =>
                                     handleAction(

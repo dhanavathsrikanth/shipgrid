@@ -6,10 +6,10 @@ import { api } from "../../../convex/_generated/api";
 import { User } from "lucide-react";
 
 interface MentionUser {
-  _id: string;
+  _id: any;
   username: string;
   name: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
 }
 
 interface MentionTextareaProps {

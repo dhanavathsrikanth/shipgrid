@@ -1897,11 +1897,13 @@ export function ContentModeration() {
     if (activeItemType === "submissions") {
       return (stories || []).map((story) => ({
         ...story,
+        authorUsername: story.authorUsername === null ? undefined : story.authorUsername,
         type: "story" as const,
       }));
     } else {
       return (comments || []).map((comment) => ({
         ...comment,
+        authorUsername: comment.authorUsername === null ? undefined : comment.authorUsername,
         type: "comment" as const,
       }));
     }

@@ -13,14 +13,14 @@ import { GenericDatabaseReader, StorageReader } from "convex/server";
 
 export const getStoryByIdInternal = internalQuery({
   args: { storyId: v.id("stories") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: QueryCtx, args: { storyId: Id<"stories"> }) => {
     return await ctx.db.get(args.storyId);
   },
 });
 
 export const getStoriesByIdsInternal = internalQuery({
   args: { storyIds: v.array(v.id("stories")) },
-  handler: async (ctx, args) => {
+  handler: async (ctx: QueryCtx, args: { storyIds: Array<Id<"stories">> }) => {
     const stories = await Promise.all(
       args.storyIds.map((id) => ctx.db.get(id))
     );
@@ -1771,9 +1771,17 @@ export const updateOwnStory = mutation({
 
       const existingChangeLog = story.changeLog || [];
       updateData.changeLog = [...existingChangeLog, changeLogEntry];
+      updateData.updatedAt = Date.now(); // Signal score bump for changelog
     }
 
     await ctx.db.patch(args.storyId, updateData);
+
+    // Schedule changelog notification
+    if (updateData.updatedAt && story.stage === "live") {
+      await ctx.scheduler.runAfter(0, internal.emails.lifecycle.notifyChangelogUpdate, {
+        storyId: args.storyId,
+      });
+    }
 
     // Schedule embedding generation for semantic search
     await ctx.scheduler.runAfter(0, internal.embeddings.generateProductEmbedding, {
@@ -2904,3 +2912,82 @@ export const getAllApprovedInternal = internalQuery({
 
 
 
+// =========== Lufecycle Management ===========
+export const moveToBeta = mutation({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUserDoc(ctx);
+    if (!user) throw new Error("Unauthenticated");
+
+    const story = await ctx.db.get(args.storyId);
+    if (!story) throw new Error("Story not found");
+
+    // 1. Verify the requesting user owns this story
+    if (story.userId !== user._id) {
+      throw new Error("User not authorized to edit this story. Only the owner can edit.");
+    }
+
+    // 2. Prevent re-opening the beta window
+    if (story.betaOpenedAt) {
+      throw new Error("Beta window already used. You cannot re-open the beta window.");
+    }
+
+    await ctx.db.patch(args.storyId, {
+      stage: 'beta',
+      betaOpenedAt: Date.now()
+    });
+
+    await ctx.scheduler.runAfter(0, internal.emails.lifecycle.notifyBetaLaunch, {
+      storyId: args.storyId
+    });
+  }
+});
+
+export const moveToLive = mutation({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUserDoc(ctx);
+    if (!user) throw new Error("Unauthenticated");
+
+    const story = await ctx.db.get(args.storyId);
+    if (!story) throw new Error("Story not found");
+
+    // 1. Verify the requesting user owns this story
+    if (story.userId !== user._id) {
+      throw new Error("User not authorized to edit this story. Only the owner can edit.");
+    }
+
+    await ctx.db.patch(args.storyId, {
+      stage: 'live',
+      updatedAt: Date.now(),
+    });
+
+    try {
+      await ctx.scheduler.runAfter(0, internal.seo.pingIndexNow, {
+        slug: story.slug
+      });
+    } catch (e) {
+      console.warn("Could not schedule pingIndexNow, seo config may be missing");
+    }
+  }
+});
+
+export const moveToBuilding = mutation({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUserDoc(ctx);
+    if (!user) throw new Error("Unauthenticated");
+
+    const story = await ctx.db.get(args.storyId);
+    if (!story) throw new Error("Story not found");
+
+    // 1. Verify the requesting user owns this story
+    if (story.userId !== user._id) {
+      throw new Error("User not authorized to edit this story. Only the owner can edit.");
+    }
+
+    await ctx.db.patch(args.storyId, {
+      stage: 'building'
+    });
+  }
+});

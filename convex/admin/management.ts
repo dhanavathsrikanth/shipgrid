@@ -1,53 +1,11 @@
 import { mutation } from "../_generated/server";
-import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { requireAdminRole } from "../users";
 
 /**
- * Force logout all users by revoking their Clerk sessions
- * This requires Clerk Admin API access
- */
-export const forceLogoutAllUsers = mutation({
-  args: {
-    reason: v.optional(v.string()),
-  },
-  returns: v.object({
-    success: v.boolean(),
-    message: v.string(),
-    usersProcessed: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    // Only allow admins to force logout users
-    await requireAdminRole(ctx);
-
-    // Get all users from database
-    const users = await ctx.db.query("users").collect();
-
-    // Schedule the actual logout action (which needs Node.js runtime for Clerk API)
-    await ctx.scheduler.runAfter(
-      0,
-      internal.admin.forceLogout.revokeAllSessions,
-      {
-        userClerkIds: users.map((u) => u.clerkId),
-        reason: args.reason || "Admin forced re-authentication for email sync",
-      },
-    );
-
-    return {
-      success: true,
-      message: `Scheduled logout for ${users.length} users. This may take a few minutes to complete.`,
-      usersProcessed: users.length,
-    };
-  },
-});
-
-/**
- * --- User Management (Full Power) ---
+ * --- User Management ---
  */
 
-/**
- * Toggles the 'isBanned' status of a user.
- */
 export const adminBanUser = mutation({
   args: { userId: v.id("users"), isBanned: v.boolean() },
   handler: async (ctx, args) => {
@@ -57,9 +15,6 @@ export const adminBanUser = mutation({
   },
 });
 
-/**
- * Toggles the 'isVerified' status of a user.
- */
 export const adminVerifyUser = mutation({
   args: { userId: v.id("users"), isVerified: v.boolean() },
   handler: async (ctx, args) => {
@@ -68,9 +23,6 @@ export const adminVerifyUser = mutation({
   },
 });
 
-/**
- * Manually sets a user's role in the Convex database.
- */
 export const adminSetUserRole = mutation({
   args: { userId: v.id("users"), role: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -81,12 +33,9 @@ export const adminSetUserRole = mutation({
 });
 
 /**
- * --- Story / Product Management (Full Power) ---
+ * --- Story / Product Management ---
  */
 
-/**
- * "God Mode" update for any story field.
- */
 export const adminUpdateStory = mutation({
   args: {
     storyId: v.id("stories"),
@@ -100,9 +49,7 @@ export const adminUpdateStory = mutation({
       isPinned: v.optional(v.boolean()),
       isArchived: v.optional(v.boolean()),
       customMessage: v.optional(v.string()),
-      stage: v.optional(
-        v.union(v.literal("building"), v.literal("beta"), v.literal("live"))
-      ),
+      stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
       rejectionReason: v.optional(v.string()),
     }),
   },
@@ -110,7 +57,7 @@ export const adminUpdateStory = mutation({
     await requireAdminRole(ctx);
     const story = await ctx.db.get(args.storyId);
     if (!story) throw new Error("Story not found");
-
+    
     await ctx.db.patch(args.storyId, {
       ...args.updates,
       updatedAt: Date.now(),
@@ -119,22 +66,15 @@ export const adminUpdateStory = mutation({
   },
 });
 
-/**
- * Force set a story's approval status.
- */
 export const adminSetStoryStatus = mutation({
-  args: {
-    storyId: v.id("stories"),
-    status: v.union(
-      v.literal("approved"),
-      v.literal("pending"),
-      v.literal("rejected")
-    ),
+  args: { 
+    storyId: v.id("stories"), 
+    status: v.union(v.literal("approved"), v.literal("pending"), v.literal("rejected")),
     rejectionReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireAdminRole(ctx);
-    await ctx.db.patch(args.storyId, {
+    await ctx.db.patch(args.storyId, { 
       status: args.status,
       isApproved: args.status === "approved",
       rejectionReason: args.rejectionReason,
@@ -144,25 +84,19 @@ export const adminSetStoryStatus = mutation({
 });
 
 /**
- * --- Content Moderation (Full Power) ---
+ * --- Moderation ---
  */
 
 export const adminModerateComment = mutation({
-  args: {
-    commentId: v.id("comments"),
-    action: v.union(
-      v.literal("approve"),
-      v.literal("reject"),
-      v.literal("hide"),
-      v.literal("show"),
-      v.literal("delete")
-    ),
+  args: { 
+    commentId: v.id("comments"), 
+    action: v.union(v.literal("approve"), v.literal("reject"), v.literal("hide"), v.literal("show"), v.literal("delete")) 
   },
   handler: async (ctx, args) => {
     await requireAdminRole(ctx);
     const comment = await ctx.db.get(args.commentId);
     if (!comment) throw new Error("Comment not found");
-
+    
     switch (args.action) {
       case "approve":
         await ctx.db.patch(args.commentId, { status: "approved" });
@@ -180,11 +114,44 @@ export const adminModerateComment = mutation({
         await ctx.db.delete(args.commentId);
         const story = await ctx.db.get(comment.storyId);
         if (story) {
-          await ctx.db.patch(story._id, {
-            commentCount: Math.max(0, (story.commentCount || 1) - 1),
-          });
+           await ctx.db.patch(story._id, { commentCount: Math.max(0, (story.commentCount || 1) - 1) });
         }
         break;
+    }
+  },
+});
+
+/**
+ * --- App Settings ---
+ */
+
+export const adminUpdateAppSettings = mutation({
+  args: {
+    key: v.string(),
+    valueBoolean: v.optional(v.boolean()),
+    valueString: v.optional(v.string()),
+    valueNumber: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAdminRole(ctx);
+    const existing = await ctx.db
+      .query("appSettings")
+      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .unique();
+      
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        valueBoolean: args.valueBoolean,
+        valueString: args.valueString,
+        valueNumber: args.valueNumber,
+      });
+    } else {
+      await ctx.db.insert("appSettings", {
+        key: args.key,
+        valueBoolean: args.valueBoolean,
+        valueString: args.valueString,
+        valueNumber: args.valueNumber,
+      });
     }
   },
 });

@@ -232,3 +232,54 @@ export const isFollowing = query({
     return !!existingFollow;
   },
 });
+
+// --- PRODUCT FOLLOWS ---
+
+export const toggleProductFollow = mutation({
+  args: { storyId: v.id("stories") },
+  returns: v.object({
+    success: v.boolean(),
+    isFollowing: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const currentUser = await getUserByCtx(ctx);
+    if (!currentUser) throw new Error("User not authenticated");
+
+    const existingFollow = await ctx.db
+      .query("product_follows")
+      .withIndex("by_user_story", (q) =>
+        q.eq("userId", currentUser._id).eq("storyId", args.storyId)
+      )
+      .unique();
+
+    if (existingFollow) {
+      await ctx.db.delete(existingFollow._id);
+      return { success: true, isFollowing: false };
+    }
+
+    await ctx.db.insert("product_follows", {
+      userId: currentUser._id,
+      storyId: args.storyId,
+      followedAt: Date.now(),
+    });
+    return { success: true, isFollowing: true };
+  }
+});
+
+export const isFollowingProduct = query({
+  args: { storyId: v.id("stories") },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const currentUser = await getUserByCtx(ctx);
+    if (!currentUser) return false;
+
+    const existingFollow = await ctx.db
+      .query("product_follows")
+      .withIndex("by_user_story", (q) =>
+        q.eq("userId", currentUser._id).eq("storyId", args.storyId)
+      )
+      .unique();
+
+    return !!existingFollow;
+  }
+});

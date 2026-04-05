@@ -120,6 +120,7 @@ export default defineSchema({
     notFor: v.optional(v.string()),
     stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
     betaOpenedAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
     faqs: v.optional(
       v.array(
         v.object({
@@ -347,6 +348,16 @@ export default defineSchema({
     .index("by_followingId", ["followingId"]) // To get all followers of a user
     .index("by_followerId", ["followerId"]), // To get all users a user is following
 
+  // Product follows table for 3-stage lifecycle notifications
+  product_follows: defineTable({
+    userId: v.id("users"),
+    storyId: v.id("stories"),
+    followedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_story", ["storyId"])
+    .index("by_user_story", ["userId", "storyId"]),
+
   // Form fields configuration for dynamic story form management
   storyFormFields: defineTable({
     key: v.string(), // Unique identifier for the field (e.g., "linkedinUrl", "twitterUrl")
@@ -546,7 +557,16 @@ export default defineSchema({
     .index("by_recipient", ["recipientUserId"]) // Paginate and order by _creationTime desc
     .index("by_recipient_and_isRead", ["recipientUserId", "isRead"]), // Efficient unread checks
 
+  // Notification deduplication log for 3-stage lifecycle notifications
+  notificationLog: defineTable({
+    storyId: v.id("stories"),
+    type: v.string(), // "beta_launch", "changelog_update", etc.
+    sentAt: v.number(),
+  })
+    .index("by_story_type", ["storyId", "type"]),
+
   // Email preferences per user (for Resend integration)
+
   emailSettings: defineTable({
     userId: v.id("users"),
     // Master kill switch for this user
@@ -573,6 +593,8 @@ export default defineSchema({
       v.literal("admin_broadcast"),
       v.literal("admin_report_notification"),
       v.literal("admin_user_report_notification"),
+      v.literal("beta_launch"),
+      v.literal("changelog_update"),
     ),
     recipientEmail: v.string(),
     sentAt: v.number(),

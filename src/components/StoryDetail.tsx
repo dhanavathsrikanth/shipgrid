@@ -41,6 +41,8 @@ import { ImageGallery } from "./ImageGallery";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { Markdown } from "./Markdown";
 import { useDialog } from "../hooks/useDialog";
+import { StageBadge } from "./StageBadge";
+import { FollowButton } from "./FollowButton";
 
 // Removed MOCK_COMMENTS
 
@@ -936,16 +938,21 @@ export function StoryDetail({ story }: StoryDetailProps) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl lg:text-1xl font-bold  text-transform: capitalize text-foreground mb-2">
-                  <a
-                    href={story.url}
-                    className="hover:text-muted-foreground break-words"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {story.title}
-                  </a>
-                </h1>
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h1 className="text-xl lg:text-1xl font-bold text-transform: capitalize text-foreground">
+                    <a
+                      href={story.url}
+                      className="hover:text-muted-foreground break-words"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {story.title}
+                    </a>
+                  </h1>
+                  {story.stage && (
+                    <StageBadge stage={story.stage} betaOpenedAt={story.betaOpenedAt} />
+                  )}
+                </div>
                 {story.customMessage && (
                   <div className="mb-4 text-sm text-primary-foreground bg-foreground border border-border rounded-md p-3 italic">
                     {story.customMessage}
@@ -1014,6 +1021,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     <MessageSquare className="w-4 h-4" />
                     {comments?.length ?? 0} Comments
                   </Link>
+                  <FollowButton storyId={story._id} />
                   <BookmarkButton storyId={story._id} />
                 </div>
               </div>

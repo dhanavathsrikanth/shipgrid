@@ -2,7 +2,7 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
-export const getMatchedStoriesAction = action({
+export const getMatchedStories = action({
   args: {},
   handler: async (ctx, args): Promise<any[]> => {
     const identity = await ctx.auth.getUserIdentity();
@@ -66,11 +66,30 @@ export const getMatchedStoriesAction = action({
         const score = results[index]?._score || 0;
         // Simple conversion from cosine similarity/distance to percentage
         // For text-embedding-3-small, scores are typically 0.5 to 0.9
-        const precision = Math.min(Math.round(score * 100), 100);
+        let precision = Math.min(Math.round(score * 100), 100);
+        
+        // Beta window bonus — only during the 72h window
+        if (story.stage === 'beta' && story.betaOpenedAt) {
+          const hoursInBeta = (Date.now() - story.betaOpenedAt) / 3600000;
+          if (hoursInBeta < 72) {
+            precision += 15;
+          }
+        }
+
+        // Changelog recency bonus — only for Live products that posted recently
+        // Do NOT apply this to Beta products — they already get the beta bonus
+        if (story.stage === 'live' && story.updatedAt) {
+          const hoursSinceUpdate = (Date.now() - story.updatedAt) / 3600000;
+          if (hoursSinceUpdate < 168) {      // within 7 days
+            precision += 10;
+          } else if (hoursSinceUpdate < 720) { // within 30 days
+            precision += 5;
+          }
+        }
         
         return {
             ...story,
-            matchScore: precision
+            matchScore: Math.min(precision, 100)
         };
     });
   },

@@ -15,7 +15,7 @@ export default function BrowsePage() {
   const { viewMode } = useLayoutContext();
   const { isSignedIn } = useUser();
   const settings = useQuery(api.settings.get);
-  const getMatchedStories = useAction(api.icpMatch.getMatchedStories);
+  const getMatchedStories = useAction(api.icpMatch.getMatchedStoriesAction);
   
   const [currentTab, setCurrentTab] = useState<"all" | "following" | "matched">("all");
   const [matchedStories, setMatchedStories] = useState<any[] | null>(null);

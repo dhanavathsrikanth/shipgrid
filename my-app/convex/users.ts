@@ -2272,4 +2272,24 @@ export const syncUserFromClerkWebhook = internalMutation({
   },
 });
 
+/**
+ * Internal mutation to delete a user when their Clerk account is deleted.
+ * Triggered by the user.deleted webhook event.
+ */
+export const deleteUserByClerkId = internalMutation({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    console.log(`deleteUserByClerkId: Processing deletion for Clerk ID ${args.clerkId}`);
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
 
+    if (user !== null) {
+      await ctx.db.delete(user._id);
+      console.log(`Successfully deleted user ${args.clerkId} from Convex DB.`);
+    } else {
+      console.warn(`Can't delete user, there is no user record for Clerk ID: ${args.clerkId}`);
+    }
+  },
+});

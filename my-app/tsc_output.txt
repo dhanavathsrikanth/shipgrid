@@ -1,0 +1,38 @@
+src/app/(main)/browse/page.tsx(18,52): error TS2339: Property 'getMatchedStories' does not exist on type '{ getMatchedStoriesAction: FunctionReference<"action", "public", {}, any[], string | undefined>; }'.
+src/app/(main)/page.tsx(15,52): error TS2339: Property 'getMatchedStories' does not exist on type '{ getMatchedStoriesAction: FunctionReference<"action", "public", {}, any[], string | undefined>; }'.
+src/components/admin/ContentModeration.tsx(1896,9): error TS2322: Type '{ type: "story"; _id: Id<"stories">; _creationTime: number; email?: string | undefined; icpRoles?: string[] | undefined; longDescription?: string | undefined; submitterName?: string | undefined; ... 47 more ...; votesCount: number; }[] | { ...; }[]' is not assignable to type 'ModeratableItem[]'.
+  Type '{ type: "comment"; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; authorName?: string | undefined; authorUsername?: string | ... 1 more ... | undefined; }[]' is not assignable to type 'ModeratableItem[]'.
+    Type '{ type: "comment"; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; authorName?: string; authorUsername?: string | null; }' is not assignable to type 'ModeratableItem'.
+      Type '{ type: "comment"; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; authorName?: string; authorUsername?: string | null; }' is not assignable to type '{ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; } & { ...; }'.
+        Type '{ type: "comment"; _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; authorName?: string; authorUsername?: string | null; }' is not assignable to type '{ authorName?: string | undefined; authorUsername?: string | undefined; }'.
+          Types of property 'authorUsername' are incompatible.
+            Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+              Type 'null' is not assignable to type 'string | undefined'.
+src/components/admin/JudgeTracking.tsx(651,31): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/components/admin/ReportManagement.tsx(367,35): error TS2322: Type '"destructive_outline"' is not assignable to type '"link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined'.
+src/components/admin/UserModeration.tsx(271,38): error TS2345: Argument of type '(user: AdminUserView) => JSX.Element' is not assignable to parameter of type '(value: { _id: Id<"users">; _creationTime: number; name: string; email: string | undefined; clerkId: string; username: string | null | undefined; imageUrl: string | null | undefined; isBanned: boolean; isPaused: boolean; isVerified: boolean; }, index: number, array: { ...; }[]) => Element'.
+  Types of parameters 'user' and 'value' are incompatible.
+    Type '{ _id: Id<"users">; _creationTime: number; name: string; email: string | undefined; clerkId: string; username: string | null | undefined; imageUrl: string | null | undefined; isBanned: boolean; isPaused: boolean; isVerified: boolean; }' is not assignable to type 'AdminUserView'.
+      Types of property 'username' are incompatible.
+        Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+          Type 'null' is not assignable to type 'string | undefined'.
+src/components/MatchedStoriesShelf.tsx(14,52): error TS2339: Property 'getMatchedStories' does not exist on type '{ getMatchedStoriesAction: FunctionReference<"action", "public", {}, any[], string | undefined>; }'.
+src/components/RecentVibers.tsx(56,27): error TS2345: Argument of type '(user: RecentViberUser) => JSX.Element | null' is not assignable to parameter of type '(value: { _id: Id<"users">; _creationTime: number; name: string; username: string; imageUrl: string | null | undefined; isVerified: boolean | undefined; }, index: number, array: { _id: Id<...>; ... 4 more ...; isVerified: boolean | undefined; }[]) => Element | null'.
+  Types of parameters 'user' and 'value' are incompatible.
+    Type '{ _id: Id<"users">; _creationTime: number; name: string; username: string; imageUrl: string | null | undefined; isVerified: boolean | undefined; }' is not assignable to type 'RecentViberUser'.
+      Types of property 'imageUrl' are incompatible.
+        Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+          Type 'null' is not assignable to type 'string | undefined'.
+src/components/ui/MentionTextarea.tsx(101,23): error TS2345: Argument of type '{ _id: Id<"users">; username: string; name: string; profileImageUrl: string | null | undefined; }' is not assignable to parameter of type 'MentionUser'.
+  Types of property 'profileImageUrl' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/components/ui/MentionTextarea.tsx(177,52): error TS2345: Argument of type '{ _id: Id<"users">; username: string; name: string; profileImageUrl: string | null | undefined; }' is not assignable to parameter of type 'MentionUser'.
+  Types of property 'profileImageUrl' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/views/LeaderboardPage.tsx(31,50): error TS2322: Type '{ authorName?: string | undefined; authorUsername?: string | null | undefined; title: string; slug: string; votes: number; _id: Id<"stories">; }' is not assignable to type '{ _id: string; title: string; slug: string; votes: number; authorUsername?: string | undefined; authorName?: string | undefined; }'.
+  Types of property 'authorUsername' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.

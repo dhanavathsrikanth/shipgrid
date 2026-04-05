@@ -104,12 +104,12 @@ export const handleClerkWebhook = internalAction({
           publicMetadata: userData.public_metadata,
         });
         break;
-      // TODO: Handle 'user.deleted' if needed
-      // case "user.deleted":
-      //   console.log("User deleted event:", event.data.id);
-      //   // Find user by clerkId and delete them from your Convex DB
-      //   // await ctx.runMutation(internal.users.deleteUserByClerkId, { clerkId: event.data.id });
-      //   break;
+      case "user.deleted":
+        console.log("User deleted event:", event.data.id);
+        if (event.data.id) {
+          await ctx.runMutation(internal.users.deleteUserByClerkId, { clerkId: event.data.id });
+        }
+        break;
       default:
         console.log(`Received unhandled Clerk webhook event: ${event.type}`);
     }

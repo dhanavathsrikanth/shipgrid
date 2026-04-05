@@ -297,19 +297,19 @@ export function ContentModeration() {
     { initialNumItems: 10 },
   );
 
-  // Story Mutations
-  const approveStory = useMutation(api.stories.updateStatus);
-  const rejectStory = useMutation(api.stories.updateStatus);
+  // Story Mutations (God Mode)
+  const adminUpdateStory = useMutation(api.admin.adminActions.adminUpdateStory);
+  const adminSetStoryStatus = useMutation(api.admin.adminActions.adminSetStoryStatus);
+  
+  // Keep existing for legacy reference if needed, but we'll use Admin versions
   const hideStory = useMutation(api.stories.hideStory);
   const showStory = useMutation(api.stories.showStory);
   const archiveStory = useMutation(api.stories.archiveStory);
   const unarchiveStory = useMutation(api.stories.unarchiveStory);
   const deleteStory = useMutation(api.stories.deleteStory);
-  const updateCustomMessage = useMutation(api.stories.updateStoryCustomMessage);
   const togglePin = useMutation(api.stories.toggleStoryPinStatus);
   const addTagsToStory = useMutation(api.stories.addTagsToStory);
   const removeTagsFromStory = useMutation(api.stories.removeTagsFromStory);
-  const updateStoryAdmin = useMutation(api.stories.updateStoryAdmin);
 
   // Judging group queries and mutations
   const judgingGroups = useQuery(
@@ -337,7 +337,7 @@ export function ContentModeration() {
   const showComment = useMutation(api.comments.showComment);
   const deleteComment = useMutation(api.comments.deleteComment);
 
-  const handleAction = (
+  const handleAction = async (
     action:
       | "approve"
       | "reject"
@@ -351,41 +351,47 @@ export function ContentModeration() {
   ) => {
     if (item.type === "story") {
       const storyId = item._id as Id<"stories">;
-      switch (action) {
-        case "approve":
-          approveStory({ storyId, status: "approved" });
-          break;
-        case "reject":
-          rejectStory({ storyId, status: "rejected" });
-          break;
-        case "hide":
-          hideStory({ storyId });
-          break;
-        case "show":
-          showStory({ storyId });
-          break;
-        case "archive":
-          archiveStory({ storyId });
-          toast.success("Story archived");
-          break;
-        case "unarchive":
-          unarchiveStory({ storyId });
-          toast.success("Story unarchived");
-          break;
-        case "delete":
-          showConfirm(
-            "Delete Story",
-            "Delete story? This cannot be undone.",
-            () => deleteStory({ storyId }),
-            {
-              confirmButtonText: "Delete",
-              confirmButtonVariant: "destructive",
-            },
-          );
-          break;
-        case "togglePin":
-          togglePin({ storyId });
-          break;
+      try {
+        switch (action) {
+          case "approve":
+            await adminSetStoryStatus({ storyId, status: "approved" });
+            toast.success("Story approved");
+            break;
+          case "reject":
+            await adminSetStoryStatus({ storyId, status: "rejected" });
+            toast.success("Story rejected");
+            break;
+          case "hide":
+            await hideStory({ storyId });
+            break;
+          case "show":
+            await showStory({ storyId });
+            break;
+          case "archive":
+            await archiveStory({ storyId });
+            toast.success("Story archived");
+            break;
+          case "unarchive":
+            await unarchiveStory({ storyId });
+            toast.success("Story unarchived");
+            break;
+          case "delete":
+            showConfirm(
+              "Delete Story",
+              "Delete story? This cannot be undone.",
+              () => deleteStory({ storyId }),
+              {
+                confirmButtonText: "Delete",
+                confirmButtonVariant: "destructive",
+              },
+            );
+            break;
+          case "togglePin":
+            await togglePin({ storyId });
+            break;
+        }
+      } catch (err: any) {
+        toast.error(`Action failed: ${err.message}`);
       }
     } else {
       // Comment actions
@@ -407,6 +413,15 @@ export function ContentModeration() {
           setConfirmDeleteCommentId(commentId);
           break;
       }
+    }
+  };
+
+  const handleSetStage = async (storyId: Id<"stories">, stage: "building" | "beta" | "live") => {
+    try {
+      await adminUpdateStory({ storyId, updates: { stage } });
+      toast.success(`Product stage updated to ${stage}`);
+    } catch (err: any) {
+      toast.error(`Failed to update stage: ${err.message}`);
     }
   };
 
@@ -628,7 +643,9 @@ export function ContentModeration() {
         mutationArgs.screenshotId = screenshotStorageId;
       }
 
-      await updateStoryAdmin(mutationArgs);
+      // Extract storyId and wrap rest in updates
+      const { storyId, ...updates } = mutationArgs;
+      await adminUpdateStory({ storyId, updates });
 
       handleCancelEdit();
       toast.success("Story updated successfully!");
@@ -1732,6 +1749,11 @@ export function ContentModeration() {
                   ? "Hidden"
                   : item.status.charAt(0).toUpperCase() + item.status.slice(1)}
               </span>
+              {item.type === "story" && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${(item as any).stage === 'live' ? 'bg-green-100 text-green-700' : (item as any).stage === 'beta' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {(item as any).stage || 'No Stage'}
+                </span>
+              )}
             </div>
             {item.type === "story" && item.tags?.length > 0 && (
               <div className="flex gap-1 mt-2 flex-wrap">
@@ -1767,9 +1789,33 @@ export function ContentModeration() {
               </div>
             )}
 
-            {/* Row 1: Hide/Show, Pin, Add Message, Add Tag */}
-            <div className="flex flex-wrap gap-2 items-center">
-              {/* Hide/Show Button */}
+            {/* Row 2: Stage Overrides (Only for stories) */}
+            {item.type === "story" && (
+              <div className="flex flex-wrap gap-2 items-center mt-2 border-t pt-2">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter mr-1">Set Stage:</span>
+                <button
+                  className={`px-2 py-1 text-[10px] font-bold rounded border transition-all ${(item as any).stage === 'building' ? 'bg-orange-500 text-white border-orange-600 shadow-sm' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50'}`}
+                  onClick={() => handleSetStage(item._id as Id<"stories">, "building")}
+                >
+                  Building
+                </button>
+                <button
+                  className={`px-2 py-1 text-[10px] font-bold rounded border transition-all ${(item as any).stage === 'beta' ? 'bg-blue-500 text-white border-blue-600 shadow-sm' : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                  onClick={() => handleSetStage(item._id as Id<"stories">, "beta")}
+                >
+                  Beta
+                </button>
+                <button
+                  className={`px-2 py-1 text-[10px] font-bold rounded border transition-all ${(item as any).stage === 'live' ? 'bg-green-500 text-white border-green-600 shadow-sm' : 'bg-white text-green-600 border-green-200 hover:bg-green-50'}`}
+                  onClick={() => handleSetStage(item._id as Id<"stories">, "live")}
+                >
+                  Live
+                </button>
+              </div>
+            )}
+
+            {/* Row 3: Standard Actions (Hide/Show, Archive, Pin, Tags) */}
+            <div className="flex flex-wrap gap-2 items-center mt-2">
               {item.isHidden ? (
                 <button
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 hover:border-blue-300 transition-all font-medium"

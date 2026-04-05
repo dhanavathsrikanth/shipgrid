@@ -7,11 +7,11 @@ import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 // Type for the user object returned by getRecentVibers
 type RecentViberUser = {
-  _id: string;
+  _id: any;
   _creationTime: number;
   name: string;
-  username?: string;
-  imageUrl?: string;
+  username?: string | null;
+  imageUrl?: string | null;
   isVerified?: boolean;
 };
 

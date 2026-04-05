@@ -648,7 +648,7 @@ export function JudgeTracking({
                           </span>
                           {judge.userProfile && (
                             <ProfileHoverCard
-                              username={judge.userProfile.username}
+                              username={judge.userProfile.username ?? undefined}
                             >
                               <Link
                                 href={`/${judge.userProfile.username || judge.userProfile._id}`}

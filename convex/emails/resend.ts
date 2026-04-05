@@ -23,6 +23,8 @@ export const sendEmail = internalAction({
       v.literal("admin_broadcast"),
       v.literal("admin_report_notification"),
       v.literal("admin_user_report_notification"),
+      v.literal("beta_launch"),
+      v.literal("changelog_update"),
     ),
     userId: v.optional(v.id("users")),
     metadata: v.optional(v.any()),

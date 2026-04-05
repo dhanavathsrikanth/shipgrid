@@ -11,7 +11,7 @@ export function MatchedStoriesShelf() {
   const settings = useQuery(api.settings.get);
   const [matchedStories, setMatchedStories] = React.useState<any[] | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const getMatchedStories = useAction(api.icpMatch.getMatchedStories);
+  const getMatchedStories = useAction(api.icpMatch.getMatchedStoriesAction);
 
   React.useEffect(() => {
     let isMounted = true;

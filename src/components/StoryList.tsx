@@ -20,6 +20,7 @@ import { useAuth } from "@clerk/nextjs";
 import { AuthRequiredDialog } from "./ui/AuthRequiredDialog";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { useDialog } from "../hooks/useDialog";
+import { StageBadge } from "./StageBadge";
 
 interface StoryListProps {
   stories: Story[];
@@ -247,7 +248,7 @@ export function StoryList({
                           </>
                         )}
                         <h2
-                          className={`${viewMode === "vibe" || viewMode === "list" ? "text-[15px]" : "text-base"} text-foreground font-bold truncate`}
+                          className={`${viewMode === "vibe" || viewMode === "list" ? "text-[15px]" : "text-base"} text-foreground font-bold truncate flex items-center gap-2`}
                         >
                           <Link
                             href={`/s/${story.slug}`}
@@ -255,6 +256,11 @@ export function StoryList({
                           >
                             {story.title}
                           </Link>
+                          {story.stage && (
+                            <div className="flex-shrink-0">
+                                <StageBadge stage={story.stage} betaOpenedAt={story.betaOpenedAt} />
+                            </div>
+                          )}
                         </h2>
                       </div>
                       {viewMode === "vibe" && (

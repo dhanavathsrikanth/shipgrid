@@ -144,3 +144,83 @@ export const getUserGrowthData = query({
     return growthData;
   },
 });
+
+/**
+ * Consolidated platform overview for the admin dashboard.
+ */
+export const getAdminOverview = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdminRole(ctx);
+
+    const [
+      totalUsers,
+      totalStories,
+      totalComments,
+      totalVotes,
+      pendingReports,
+      totalProductFollows,
+    ] = await Promise.all([
+      ctx.db.query("users").collect().then(docs => docs.length),
+      ctx.db.query("stories").collect().then(docs => docs.length),
+      ctx.db.query("comments").collect().then(docs => docs.length),
+      ctx.db.query("votes").collect().then(docs => docs.length),
+      ctx.db.query("reports").withIndex("by_status", q => q.eq("status", "pending")).collect().then(docs => docs.length),
+      ctx.db.query("product_follows").collect().then(docs => docs.length),
+    ]);
+
+    // Breakdown stories by stage
+    const stories = await ctx.db.query("stories").collect();
+    const stageBreakdown = {
+      building: stories.filter(s => s.stage === "building").length,
+      beta: stories.filter(s => s.stage === "beta").length,
+      live: stories.filter(s => s.stage === "live").length,
+      undefined: stories.filter(s => !s.stage).length,
+    };
+
+    return {
+      stats: {
+        totalUsers,
+        totalStories,
+        totalComments,
+        totalVotes,
+        pendingReports,
+        totalProductFollows,
+      },
+      stageBreakdown,
+    };
+  },
+});
+
+/**
+ * Paginated list of all users for the admin dashboard.
+ */
+import { paginationOptsValidator } from "convex/server";
+
+export const adminListAllUsers = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    searchTerm: v.optional(v.string()),
+    filterBanned: v.optional(v.boolean()),
+    filterVerified: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    await requireAdminRole(ctx);
+
+    // If searching, use the search index
+    if (args.searchTerm && args.searchTerm.trim() !== "") {
+      return await ctx.db
+        .query("users")
+        .withSearchIndex("search_users", (q) =>
+          q.search("name", args.searchTerm!)
+        )
+        .paginate(args.paginationOpts);
+    }
+
+    // Otherwise, return paginated list
+    return await ctx.db
+      .query("users")
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});

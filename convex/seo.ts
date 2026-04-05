@@ -74,6 +74,16 @@ export const updateStoryFaqs = internalMutation({
   },
 });
 
+export const pingIndexNow = internalAction({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    // Placeholder for future SEO IndexNow functionality
+    // This is called when a product moves to 'live' stage
+    console.log(`Ping IndexNow for story slug: ${args.slug}`);
+    return;
+  },
+});
+
 export const runAudit = action({
   args: { storyId: v.id("stories") },
   handler: async (ctx, args) => {
@@ -189,3 +199,5 @@ export const listStoriesWithReports = query({
     });
   },
 });
+
+
