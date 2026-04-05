@@ -40,20 +40,30 @@ export default function OnboardingView() {
     setError(null);
     setIsLoading(true);
 
-    if (!username.trim()) {
+    const newTrimmedUsername = username.trim();
+
+    if (!newTrimmedUsername) {
+      toast.error("Username cannot be empty.");
       setError("Username cannot be empty.");
       setIsLoading(false);
       return;
     }
 
+    if (newTrimmedUsername.length < 3 || newTrimmedUsername.length > 20) {
+      toast.error("Username must be between 3 and 20 characters.");
+      setError("Username must be between 3 and 20 characters.");
+      setIsLoading(false);
+      return;
+    }
+
     if (!clerkUser) {
+      toast.error("User not authenticated.");
       setError("User not authenticated. Please sign in again.");
       setIsLoading(false);
       return;
     }
 
     try {
-      const newTrimmedUsername = username.trim();
       await setUsernameMutation({ newUsername: newTrimmedUsername });
       
       // Successfully set username in Convex.
@@ -63,9 +73,18 @@ export default function OnboardingView() {
       router.push(`/${newTrimmedUsername}`);
     } catch (err: any) {
       console.error("Error setting username:", err);
-      setError(
-        err.data?.message || err.message || "Failed to set username. It might be taken or invalid."
-      );
+      
+      const rawError = err.data?.message || err.message || "";
+      let userSafeMessage = "Failed to set username. It might be taken or invalid.";
+      
+      if (rawError.includes("already taken")) {
+        userSafeMessage = `Username "${newTrimmedUsername}" is already taken. Please choose another.`;
+      } else if (err.data && err.data.message) {
+        userSafeMessage = err.data.message;
+      }
+      
+      toast.error(userSafeMessage);
+      setError(userSafeMessage);
     }
     setIsLoading(false);
   };
