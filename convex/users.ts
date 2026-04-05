@@ -201,8 +201,11 @@ export const ensureUser = mutation({
 
 /**
  * Retrieves the Convex user ID of the currently authenticated user.
- * Throws an error if the user is not authenticated or not found in the database.
- * (Assumes ensureUser has been called previously to sync the user).
+ * Throws an error if the user is not authenticated.
+ *
+ * If the user record doesn't exist yet (sync race window at sign-up),
+ * it auto-creates a minimal user document so mutations never fail mid-flow.
+ * This is safe because: auth identity is confirmed by Convex before we reach here.
  */
 export async function getAuthenticatedUserId(
   ctx: QueryCtx | MutationCtx,
@@ -215,14 +218,50 @@ export async function getAuthenticatedUserId(
     .query("users")
     .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
     .unique();
-  if (!user) {
-    // This should ideally not happen if ensureUser is called on login
+
+  if (user) {
+    return user._id;
+  }
+
+  // User record is missing — this can happen during the Clerk→Convex sync window
+  // at sign-up (ensureUser hasn't run yet or webhook is delayed).
+  // Auto-create a minimal record so mutations don't crash. ensureUser will
+  // backfill the full profile (name, email, imageUrl) on the next call.
+  console.warn(
+    `[getAuthenticatedUserId] User record not found for clerkId=${identity.subject}. ` +
+    `Auto-creating minimal record to prevent crash during sync window.`
+  );
+
+  // Only MutationCtx supports db.insert. For QueryCtx, we must throw.
+  if (!("db" in ctx && typeof (ctx as MutationCtx).db?.insert === "function")) {
     throw new Error(
-      "Authenticated user not found in Convex database. User sync issue?",
+      "Authenticated user not found in Convex database (read-only context). " +
+      "Ensure ensureUser mutation has been called after sign-in."
     );
   }
-  return user._id;
+
+  const mutCtx = ctx as MutationCtx;
+
+  // Derive best-effort name from the JWT
+  let name = "Anonymous";
+  if (identity.givenName && identity.familyName) {
+    name = `${identity.givenName} ${identity.familyName}`;
+  } else if (identity.name) {
+    name = identity.name;
+  } else if (identity.nickname) {
+    name = identity.nickname;
+  }
+
+  const newUserId = await mutCtx.db.insert("users", {
+    clerkId: identity.subject,
+    name,
+    email: typeof identity.email === "string" ? identity.email : undefined,
+    imageUrl: typeof identity.pictureUrl === "string" ? identity.pictureUrl || undefined : undefined,
+  });
+
+  return newUserId;
 }
+
 
 /**
  * Retrieves the full user document of the currently authenticated user.

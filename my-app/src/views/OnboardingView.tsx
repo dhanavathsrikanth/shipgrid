@@ -51,7 +51,11 @@ export default function OnboardingView() {
 
     try {
       const newTrimmedUsername = username.trim();
-      await setUsernameMutation({ newUsername: newTrimmedUsername });
+      const result = await setUsernameMutation({ newUsername: newTrimmedUsername });
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to set username.");
+      }
       
       // Successfully set username in Convex.
       toast.success("Username reserved!");

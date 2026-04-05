@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import {
   Dialog,
@@ -22,7 +22,8 @@ import { Label } from "./ui/label";
 import { toast } from "sonner";
 
 export function IcpProfileModal() {
-  const user = useQuery(api.users.getMyUserDocument);
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
   const updateIcpProfile = useMutation(api.users.updateIcpProfile);
   const settings = useQuery(api.settings.get);
 

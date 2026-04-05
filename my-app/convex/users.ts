@@ -879,9 +879,41 @@ export const setUsername = mutation({
   args: { newUsername: v.string() },
   handler: async (ctx, args) => {
     // 1. Get authenticated user doc effectively
-    const user = await getAuthenticatedUserDoc(ctx);
+    let user = await getAuthenticatedUserDoc(ctx);
+    
+    // Fallback: If user is not found but identity exists, try to ensure the user is created right now.
+    // This handles any race conditions where the webhook or UserSyncer hasn't finished yet.
     if (!user) {
-      return { success: false, error: "Authenticated user record not found. Please try logging in again." };
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        return { success: false, error: "Authentication token missing. Please try logging in again." };
+      }
+      
+      const clerkEmail = identity.email || identity.emailAddress || (identity.primaryEmailAddress as any)?.emailAddress;
+      
+      const newUserId = await ctx.db.insert("users", {
+        name: identity.name || [identity.givenName, identity.familyName].filter(Boolean).join(" ") || "Anonymous",
+        clerkId: identity.subject,
+        email: typeof clerkEmail === "string" ? clerkEmail : undefined,
+        imageUrl: identity.pictureUrl || (identity as any).imageUrl || undefined,
+        role: "user",
+      });
+      
+      // Initialize email settings for new user
+      await ctx.db.insert("emailSettings", {
+        userId: newUserId,
+        dailyEngagementEmails: true,
+        messageNotifications: true,
+        marketingEmails: false,
+        weeklyDigestEmails: true,
+        mentionNotifications: true,
+      });
+      
+      user = await ctx.db.get(newUserId);
+    }
+    
+    if (!user) {
+      return { success: false, error: "Authenticated user record not found and could not be created. Please try logging in again." };
     }
 
     const trimmedUsername = args.newUsername.trim();
@@ -899,7 +931,7 @@ export const setUsername = mutation({
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", trimmedUsername))
       .take(2);
-    const hasConflict = conflictingUsers.some((u) => u._id !== user._id);
+    const hasConflict = conflictingUsers.some((u) => u._id !== user!._id);
 
     if (hasConflict) {
       return { success: false, error: `Username "${trimmedUsername}" is already taken or has an invalid format. Please choose another.` };

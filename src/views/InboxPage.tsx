@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -51,16 +51,17 @@ const parseMessageWithMentions = (content: string, isOwnMessage: boolean) => {
 
 export default function InboxPage() {
   const { user: authUser, isLoaded } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedConversationId = searchParams.get("conversation") as Id<"dmConversations"> | null;
   const { showMessage, showConfirm, DialogComponents } = useDialog();
 
-  // Queries
-  const currentUser = useQuery(api.users.getMyUserDocument);
+  // Queries — guarded on isAuthenticated (Convex-validated) not Clerk's isLoaded
+  const currentUser = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
   const conversations = useQuery(
     api.dm.listConversations,
-    isLoaded ? {} : "skip",
+    isAuthenticated ? {} : "skip",
   );
   const messages = useQuery(
     api.dm.listMessages,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import ConvexClientProvider from "@/components/ConvexClientProvider";
 import "@/index.css";
 
 export const dynamic = "force-dynamic";
@@ -130,9 +130,8 @@ export default function RootLayout({
             __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        <ClerkProvider
-          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
-        >
+        {/* ClerkProvider auto-reads NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY — matches Clerk docs (image 3, line 30) */}
+        <ClerkProvider>
           <ConvexClientProvider>
             {children}
           </ConvexClientProvider>

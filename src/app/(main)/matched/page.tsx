@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useQuery, useConvexAuth } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Sparkles, ChevronLeft, TrendingUp } from "lucide-react";
 import Link from "next/link";
@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 export default function MatchedPage() {
   const [matchedStories, setMatchedStories] = React.useState<any[] | undefined>(undefined);
   const getMatches = useAction(api.icpMatch.getMatchedStoriesAction);
-  const user = useQuery(api.users.getMyUserDocument);
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
 
   React.useEffect(() => {
     async function fetchMatches() {

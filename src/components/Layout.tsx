@@ -13,7 +13,7 @@ import {
   Menu,
   Sparkles,
 } from "lucide-react";
-import { useQuery } from "convex/react";
+import { useQuery, useConvexAuth } from "convex/react"; // useConvexAuth per Clerk+Convex docs
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ConvexBox } from "./ConvexBox";
@@ -23,7 +23,7 @@ import {
   useClerk,
   SignInButton,
   SignUpButton,
-  useAuth,
+  // useAuth removed — per docs, use useConvexAuth() for Convex query guards
 } from "@clerk/nextjs";
 import { UserSyncer } from "./UserSyncer";
 import { WeeklyLeaderboard } from "./WeeklyLeaderboard";
@@ -70,6 +70,9 @@ export function Layout({ children }: { children?: ReactNode }) {
   const pathname = usePathname();
   const { user: clerkUser, isSignedIn, isLoaded: isClerkLoaded } = useUser();
   const clerk = useClerk();
+  // Per Clerk+Convex docs: use isAuthenticated (not Clerk's isSignedIn) for Convex query skips.
+  // isAuthenticated is true only after Convex backend has validated the token.
+  const { isAuthenticated } = useConvexAuth();
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   const settings = useQuery(api.settings.get);
@@ -82,14 +85,15 @@ export function Layout({ children }: { children?: ReactNode }) {
   const [showAuthDialog, setShowAuthDialog] = React.useState(false);
 
   const headerTags = useQuery(api.tags.listHeader);
-  const convexUserDoc = useQuery(api.users.getMyUserDocument, isClerkLoaded && isSignedIn ? {} : "skip");
-  const hasUnreadAlerts = useQuery(api.alerts.hasUnread, isClerkLoaded && isSignedIn ? {} : "skip");
-  const recentAlerts = useQuery(api.alerts.listRecentForDropdown, isClerkLoaded && isSignedIn ? {} : "skip");
+  // Query skips use isAuthenticated (Convex) — ensures token is validated before querying
+  const convexUserDoc = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
+  const hasUnreadAlerts = useQuery(api.alerts.hasUnread, isAuthenticated ? {} : "skip");
+  const recentAlerts = useQuery(api.alerts.listRecentForDropdown, isAuthenticated ? {} : "skip");
   const userInboxEnabled = useQuery(
     api.dm.getInboxEnabled,
-    isClerkLoaded && isSignedIn && convexUserDoc?._id ? { userId: convexUserDoc._id } : "skip",
+    isAuthenticated && convexUserDoc?._id ? { userId: convexUserDoc._id } : "skip",
   );
-  const hasUnreadMessages = useQuery(api.dm.hasUnreadMessages, isClerkLoaded && isSignedIn ? {} : "skip");
+  const hasUnreadMessages = useQuery(api.dm.hasUnreadMessages, isAuthenticated ? {} : "skip");
 
   React.useEffect(() => {
     if (settings) {

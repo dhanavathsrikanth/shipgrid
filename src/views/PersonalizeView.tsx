@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,10 @@ import { Card } from "@/components/ui/card";
 
 export default function PersonalizeView() {
   const router = useRouter();
-  const user = useQuery(api.users.getMyUserDocument);
+  // useConvexAuth ensures we only query AFTER Convex has validated the JWT,
+  // not just when Clerk says the user is loaded — per Convex docs.
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
   const options = useQuery(api.icp.getOptions);
   const updateIcpProfile = useMutation(api.users.updateIcpProfile);
   

@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
 
 export function UserSyncer() {
-  const { isSignedIn, user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  const { user: clerkUser } = useUser(); // keep for clerkUser data access
+  // Per Clerk+Convex docs: use useConvexAuth for Convex operation gates
+  // isAuthenticated = true only after Convex backend has validated the token
+  const { isAuthenticated } = useConvexAuth();
   const ensureUserMutation = useMutation(api.users.ensureUser);
   const router = useRouter();
   const pathname = usePathname();
 
   const convexUserDoc = useQuery(
     api.users.getMyUserDocument,
-    isClerkLoaded && isSignedIn ? {} : "skip"
+    isAuthenticated ? {} : "skip"
   );
 
   const [hasRunEnsure, setHasRunEnsure] = useState(false);
@@ -22,7 +25,7 @@ export function UserSyncer() {
   const [isSyncedAndChecked, setIsSyncedAndChecked] = useState(false);
 
   useEffect(() => {
-    if (isClerkLoaded && isSignedIn && clerkUser && !hasRunEnsure) {
+    if (isAuthenticated && clerkUser && !hasRunEnsure) {
       setHasRunEnsure(true);
       ensureUserMutation()
         .then(() => {
@@ -33,11 +36,11 @@ export function UserSyncer() {
           setHasRunEnsure(false); // Can retry if it was a transient error
         });
     }
-  }, [isClerkLoaded, isSignedIn, clerkUser, ensureUserMutation, hasRunEnsure]);
+  }, [isAuthenticated, clerkUser, ensureUserMutation, hasRunEnsure]);
 
   useEffect(() => {
     // Only proceed if ensureUser succeeded AND the query sees the updated doc
-    if (isClerkLoaded && isSignedIn && ensureSuccess && convexUserDoc !== undefined && !isSyncedAndChecked) {
+    if (isAuthenticated && ensureSuccess && convexUserDoc !== undefined && !isSyncedAndChecked) {
       if (convexUserDoc === null) {
         // The index hasn't caught up to the mutation yet. Wait.
       } else {
@@ -48,12 +51,12 @@ export function UserSyncer() {
       }
     }
     
-    if (isClerkLoaded && !isSignedIn) {
+    if (!isAuthenticated) {
       setIsSyncedAndChecked(false);
       setHasRunEnsure(false);
       setEnsureSuccess(false);
     }
-  }, [isClerkLoaded, isSignedIn, ensureSuccess, convexUserDoc, router, isSyncedAndChecked, pathname]);
+  }, [isAuthenticated, ensureSuccess, convexUserDoc, router, isSyncedAndChecked, pathname]);
 
   return null;
 }

@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Banner1 } from "./ui/banner";
 
 export function IcpBanner() {
-  const user = useQuery(api.users.getMyUserDocument);
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
   const settings = useQuery(api.settings.get);
 
   const shouldShow = 

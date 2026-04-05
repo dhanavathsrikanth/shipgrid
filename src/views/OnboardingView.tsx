@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -18,19 +18,22 @@ export default function OnboardingView() {
   const [isLoading, setIsLoading] = useState(false);
   const setUsernameMutation = useMutation(api.users.setUsername);
   const router = useRouter();
-  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  // useConvexAuth is the correct gate per Convex docs — isAuthenticated is only true
+  // AFTER Convex has validated the Clerk JWT, not just when Clerk says the user is loaded.
+  const { isAuthenticated } = useConvexAuth();
+  const { user: clerkUser } = useUser();
 
   const convexUser = useQuery(
     api.users.getMyUserDocument,
-    isClerkLoaded && clerkUser ? {} : "skip"
+    isAuthenticated ? {} : "skip"  // ✅ Convex-validated auth gate
   );
 
   useEffect(() => {
-    if (isClerkLoaded && convexUser && convexUser.username) {
-      // Username is set and available
+    if (isAuthenticated && convexUser && convexUser.username) {
+      // Username already set — redirect to profile
       router.push(`/${convexUser.username}`);
     }
-  }, [isClerkLoaded, convexUser, router]);
+  }, [isAuthenticated, convexUser, router]);
 
   const handleUsernameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +70,8 @@ export default function OnboardingView() {
     setIsLoading(false);
   };
 
-  // Improved loading check to prevent the race condition
-  if (!isClerkLoaded || convexUser === undefined || convexUser === null) {
+  // Show loading until Convex auth is confirmed AND user doc is fetched
+  if (!isAuthenticated || convexUser === undefined || convexUser === null) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center animate-in fade-in transition-all duration-500">
         <div className="relative mb-6">
