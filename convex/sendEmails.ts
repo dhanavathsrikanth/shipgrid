@@ -94,12 +94,12 @@ export const sendTestEmailInternal = internalMutation({
 // Internal mutation to handle email events from Resend webhooks
 export const handleEmailEvent = internalMutation({
   args: {
-    type: v.string(), // e.g., 'email.delivered', 'email.bounced'
-    data: v.any(),
+    id: v.string(),
+    event: v.any(),
   },
   handler: async (ctx, args) => {
-    const eventType = args.type.replace("email.", "");
-    const messageId = args.data.email_id || args.data.id;
+    const eventType = args.event.type.replace("email.", "");
+    const messageId = args.id;
 
     if (!messageId) return;
 
@@ -115,7 +115,7 @@ export const handleEmailEvent = internalMutation({
       await ctx.runMutation(internal.emails.queries.updateEmailLogStatus, {
         resendMessageId: messageId,
         status,
-        metadata: args.data,
+        metadata: args.event.data,
       });
     }
   },
