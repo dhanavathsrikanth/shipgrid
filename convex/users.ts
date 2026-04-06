@@ -216,7 +216,7 @@ export async function getAuthenticatedUserId(
 ): Promise<Id<"users">> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
-    throw new Error("User not authenticated.");
+    throw new ConvexError({ message: "User not authenticated." });
   }
 
   // 1. Primary lookup: by Clerk ID
@@ -238,50 +238,38 @@ export async function getAuthenticatedUserId(
       .first();
 
     if (user) {
-      console.log(`[getAuthenticatedUserId] Linking existing record ${user._id} to new Clerk ID ${identity.subject} via email ${email}`);
-      // Only MutationCtx can patch the database
-      if ("db" in ctx && typeof (ctx as MutationCtx).db?.patch === "function") {
+      console.log(`[getAuthenticatedUserId] Recovered record ${user._id} for new Clerk ID ${identity.subject} via email ${email}`);
+      // IDENTITY HEALING: Only MutationCtx can patch the database.
+      // If we are in a Query (read-only), we just return the ID. 
+      // The next mutation (like ensureUser or setUsername) will catch up the clerkId link.
+      const isMutation = "db" in ctx && typeof (ctx as MutationCtx).db?.patch === "function";
+      if (isMutation) {
         await (ctx as MutationCtx).db.patch(user._id, { clerkId: identity.subject });
       }
       return user._id;
     }
   }
 
-  // Record is missing — auto-create a minimal user document to prevent crash during sync window.
-  // ... rest of the creation logic ...
-  console.warn(
-    `[getAuthenticatedUserId] User record not found for clerkId=${identity.subject}. ` +
-    `Auto-creating minimal record to prevent crash during sync window.`
-  );
-
-  if (!("db" in ctx && typeof (ctx as MutationCtx).db?.insert === "function")) {
-    throw new Error(
-      "Authenticated user not found in Convex database (read-only context). " +
-      "Ensure ensureUser mutation has been called after sign-in."
-    );
+  // 3. AUTO-CREATE: If not found anywhere, create a minimal record to prevent crashes.
+  // This is a safety net for mutations called before Clerk webhooks or ensureUser finish.
+  const isMutation = "db" in ctx && typeof (ctx as MutationCtx).db?.insert === "function";
+  if (!isMutation) {
+    throw new ConvexError({
+      message: "Sync failure: User record not found. Please log in again or wait a moment for profile initialization."
+    });
   }
 
-  const mutCtx = ctx as MutationCtx;
-
-  let name = "Anonymous";
-  if (identity.givenName && identity.familyName) {
-    name = `${identity.givenName} ${identity.familyName}`;
-  } else if (identity.name) {
-    name = identity.name;
-  } else if (identity.nickname) {
-    name = identity.nickname;
-  }
-
-  const newUserId = await mutCtx.db.insert("users", {
+  console.warn(`[getAuthenticatedUserId] Creating minimal record for ${identity.subject}`);
+  return await (ctx as MutationCtx).db.insert("users", {
     clerkId: identity.subject,
-    name,
-    email: typeof identity.email === "string" ? identity.email : undefined,
-    imageUrl: typeof identity.pictureUrl === "string" ? identity.pictureUrl || undefined : undefined,
+    email: email,
+    name: identity.name || identity.nickname || "Anonymous",
+    isBanned: false,
+    isPaused: false,
+    isVerified: false,
+    inboxEnabled: true,
   });
-
-  return newUserId;
 }
-
 
 /**
  * Retrieves the full user document of the currently authenticated user.
@@ -947,35 +935,9 @@ export const setUsername = mutation({
   args: { newUsername: v.string() },
   handler: async (ctx, args) => {
     try {
-      const identity = await ctx.auth.getUserIdentity();
-      if (!identity) {
-        throw new ConvexError({ message: "User not authenticated to set username." });
-      }
-
-      let user = await ctx.db
-        .query("users")
-        .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-        .first();
-
-      if (!user) {
-        // Just-in-time sync: if user record is missing, create it now
-        // This logic mirrors ensureUser but is simplified for this specific mutation
-        const userId = await ctx.db.insert("users", {
-          name: identity.name || identity.nickname || "Anonymous",
-          clerkId: identity.subject,
-          email: (identity.emailAddress || identity.email || (identity as any).primaryEmailAddress?.emailAddress || undefined) as string | undefined,
-          imageUrl: (identity.imageUrl ?? undefined) as string | undefined,
-        });
-        user = await ctx.db.get(userId);
-      }
-
-      if (!user) {
-        throw new ConvexError({ message: "Failed to initialize user record. Please try again." });
-      }
-
-      const userId = user._id;
-
-      // Basic validation for username (e.g., length, allowed characters)
+      const userId = await getAuthenticatedUserId(ctx); // Ensures user exists and handles identity healing
+      
+      // Basic validation for username
       const trimmedUsername = args.newUsername.trim();
       if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
         throw new ConvexError({ message: "Username must be between 3 and 20 characters." });
@@ -990,7 +952,7 @@ export const setUsername = mutation({
       const conflictingUser = await ctx.db
         .query("users")
         .withIndex("by_username", (q) => q.eq("username", trimmedUsername))
-        .filter((q) => q.neq(q.field("_id"), userId)) // Exclude current user from conflict check
+        .filter((q) => q.neq(q.field("_id"), userId))
         .first();
 
       if (conflictingUser) {
@@ -1005,15 +967,10 @@ export const setUsername = mutation({
       return { success: true, username: trimmedUsername };
     } catch (e: any) {
       if (e instanceof ConvexError) throw e;
-      const errorMessage = e.message || "An unknown error occurred on the server.";
-      console.error("Error in setUsername:", errorMessage);
-      throw new ConvexError({ 
-        message: `SERVER ERROR: ${errorMessage}. Please check your database schema or logs.`
-      });
+      throw new ConvexError({ message: `Failed to set username: ${e.message || "Unknown error"}` });
     }
   },
 });
-
 
 // Action to generate a short-lived upload URL for profile images
 export const generateUploadUrl = action({

@@ -27,7 +27,6 @@ import type * as clerkSync from "../clerkSync.js";
 import type * as comments from "../comments.js";
 import type * as convexBoxConfig from "../convexBoxConfig.js";
 import type * as crons from "../crons.js";
-import type * as debug from "../debug.js";
 import type * as dm from "../dm.js";
 import type * as dmReactions from "../dmReactions.js";
 import type * as emailSettings from "../emailSettings.js";
@@ -104,7 +103,6 @@ declare const fullApi: ApiFromModules<{
   comments: typeof comments;
   convexBoxConfig: typeof convexBoxConfig;
   crons: typeof crons;
-  debug: typeof debug;
   dm: typeof dm;
   dmReactions: typeof dmReactions;
   emailSettings: typeof emailSettings;
