@@ -1,5 +1,5 @@
 import { components, internal } from "./_generated/api";
-import { Resend } from "@convex-dev/resend";
+import { Resend, vEmailId, vEmailEvent } from "@convex-dev/resend";
 import {
   internalMutation,
   internalAction,
@@ -94,8 +94,8 @@ export const sendTestEmailInternal = internalMutation({
 // Internal mutation to handle email events from Resend webhooks
 export const handleEmailEvent = internalMutation({
   args: {
-    id: v.string(),
-    event: v.any(),
+    id: vEmailId,
+    event: vEmailEvent,
   },
   handler: async (ctx, args) => {
     const eventType = args.event.type.replace("email.", "");
