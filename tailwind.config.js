@@ -5,8 +5,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter var", "sans-serif"],
-        "alfa-slab-one": ['"Alfa Slab One"', "cursive"],
+        sans: ["var(--font-inter)", "sans-serif"],
+        "alfa-slab-one": ["var(--font-alfa-slab-one)", "cursive"],
       },
       colors: {
         background: "hsl(var(--background))",

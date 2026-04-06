@@ -1,8 +1,22 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Inter, Alfa_Slab_One } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import "@/index.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const alfaSlabOne = Alfa_Slab_One({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-alfa-slab-one",
+});
 
 export const dynamic = "force-dynamic";
 
@@ -100,23 +114,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Inter:wght@100..900&display=swap"
-          rel="stylesheet"
-        />
         <link rel="preconnect" href="https://stijndv.com" />
         <link
           rel="stylesheet"
           href="https://stijndv.com/fonts/Eudoxus-Sans.css"
         />
       </head>
-      <body>
+      <body className={`${inter.variable} ${alfaSlabOne.variable}`}>
         {/* Global Structured Data for Google Knowledge Graph + AI Engines */}
         <script
           type="application/ld+json"
