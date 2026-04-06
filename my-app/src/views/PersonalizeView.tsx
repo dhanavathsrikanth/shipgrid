@@ -60,8 +60,9 @@ export default function PersonalizeView() {
       });
       toast.success("Feed Personality Optimized!");
       router.push("/");
-    } catch (error) {
-      toast.error("Failed to update profile.");
+    } catch (error: any) {
+      console.error("updateIcpProfile error:", error);
+      toast.error(error?.data?.message || error?.message || "Failed to update profile.");
     } finally {
       setIsLoading(false);
     }

@@ -27,8 +27,12 @@ export default function OnboardingView() {
 
   useEffect(() => {
     if (isClerkLoaded && convexUser && convexUser.username) {
-      // Username is set and available
-      router.push(`/${convexUser.username}`);
+      // Username already set — continue to personalise if not done, else profile
+      if (!convexUser.icpComplete) {
+        router.push("/personalize");
+      } else {
+        router.push(`/${convexUser.username}`);
+      }
     }
   }, [isClerkLoaded, convexUser, router]);
 
@@ -59,9 +63,7 @@ export default function OnboardingView() {
       
       // Successfully set username in Convex.
       toast.success("Username reserved!");
-      
-      // Navigate to personal profile as per Vite logic
-      router.push(`/${newTrimmedUsername}`);
+      router.push("/personalize");
     } catch (err: any) {
       console.error("Error setting username:", err);
       setError(
@@ -71,8 +73,9 @@ export default function OnboardingView() {
     setIsLoading(false);
   };
 
-  // Improved loading check to prevent the race condition
-  if (!isClerkLoaded || convexUser === undefined || convexUser === null) {
+  // Show spinner only while Clerk or the Convex query is still loading (undefined = in-flight)
+  // null means no record yet (new user) — that's fine, show the form
+  if (!isClerkLoaded || convexUser === undefined) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center animate-in fade-in transition-all duration-500">
         <div className="relative mb-6">

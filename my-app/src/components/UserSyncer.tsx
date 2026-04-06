@@ -4,12 +4,14 @@ import { useEffect, useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export function UserSyncer() {
   const { isSignedIn, user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const ensureUserMutation = useMutation(api.users.ensureUser);
   const router = useRouter();
+  const pathname = usePathname();
+  const isOnboardingPage = pathname === "/set-username" || pathname === "/personalize";
 
   // Track whether ensureUser has completed — only query Convex user doc after
   // the record is guaranteed to exist, preventing a race where setUsername fires
@@ -65,8 +67,11 @@ export function UserSyncer() {
         }
 
         // REDIRECT: If username is missing, send to the setup page
-        if (!convexUserDoc.username) {
+        if (!convexUserDoc.username && !isOnboardingPage) {
           router.push("/set-username");
+        } else if (convexUserDoc.username && !convexUserDoc.icpComplete && !isOnboardingPage) {
+          // Username set but personalisation not done yet
+          router.push("/personalize");
         }
       }
       setIsSyncedAndChecked(true);

@@ -830,7 +830,7 @@ export const updateIcpProfile = mutation({
       primaryProblem: args.primaryProblem,
       budgetRange: args.budgetRange,
       region: args.region,
-      role: args.role,
+      ...(args.role !== undefined && { role: args.role }),
       icpRoles: args.icpRoles,
       icpComplete: true,
     });
@@ -1953,12 +1953,18 @@ export const getRecentVibers = query({
     // Get recent activity from multiple sources
     const recentActivityLimit = Math.min(args.limit * 3, 100); // Get more to ensure diversity
 
-    // 1. Recent user joins
+    // 1. Recent user joins — only users with a real username and not banned/paused
     const recentJoins = await ctx.db
       .query("users")
       .order("desc")
-      .filter((q) => q.neq(q.field("isBanned"), true))
-      .filter((q) => q.neq(q.field("username"), undefined))
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("isBanned"), true),
+          q.neq(q.field("isPaused"), true),
+          q.neq(q.field("username"), undefined),
+          q.neq(q.field("username"), null),
+        )
+      )
       .take(recentActivityLimit);
 
     // 2. Recent comments
@@ -2042,7 +2048,13 @@ export const getRecentVibers = query({
     const recentActiveUsers = [];
     for (const activity of sortedActivities) {
       const user = await ctx.db.get(activity.userId);
-      if (user && !user.isBanned && user.username) {
+      if (
+        user &&
+        !user.isBanned &&
+        !user.isPaused &&
+        user.username &&
+        typeof user.username === "string"
+      ) {
         recentActiveUsers.push({
           _id: user._id,
           _creationTime: user._creationTime,
