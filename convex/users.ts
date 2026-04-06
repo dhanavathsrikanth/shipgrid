@@ -47,7 +47,7 @@ export const ensureUser = mutation({
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     // Role is no longer synced from Clerk to Convex user document here
     // const publicMetadata = identity.publicMetadata as { role?: string } | undefined;
@@ -217,7 +217,7 @@ export async function getAuthenticatedUserId(
   const user = await ctx.db
     .query("users")
     .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-    .unique();
+    .first();
 
   if (user) {
     return user._id;
@@ -277,7 +277,7 @@ export async function getAuthenticatedUserDoc(
   return await ctx.db
     .query("users")
     .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-    .unique();
+    .first();
 }
 
 /**
@@ -347,7 +347,7 @@ export const getMyUserDocument = query({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)) // Ensured correct index name
-      .unique();
+      .first();
     return user;
   },
 });
@@ -389,7 +389,7 @@ export async function isUserAdmin(
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
       
     const isDbAdmin = user?.role === "admin";
     console.log(`[isUserAdmin] DB Role check for ${identity.subject}: userFound=${!!user}, role="${user?.role}", result=${isDbAdmin}`);
@@ -443,7 +443,7 @@ export async function requireAdminRole(
     ? await ctx.db
         .query("users")
         .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
-        .unique()
+        .first()
     : await ctx.runQuery(internal.users.getUserByClerkIdInternal, { 
         clerkId: identity.subject 
       });
@@ -618,7 +618,7 @@ export async function getUserByCtx(
   return await ctx.db
     .query("users")
     .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-    .unique();
+    .first();
 }
 
 export const getUserProfileByUsername = query({
@@ -640,7 +640,7 @@ export const getUserProfileByUsername = query({
     const userDoc: Doc<"users"> | null = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))
-      .unique();
+      .first();
 
     if (!userDoc) {
       return null;
@@ -1000,7 +1000,7 @@ export const setUserProfileImage = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!user) {
       throw new ConvexError({ message: "User record not found." });
@@ -1044,7 +1044,7 @@ export const updateUsername = mutation({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!currentUser) {
       throw new ConvexError({ message: "Current user record not found." });
@@ -1063,7 +1063,7 @@ export const updateUsername = mutation({
     const existingUserWithNewUsername = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", trimmedUsername))
-      .unique();
+      .first();
 
     if (
       existingUserWithNewUsername &&
@@ -1109,7 +1109,7 @@ export const updateProfileDetails = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
     if (!user) throw new Error("User record not found.");
 
     const updates: Partial<Doc<"users">> = {};
@@ -1162,7 +1162,7 @@ export const getUserForHoverCard = query({
     const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))
-      .unique();
+      .first();
 
     if (!user) {
       return null;
@@ -1509,7 +1509,7 @@ export const setCurrentUserAsAdminTemp = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!user) {
       throw new Error("User not found in database");
@@ -1566,7 +1566,7 @@ export const setUserAsAdminByUsername = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))
-      .unique();
+      .first();
 
     if (!user) {
       throw new Error(
@@ -1641,7 +1641,7 @@ export const fixMissingEmails = mutation({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!currentUser) {
       throw new Error("Current user not found");
@@ -1723,7 +1723,7 @@ export const forceRefreshCurrentUser = mutation({
       const currentUser = await ctx.db
         .query("users")
         .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-        .unique();
+        .first();
 
       if (!currentUser) {
         throw new Error("Current user not found");
@@ -1850,7 +1850,7 @@ export const searchUsersForMentions = query({
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", query))
       .filter((q) => q.neq(q.field("isBanned"), true))
-      .unique();
+      .first();
 
     if (exactMatch && exactMatch.username) {
       return [
@@ -2131,7 +2131,7 @@ export const updateEmojiTheme = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!user) {
       throw new Error("User not found");
@@ -2160,7 +2160,7 @@ export const getMyEmojiTheme = query({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!user) {
       return null;
@@ -2207,7 +2207,7 @@ export const getUserByClerkIdInternal = internalQuery({
     return await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-      .unique();
+      .first();
   },
 });
 
@@ -2244,7 +2244,7 @@ export const syncUserFromClerkWebhook = internalMutation({
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-      .unique();
+      .first();
 
     // Normalize nulls to undefined for schema compatibility
     const firstName = args.firstName ?? undefined;
@@ -2324,7 +2324,7 @@ export const deleteUserByClerkId = internalMutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-      .unique();
+      .first();
 
     if (user) {
       await ctx.db.delete(user._id);

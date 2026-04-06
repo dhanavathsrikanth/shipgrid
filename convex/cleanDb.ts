@@ -1,0 +1,1 @@
+import { mutation } from "./_generated/server"; export const cleanDb = mutation(async (ctx) => { const users = await ctx.db.query("users").collect(); const seen = new Set(); let deleted = 0; for (const u of users) { if (seen.has(u.clerkId)) { if (!u.username) { await ctx.db.delete(u._id); deleted++; } } else { seen.add(u.clerkId); } } return deleted; });
