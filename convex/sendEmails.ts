@@ -25,10 +25,11 @@ export const sendTestEmail = mutation({
     await requireAdminRole(ctx);
 
     try {
+      const from = `${process.env.EMAIL_FROM_NAME || "ShipGrid Updates"} <${process.env.EMAIL_FROM_ADDRESS || "alerts@updates.goshipgrid.app"}>`;
       const result = await resend.sendEmail(ctx, {
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from,
         to: args.to,
-        subject: "ShipGrid Updates: Test email from admin",
+        subject: withSubjectPrefix("Test email from admin"),
         html: `
           <h2>Test Email Success!</h2>
           <p>This test email was sent from the ShipGrid admin dashboard.</p>
@@ -62,10 +63,11 @@ export const sendTestEmailInternal = internalMutation({
   }),
   handler: async (ctx, args) => {
     try {
+      const from = `${process.env.EMAIL_FROM_NAME || "ShipGrid Updates"} <${process.env.EMAIL_FROM_ADDRESS || "alerts@updates.goshipgrid.app"}>`;
       const result = await resend.sendEmail(ctx, {
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from,
         to: args.to || "wayne@convex.dev", // Default to your email
-        subject: "ShipGrid Updates: Test email from admin",
+        subject: withSubjectPrefix("Test email from admin"),
         html: `
           <h2>Test Email Success!</h2>
           <p>This test email was sent from the ShipGrid admin dashboard.</p>
@@ -101,8 +103,9 @@ export const sendEmail = internalAction({
   }),
   handler: async (ctx, args) => {
     try {
+      const from = `${process.env.EMAIL_FROM_NAME || "ShipGrid Updates"} <${process.env.EMAIL_FROM_ADDRESS || "alerts@updates.goshipgrid.app"}>`;
       await resend.sendEmail(ctx, {
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from,
         to: args.to,
         subject: withSubjectPrefix(args.subject),
         html: args.html,
@@ -123,6 +126,6 @@ export const sendEmail = internalAction({
 
 // Helper to wrap subjects to always have the required prefix
 export function withSubjectPrefix(subject: string): string {
-  const prefix = "ShipGrid Updates: ";
+  const prefix = process.env.EMAIL_SUBJECT_PREFIX || "ShipGrid Updates: ";
   return subject.startsWith(prefix) ? subject : `${prefix}${subject}`;
 }
