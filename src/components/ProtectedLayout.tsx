@@ -11,7 +11,9 @@ export function ProtectedLayout({ children }: { children: React.ReactNode }) {
     <>
       <Authenticated>{children}</Authenticated>
       <Unauthenticated>
-        <RedirectToSignIn />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <RedirectToSignIn />
+        </div>
       </Unauthenticated>
     </>
   );
