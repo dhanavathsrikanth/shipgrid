@@ -14,6 +14,8 @@ import type * as adminQueries from "../adminQueries.js";
 import type * as admin_adminActions from "../admin/adminActions.js";
 import type * as admin_all from "../admin/all.js";
 import type * as admin_forceLogout from "../admin/forceLogout.js";
+import type * as admin_management from "../admin/management.js";
+import type * as admin_queries from "../admin/queries.js";
 import type * as admin_settings from "../admin/settings.js";
 import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
@@ -88,6 +90,8 @@ declare const fullApi: ApiFromModules<{
   "admin/adminActions": typeof admin_adminActions;
   "admin/all": typeof admin_all;
   "admin/forceLogout": typeof admin_forceLogout;
+  "admin/management": typeof admin_management;
+  "admin/queries": typeof admin_queries;
   "admin/settings": typeof admin_settings;
   alerts: typeof alerts;
   auth: typeof auth;

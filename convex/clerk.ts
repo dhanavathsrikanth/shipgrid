@@ -96,7 +96,9 @@ export const handleClerkWebhook = internalAction({
           primaryEmail = userData.email_addresses[0].email_address;
         }
 
-        await ctx.runMutation(internal.users.syncUserFromClerkWebhook, {
+        // Use scheduler.runAfter(0, ...) to process the mutation in the background.
+        // This ensures the HTTP request returns 200 OK immediately to Clerk.
+        await ctx.scheduler.runAfter(0, internal.users.syncUserFromClerkWebhook, {
           clerkId: userData.id,
           email: primaryEmail,
           firstName: userData.first_name,
@@ -106,12 +108,15 @@ export const handleClerkWebhook = internalAction({
           publicMetadata: userData.public_metadata,
         });
         break;
-      // TODO: Handle 'user.deleted' if needed
-      // case "user.deleted":
-      //   console.log("User deleted event:", event.data.id);
-      //   // Find user by clerkId and delete them from your Convex DB
-      //   // await ctx.runMutation(internal.users.deleteUserByClerkId, { clerkId: event.data.id });
-      //   break;
+
+      case "user.deleted":
+        console.log(`Received Clerk webhook: ${event.type}`, event.data.id);
+        // Process deletion in the background
+        await ctx.scheduler.runAfter(0, internal.users.deleteUserByClerkId, {
+          clerkId: event.data.id,
+        });
+        break;
+
       default:
         console.log(`Received unhandled Clerk webhook event: ${event.type}`);
     }

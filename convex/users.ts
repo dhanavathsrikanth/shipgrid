@@ -2239,15 +2239,23 @@ export const syncUserFromClerkWebhook = internalMutation({
     publicMetadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    console.log(`Syncing user from Clerk: ${args.clerkId}`);
+
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .unique();
 
+    // Normalize nulls to undefined for schema compatibility
+    const firstName = args.firstName ?? undefined;
+    const lastName = args.lastName ?? undefined;
+    const imageUrl = args.imageUrl ?? undefined;
+    const username = args.username ?? undefined;
+
     const name =
-      args.firstName && args.lastName
-        ? `${args.firstName} ${args.lastName}`
-        : args.firstName || args.lastName || undefined;
+      firstName && lastName
+        ? `${firstName} ${lastName}`
+        : firstName || lastName || undefined;
 
     if (existingUser) {
       const updates: Partial<Doc<"users">> = {};
@@ -2261,45 +2269,68 @@ export const syncUserFromClerkWebhook = internalMutation({
         updates.name = name;
         changed = true;
       }
-      if (args.imageUrl && args.imageUrl !== existingUser.imageUrl) {
-        updates.imageUrl = args.imageUrl;
+      if (imageUrl && imageUrl !== existingUser.imageUrl) {
+        updates.imageUrl = imageUrl;
         changed = true;
       }
       
-      if (args.username && args.username !== existingUser.username) {
+      if (username && username !== existingUser.username) {
         // Ensure username is unique before setting it
         const conflictingUser = await ctx.db
           .query("users")
-          .withIndex("by_username", (q) => q.eq("username", args.username!))
+          .withIndex("by_username", (q) => q.eq("username", username))
           .filter((q) => q.neq(q.field("_id"), existingUser._id))
           .first();
           
         if (!conflictingUser) {
-          updates.username = args.username;
+          updates.username = username;
           changed = true;
         }
       }
 
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
-        console.log(`Synced user ${args.clerkId} from Clerk webhook.`);
+        console.log(`Updated existing user: ${args.clerkId}`);
+      } else {
+        console.log(`No changes needed for user: ${args.clerkId}`);
       }
     } else {
-      // If user doesn't exist, we could potentially create them here,
-      // but usually ensureUser handles the first login.
-      // However, for consistency, we can pre-create the user if we have an email.
+      // If user doesn't exist, create them
       if (args.email) {
         await ctx.db.insert("users", {
           clerkId: args.clerkId,
           email: args.email,
           name: name || "Anonymous",
-          imageUrl: args.imageUrl || undefined,
+          imageUrl: imageUrl,
           role: "user", // Default role
-          // Add other required fields if any
-          username: args.username || undefined,
+          username: username,
+          isBanned: false,
+          isPaused: false,
+          isVerified: false,
+          inboxEnabled: true,
+          emojiTheme: "default",
         });
-        console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
+        console.log(`Created new user from Clerk webhook: ${args.clerkId}`);
+      } else {
+        console.warn(`User ${args.clerkId} has no email, skipping creation.`);
       }
+    }
+  },
+});
+
+export const deleteUserByClerkId = internalMutation({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    if (user) {
+      await ctx.db.delete(user._id);
+      console.log(`Deleted user ${args.clerkId} (Convex ID: ${user._id})`);
+    } else {
+      console.warn(`Attempted to delete non-existent user: ${args.clerkId}`);
     }
   },
 });
