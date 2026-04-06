@@ -1661,7 +1661,7 @@ export const fixMissingEmails = mutation({
     );
 
     let updatedCount = 0;
-    const clerkEmail = await extractEmailFromIdentity(identity);
+    const clerkEmail = extractEmailFromIdentity(identity);
 
     console.log(`Current user email in DB: ${currentUser.email}`);
     console.log(`Email extracted from identity: ${clerkEmail}`);
@@ -1689,20 +1689,6 @@ export const fixMissingEmails = mutation({
   },
 });
 
-// Helper function to extract email from identity
-async function extractEmailFromIdentity(
-  identity: any,
-): Promise<string | undefined> {
-  // Try multiple possible email field names (identity.email is the correct one based on debug logs)
-  if (typeof identity.email === "string") {
-    return identity.email;
-  } else if (typeof identity.emailAddress === "string") {
-    return identity.emailAddress;
-  } else if (typeof identity.primaryEmailAddress?.emailAddress === "string") {
-    return identity.primaryEmailAddress.emailAddress;
-  }
-  return undefined;
-}
 
 /**
  * [TEMPORARY] Force refresh current user data from Clerk
@@ -1733,7 +1719,7 @@ export const forceRefreshCurrentUser = mutation({
       }
 
       // Extract email from identity
-      const clerkEmail = await extractEmailFromIdentity(identity);
+      const clerkEmail = extractEmailFromIdentity(identity);
       console.log(
         `Force refresh - Current user email in DB: ${currentUser.email}`,
       );
