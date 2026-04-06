@@ -9,7 +9,7 @@ const http = httpRouter();
 // The path can be anything you choose, e.g., "/clerk-webhooks" or "/api/clerk"
 // Make sure this path matches what you configure in the Clerk dashboard
 http.route({
-  path: "/clerk", // You can change this path
+  path: "/clerk-users-webhook", // Updated to match user's Clerk Dashboard settings
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     // Get the signature and payload from the request
