@@ -925,7 +925,7 @@ export const setUsername = mutation({
     let user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+      .first();
 
     if (!user) {
       // Just-in-time sync: if user record is missing, create it now
