@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "vercel-build": "npx convex deploy && npm run build"
+    "vercel-build": "if [ \"$VERCEL_ENV\" = \"production\" ]; then npx convex deploy; else echo 'Skipping convex deploy for preview environment'; fi && npm run build"
   },
   "dependencies": {
     "@auth/core": "^0.37.4",
