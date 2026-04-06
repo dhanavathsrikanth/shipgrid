@@ -338,6 +338,10 @@ export const getMyUserDocument = query({
       bluesky: v.optional(v.string()),
       linkedin: v.optional(v.string()),
       inboxEnabled: v.optional(v.boolean()),
+      isBanned: v.optional(v.boolean()),
+      isPaused: v.optional(v.boolean()),
+      isVerified: v.optional(v.boolean()),
+      emojiTheme: v.optional(v.string()),
       // ICP Fields
       primaryProblem: v.optional(v.string()),
       budgetRange: v.optional(v.string()),
