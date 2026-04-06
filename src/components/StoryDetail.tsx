@@ -840,10 +840,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
   // Additional meta tag updates in useEffect as backup
   useEffect(() => {
     const currentUrl = window.location.href;
-    const imageUrl = story.screenshotUrl || "/vibe-apps-open-graphi-image.png";
+    const imageUrl = story.screenshotUrl || "/shipgrid-og.png";
 
     // Ensure title is updated
-    document.title = `${story.title} | Vibe Coding`;
+    document.title = `${story.title} | ShipGrid`;
 
     // Additional cleanup and updates for any remaining default tags
     const cleanupAndUpdate = (

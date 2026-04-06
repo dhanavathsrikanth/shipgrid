@@ -24,10 +24,10 @@ const alfaSlabOne = Alfa_Slab_One({
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Shipgrid",
+  name: "ShipGrid",
   url: "https://goshipgrid.app",
   description:
-    "Shipgrid is an AI-matched product discovery platform where builders showcase their apps and buyers find exactly what they need — matched by role, problem, and budget.",
+    "ShipGrid is an AI-matched product discovery platform where builders showcase their apps and buyers find exactly what they need — matched by role, problem, and budget.",
   potentialAction: {
     "@type": "SearchAction",
     target: {
@@ -41,7 +41,7 @@ const websiteJsonLd = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Shipgrid",
+  name: "ShipGrid",
   url: "https://goshipgrid.app",
   logo: "https://goshipgrid.app/favicon-196x196.png",
   description:
@@ -53,31 +53,31 @@ const organizationJsonLd = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Shipgrid — AI-Matched Product Discovery for Builders",
-    template: "%s | Shipgrid",
+    default: "ShipGrid — AI-Matched Product Discovery for Builders",
+    template: "%s | ShipGrid",
   },
   description:
-    "Discover and ship apps on Shipgrid — the builder community with AI-matched product discovery. Find tools tailored to your role, problem, and budget.",
+    "Discover and ship apps on ShipGrid — the builder community with AI-matched product discovery. Find tools tailored to your role, problem, and budget.",
   keywords:
-    "product discovery, indie apps, builder community, ship, vibe coding, AI tools, SaaS, startups, developers, founder tools, Shipgrid",
-  authors: [{ name: "Shipgrid" }],
+    "product discovery, indie apps, builder community, ship, vibe coding, AI tools, SaaS, startups, developers, founder tools, ShipGrid",
+  authors: [{ name: "ShipGrid" }],
   metadataBase: new URL("https://goshipgrid.app"),
   openGraph: {
-    title: "Shipgrid — AI-Matched Product Discovery for Builders",
+    title: "ShipGrid — AI-Matched Product Discovery for Builders",
     description: "Discover apps matched to you. Ship to the right audience.",
-    images: ["https://goshipgrid.app/vibe-apps-open-graphi-image.png"],
+    images: ["https://goshipgrid.app/shipgrid-og.png"],
     url: "https://goshipgrid.app",
     type: "website",
-    siteName: "Shipgrid",
+    siteName: "ShipGrid",
   },
   twitter: {
     card: "summary_large_image",
     site: "@shipgrid",
     creator: "@shipgrid",
-    title: "Shipgrid — AI-Matched Product Discovery",
+    title: "ShipGrid — AI-Matched Product Discovery",
     description:
       "Where builders ship and buyers discover exactly what they need.",
-    images: ["https://goshipgrid.app/vibe-apps-open-graphi-image.png"],
+    images: ["https://goshipgrid.app/shipgrid-og.png"],
   },
   icons: {
     icon: [

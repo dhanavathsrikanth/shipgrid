@@ -96,12 +96,12 @@ export const generateDailyAdminEmail = internalQuery({
               <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/dhanavathsrikanth/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
-                <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/dhanavathsrikanth/shipgrid" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid Team, San Francisco, CA</p>
                 <p style="margin: 5px 0;">
-                  Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
+                  Follow us on <a href="https://twitter.com/ShipGridApp" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
                   <a href="https://github.com/get-convex/convex-backend" style="color: #666;">Star on Github</a>
                 </p>
               </div>
@@ -179,18 +179,18 @@ export const generateWelcomeEmail = internalQuery({
 
           
             
-            <p>Happy building!<br>ShipGrid.dev</p>
+            <p>Happy building!<br>goshipgrid.app</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences in the Manage Profile & Account section on your profile page.</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/dhanavathsrikanth/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
-                <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/dhanavathsrikanth/shipgrid" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid Team, San Francisco, CA</p>
                 <p style="margin: 5px 0;">
-                  Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
+                  Follow us on <a href="https://twitter.com/ShipGridApp" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
                   <a href="https://github.com/get-convex/convex-backend" style="color: #666;">Star on Github</a>
                 </p>
               </div>
@@ -474,18 +474,18 @@ export const generateEngagementEmail = internalQuery({
             </div>
 
             <p>Keep shipping amazing things!</p>
-            <p>ShipGrid.dev. </p>
+            <p>goshipgrid.app. </p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/dhanavathsrikanth/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
-                <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/dhanavathsrikanth/shipgrid" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid Team, San Francisco, CA</p>
                 <p style="margin: 5px 0;">
-                  Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
+                  Follow us on <a href="https://twitter.com/ShipGridApp" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
                   <a href="https://github.com/get-convex/convex-backend" style="color: #666;">Star on Github</a>
                 </p>
               </div>
@@ -560,18 +560,18 @@ export const generateWeeklyDigest = internalQuery({
               <a href="https://goshipgrid.app/leaderboard" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Weekly Leaderboard</a>
             </div>
 
-            <p>ShipGrid.dev</p>
+            <p>goshipgrid.app</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/dhanavathsrikanth/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
-                <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/dhanavathsrikanth/shipgrid" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid Team, San Francisco, CA</p>
                 <p style="margin: 5px 0;">
-                  Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
+                  Follow us on <a href="https://twitter.com/ShipGridApp" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
                   <a href="https://github.com/get-convex/convex-backend" style="color: #666;">Star on Github</a>
                 </p>
               </div>
@@ -634,12 +634,12 @@ export const generateBroadcastEmail = internalQuery({
               <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/dhanavathsrikanth/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
-                <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/dhanavathsrikanth/shipgrid" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid Team, San Francisco, CA</p>
                 <p style="margin: 5px 0;">
-                  Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
+                  Follow us on <a href="https://twitter.com/ShipGridApp" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
                   <a href="https://github.com/get-convex/convex-backend" style="color: #666;">Star on Github</a>
                 </p>
               </div>
@@ -703,12 +703,12 @@ export const generateMentionEmail = internalQuery({
               <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/dhanavathsrikanth/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
-                <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/dhanavathsrikanth/shipgrid" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid Team, San Francisco, CA</p>
                 <p style="margin: 5px 0;">
-                  Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
+                  Follow us on <a href="https://twitter.com/ShipGridApp" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
                   <a href="https://github.com/get-convex/convex-backend" style="color: #666;">Star on Github</a>
                 </p>
               </div>

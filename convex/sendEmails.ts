@@ -9,6 +9,7 @@ import { v } from "convex/values";
 import { requireAdminRole } from "./users";
 
 export const resend: Resend = new Resend(components.resend, {
+  onEmailEvent: internal.sendEmails.handleEmailEvent,
   testMode: false, // Disable test mode to send to real email addresses
 });
 
@@ -86,6 +87,36 @@ export const sendTestEmailInternal = internalMutation({
         success: false,
         message: `Failed to send test email: ${error}`,
       };
+    }
+  },
+});
+
+// Internal mutation to handle email events from Resend webhooks
+export const handleEmailEvent = internalMutation({
+  args: {
+    type: v.string(), // e.g., 'email.delivered', 'email.bounced'
+    data: v.any(),
+  },
+  handler: async (ctx, args) => {
+    const eventType = args.type.replace("email.", "");
+    const messageId = args.data.email_id || args.data.id;
+
+    if (!messageId) return;
+
+    // Map Resend events to our internal log statuses
+    const statusMap: Record<string, "delivered" | "bounced" | "complained"> = {
+      delivered: "delivered",
+      bounced: "bounced",
+      complained: "complained",
+    };
+
+    const status = statusMap[eventType];
+    if (status) {
+      await ctx.runMutation(internal.emails.queries.updateEmailLogStatus, {
+        resendMessageId: messageId,
+        status,
+        metadata: args.data,
+      });
     }
   },
 });

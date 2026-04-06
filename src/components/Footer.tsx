@@ -15,7 +15,7 @@ export function Footer() {
   const subscribe = useMutation(api.newsletter.subscribe);
   const settings = useQuery(api.settings.get);
 
-  const siteTitle = settings?.siteTitle || "Vibe Apps";
+  const siteTitle = settings?.siteTitle || "ShipGrid";
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();

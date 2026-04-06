@@ -154,7 +154,7 @@ export function Layout({ children }: { children?: ReactNode }) {
     }
   }, [pathname, isSignedIn, convexUserDoc, userChangedViewMode]);
 
-  const siteTitle = settings?.siteTitle || "Vibe Apps";
+  const siteTitle = settings?.siteTitle || "ShipGrid";
 
   const isStoryDetailPage = pathname.startsWith("/s/");
   const isJudgingPage = pathname.startsWith("/judging/");

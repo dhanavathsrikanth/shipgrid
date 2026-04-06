@@ -1365,7 +1365,7 @@ export default function UserProfilePage({ username }: { username: string }) {
             My Vibes
             {loadedProfileUser?._creationTime && (
               <span className="ml-2 text-xs text-muted-foreground">
-                Joined Vibe Apps{" "}
+                Joined ShipGrid{" "}
                 {new Date(loadedProfileUser._creationTime).toLocaleDateString(
                   "en-US",
                   {

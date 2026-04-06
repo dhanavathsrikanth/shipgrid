@@ -66,8 +66,8 @@ function generateStoryHTML(story: {
     story.screenshotUrl ||
     "https://goshipgrid.app/vibe-apps-open-graphi-image.png";
   const canonicalUrl = `https://goshipgrid.app/s/${story.slug}`;
-  const siteName = "Vibe Apps";
-  const twitterHandle = "@waynesutton";
+  const siteName = "ShipGrid";
+  const twitterHandle = "@ShipGridApp";
 
   // Escape HTML characters in dynamic content
   const escapeHtml = (text: string) => {
@@ -182,8 +182,8 @@ function generateSubmissionPageHTML(page: {
   const imageUrl =
     page.imageUrl || "https://goshipgrid.app/vibe-apps-open-graphi-image.png";
   const canonicalUrl = `https://goshipgrid.app/submit/${page.slug}`;
-  const siteName = "Vibe Apps";
-  const twitterHandle = "@waynesutton";
+  const siteName = "ShipGrid";
+  const twitterHandle = "@ShipGridApp";
 
   // Escape HTML characters in dynamic content
   const escapeHtml = (text: string) => {
@@ -310,28 +310,7 @@ http.route({
   path: "/resend-webhook",
   method: "POST",
   handler: httpAction(async (ctx, req) => {
-    const payload = await req.json();
-    try {
-      const { type, data } = payload ?? {};
-      if (type && data?.message_id) {
-        const normalized = type.split(".")[1];
-        if (
-          normalized === "delivered" ||
-          normalized === "bounced" ||
-          normalized === "complained"
-        ) {
-          await ctx.runMutation(internal.emails.queries.updateEmailLogStatus, {
-            resendMessageId: data.message_id,
-            status: normalized,
-            metadata: data,
-          });
-        }
-      }
-      return new Response("ok", { status: 200 });
-    } catch (e) {
-      console.error("Resend webhook error", e);
-      return new Response("error", { status: 200 }); // ack to avoid retries
-    }
+    return await resend.handleResendEventWebhook(ctx, req);
   }),
 });
 

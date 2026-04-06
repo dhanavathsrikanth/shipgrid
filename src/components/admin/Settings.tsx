@@ -26,7 +26,7 @@ type ViewMode = "list" | "grid" | "vibe";
 // Define DEFAULT_SETTINGS at the top of the file, for example:
 const DEFAULT_SETTINGS_FRONTEND = {
   itemsPerPage: 20,
-  siteTitle: "Vibe Apps",
+  siteTitle: "ShipGrid",
   defaultSortPeriod: "all" as SortPeriod,
   showListView: true,
   showGridView: true,

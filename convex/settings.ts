@@ -15,7 +15,7 @@ export type ViewModeConvex = Doc<"settings">["defaultViewMode"]; // Infer from s
 // Default settings
 const DEFAULT_SETTINGS = {
   itemsPerPage: 20,
-  siteTitle: "Vibe Apps",
+  siteTitle: "ShipGrid",
   // defaultViewMode: "vibe" as ViewModeConvex, // LEGACY - siteDefaultViewMode is primary. Keep for potential old doc structure, but don't rely on it for new defaults.
   defaultSortPeriod: "all" as SortPeriodConvex,
   // New view mode settings
