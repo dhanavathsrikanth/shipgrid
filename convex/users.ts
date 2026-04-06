@@ -864,20 +864,29 @@ export const updateIcpProfile = mutation({
     icpRoles: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthenticatedUserId(ctx);
-    await ctx.db.patch(userId, {
-      primaryProblem: args.primaryProblem,
-      budgetRange: args.budgetRange,
-      region: args.region,
-      role: args.role,
-      icpRoles: args.icpRoles,
-      icpComplete: true,
-    });
+    try {
+      const userId = await getAuthenticatedUserId(ctx);
+      await ctx.db.patch(userId, {
+        primaryProblem: args.primaryProblem,
+        budgetRange: args.budgetRange,
+        region: args.region,
+        role: args.role,
+        icpRoles: args.icpRoles,
+        icpComplete: true,
+      });
 
-    // Schedule embedding generation for semantic search
-    await ctx.scheduler.runAfter(0, internal.embeddings.generateUserEmbedding, {
-      userId,
-    });
+      // Schedule embedding generation for semantic search
+      await ctx.scheduler.runAfter(0, internal.embeddings.generateUserEmbedding, {
+        userId,
+      });
+    } catch (e: any) {
+      if (e instanceof ConvexError) throw e;
+      const errorMessage = e.message || "An unknown error occurred on the server.";
+      console.error("Error in updateIcpProfile:", errorMessage);
+      throw new ConvexError({ 
+        message: `SERVER ERROR: ${errorMessage}. Please check your database schema or logs.`
+      });
+    }
   },
 });
 export const listUserStoryRatings = query({
@@ -917,63 +926,71 @@ export const listUserStoryRatings = query({
 export const setUsername = mutation({
   args: { newUsername: v.string() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({ message: "User not authenticated to set username." });
-    }
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        throw new ConvexError({ message: "User not authenticated to set username." });
+      }
 
-    let user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
+      let user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+        .first();
 
-    if (!user) {
-      // Just-in-time sync: if user record is missing, create it now
-      // This logic mirrors ensureUser but is simplified for this specific mutation
-      const userId = await ctx.db.insert("users", {
-        name: identity.name || identity.nickname || "Anonymous",
-        clerkId: identity.subject,
-        email: (identity.emailAddress || identity.email || (identity as any).primaryEmailAddress?.emailAddress || undefined) as string | undefined,
-        imageUrl: (identity.imageUrl ?? undefined) as string | undefined,
+      if (!user) {
+        // Just-in-time sync: if user record is missing, create it now
+        // This logic mirrors ensureUser but is simplified for this specific mutation
+        const userId = await ctx.db.insert("users", {
+          name: identity.name || identity.nickname || "Anonymous",
+          clerkId: identity.subject,
+          email: (identity.emailAddress || identity.email || (identity as any).primaryEmailAddress?.emailAddress || undefined) as string | undefined,
+          imageUrl: (identity.imageUrl ?? undefined) as string | undefined,
+        });
+        user = await ctx.db.get(userId);
+      }
+
+      if (!user) {
+        throw new ConvexError({ message: "Failed to initialize user record. Please try again." });
+      }
+
+      const userId = user._id;
+
+      // Basic validation for username (e.g., length, allowed characters)
+      const trimmedUsername = args.newUsername.trim();
+      if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+        throw new ConvexError({ message: "Username must be between 3 and 20 characters." });
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
+        throw new ConvexError({
+          message: "Username can only contain letters, numbers, and underscores.",
+        });
+      }
+
+      // Check for uniqueness
+      const conflictingUser = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", trimmedUsername))
+        .filter((q) => q.neq(q.field("_id"), userId)) // Exclude current user from conflict check
+        .first();
+
+      if (conflictingUser) {
+        throw new ConvexError({
+          message: `Username "${trimmedUsername}" is already taken. Please choose another.`,
+        });
+      }
+
+      // Update the user's username
+      await ctx.db.patch(userId, { username: trimmedUsername });
+
+      return { success: true, username: trimmedUsername };
+    } catch (e: any) {
+      if (e instanceof ConvexError) throw e;
+      const errorMessage = e.message || "An unknown error occurred on the server.";
+      console.error("Error in setUsername:", errorMessage);
+      throw new ConvexError({ 
+        message: `SERVER ERROR: ${errorMessage}. Please check your database schema or logs.`
       });
-      user = await ctx.db.get(userId);
     }
-
-    if (!user) {
-      throw new ConvexError({ message: "Failed to initialize user record. Please try again." });
-    }
-
-    const userId = user._id;
-    const existingUserDoc = user;
-
-    // Basic validation for username (e.g., length, allowed characters)
-    const trimmedUsername = args.newUsername.trim();
-    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
-      throw new ConvexError({ message: "Username must be between 3 and 20 characters." });
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
-      throw new ConvexError({
-        message: "Username can only contain letters, numbers, and underscores.",
-      });
-    }
-
-    // Check for uniqueness
-    const conflictingUser = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", trimmedUsername))
-      .filter((q) => q.neq(q.field("_id"), userId)) // Exclude current user from conflict check
-      .first();
-
-    if (conflictingUser) {
-      throw new ConvexError({
-        message: `Username "${trimmedUsername}" is already taken. Please choose another.`,
-      });
-    }
-
-    // Update the user's username
-    await ctx.db.patch(userId, { username: trimmedUsername });
-
-    return { success: true, username: trimmedUsername };
   },
 });
 
