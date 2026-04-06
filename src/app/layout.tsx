@@ -18,7 +18,7 @@ const alfaSlabOne = Alfa_Slab_One({
   variable: "--font-alfa-slab-one",
 });
 
-export const dynamic = "force-dynamic";
+
 
 // ─── Global JSON-LD (WebSite + Organization) ─────────────────────────────────
 const websiteJsonLd = {

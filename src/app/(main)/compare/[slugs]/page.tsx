@@ -7,12 +7,13 @@ import Link from "next/link";
 import { ArrowLeftRight, Check, X, ChevronRight, Zap } from "lucide-react";
 
 interface ComparePageProps {
-  params: {
+  params: Promise<{
     slugs: string;
-  };
+  }>;
 }
 
-export async function generateMetadata({ params }: ComparePageProps): Promise<Metadata> {
+export async function generateMetadata(props: ComparePageProps): Promise<Metadata> {
+  const params = await props.params;
   const [slugA, slugB] = params.slugs.split("-vs-");
   if (!slugA || !slugB) return { title: "Comparison Error" };
 
@@ -33,7 +34,8 @@ export async function generateMetadata({ params }: ComparePageProps): Promise<Me
   };
 }
 
-export default async function ComparePage({ params }: ComparePageProps) {
+export default async function ComparePage(props: ComparePageProps) {
+  const params = await props.params;
   const [slugA, slugB] = params.slugs.split("-vs-");
   if (!slugA || !slugB) notFound();
 

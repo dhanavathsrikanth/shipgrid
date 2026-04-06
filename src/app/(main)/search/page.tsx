@@ -6,8 +6,9 @@ import { api } from "../../../../convex/_generated/api";
 import { SearchResults } from "@/components/SearchResults";
 import { useLayoutContext } from "@/components/Layout";
 import type { Story } from "@/types";
+import { Suspense } from "react";
 
-export default function SearchPage() {
+function SearchContent() {
   const { viewMode } = useLayoutContext();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
@@ -31,3 +32,10 @@ export default function SearchPage() {
   );
 }
 
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Loading search...</div>}>
+      <SearchContent />
+    </Suspense>
+  );
+}
