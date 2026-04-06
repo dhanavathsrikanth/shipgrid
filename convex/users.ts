@@ -2245,6 +2245,7 @@ export const syncUserFromClerkWebhook = internalMutation({
     const lastName = args.lastName ?? undefined;
     const imageUrl = args.imageUrl ?? undefined;
     const username = args.username ?? undefined;
+    const role = (args.publicMetadata?.role as string) ?? "user";
 
     const name =
       firstName && lastName
@@ -2282,6 +2283,11 @@ export const syncUserFromClerkWebhook = internalMutation({
         }
       }
 
+      if (role && role !== existingUser.role) {
+        updates.role = role;
+        changed = true;
+      }
+
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
         console.log(`Updated existing user: ${args.clerkId}`);
@@ -2296,7 +2302,7 @@ export const syncUserFromClerkWebhook = internalMutation({
           email: args.email,
           name: name || "Anonymous",
           imageUrl: imageUrl,
-          role: "user", // Default role
+          role: role,
           username: username,
           isBanned: false,
           isPaused: false,
