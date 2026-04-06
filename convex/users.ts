@@ -11,21 +11,6 @@ import {
 import { v, ConvexError } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 
-/**
- * Diagnostic query to find duplicate user records by clerkId.
- */
-export const checkUserDuplicates = query({
-  args: {},
-  handler: async (ctx) => {
-    const users = await ctx.db.query("users").collect();
-    return {
-      totalUsers: users.length,
-      deploymentUrl: process.env.CONVEX_URL || "UNKNOWN",
-      users: users.map(u => ({ ...u })),
-    };
-  },
-});
-
 export const getUserByIdInternal = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -59,18 +44,8 @@ export const ensureUser = mutation({
       throw new Error("Called ensureUser without authentication");
     }
 
-    const existingUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    // Role is no longer synced from Clerk to Convex user document here
-    // const publicMetadata = identity.publicMetadata as { role?: string } | undefined;
-    // const clerkRole = publicMetadata?.role;
-
+    // 1. Extract email and basic info first
     let clerkEmail: string | undefined = undefined;
-
-    // Try multiple possible email field names
     if (typeof identity.email === "string") {
       clerkEmail = identity.email;
     } else if (typeof identity.emailAddress === "string") {
@@ -92,6 +67,25 @@ export const ensureUser = mutation({
       clerkImageUrl = identity.pictureUrl || undefined;
     } else if (typeof (identity as any).imageUrl === "string") {
       clerkImageUrl = (identity as any).imageUrl || undefined;
+    }
+
+    // 2. Lookup existing user
+    let existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    // 3. SECONARY LOOKUP: If not found by Clerk ID, try Email to prevent duplicates after re-signups
+    if (!existingUser && clerkEmail) {
+      existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", clerkEmail))
+        .first();
+      
+      if (existingUser) {
+        console.log(`[ensureUser] Recovered record ${existingUser._id} for new Clerk ID ${identity.subject} via email ${clerkEmail}`);
+        await ctx.db.patch(existingUser._id, { clerkId: identity.subject });
+      }
     }
 
     if (existingUser) {
@@ -119,13 +113,8 @@ export const ensureUser = mutation({
         updates.imageUrl = clerkImageUrl;
         changed = true;
       }
-      // Removed role update: Convex user document will no longer store the role from Clerk
-      // if (clerkRole !== existingUser.role) {
-      //   updates.role = clerkRole;
-      //   changed = true;
-      // }
 
-      // Handle username update for existing user
+      // Handle username sync for existing user
       if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
         const conflictingUser = await ctx.db
           .query("users")
@@ -229,7 +218,9 @@ export async function getAuthenticatedUserId(
   if (!identity) {
     throw new Error("User not authenticated.");
   }
-  const user = await ctx.db
+
+  // 1. Primary lookup: by Clerk ID
+  let user = await ctx.db
     .query("users")
     .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
     .first();
@@ -238,16 +229,31 @@ export async function getAuthenticatedUserId(
     return user._id;
   }
 
-  // User record is missing — this can happen during the Clerk→Convex sync window
-  // at sign-up (ensureUser hasn't run yet or webhook is delayed).
-  // Auto-create a minimal record so mutations don't crash. ensureUser will
-  // backfill the full profile (name, email, imageUrl) on the next call.
+  // 2. Secondary lookup: by Email (supports identity migration/re-sign-ups)
+  const email = (identity.email || (identity as any).emailAddress || (identity as any).primaryEmailAddress?.emailAddress) as string | undefined;
+  if (email) {
+    user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+
+    if (user) {
+      console.log(`[getAuthenticatedUserId] Linking existing record ${user._id} to new Clerk ID ${identity.subject} via email ${email}`);
+      // Only MutationCtx can patch the database
+      if ("db" in ctx && typeof (ctx as MutationCtx).db?.patch === "function") {
+        await (ctx as MutationCtx).db.patch(user._id, { clerkId: identity.subject });
+      }
+      return user._id;
+    }
+  }
+
+  // Record is missing — auto-create a minimal user document to prevent crash during sync window.
+  // ... rest of the creation logic ...
   console.warn(
     `[getAuthenticatedUserId] User record not found for clerkId=${identity.subject}. ` +
     `Auto-creating minimal record to prevent crash during sync window.`
   );
 
-  // Only MutationCtx supports db.insert. For QueryCtx, we must throw.
   if (!("db" in ctx && typeof (ctx as MutationCtx).db?.insert === "function")) {
     throw new Error(
       "Authenticated user not found in Convex database (read-only context). " +
@@ -257,7 +263,6 @@ export async function getAuthenticatedUserId(
 
   const mutCtx = ctx as MutationCtx;
 
-  // Derive best-effort name from the JWT
   let name = "Anonymous";
   if (identity.givenName && identity.familyName) {
     name = `${identity.givenName} ${identity.familyName}`;
