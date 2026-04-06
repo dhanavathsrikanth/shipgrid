@@ -747,8 +747,8 @@ export const listConversations = query({
         otherUser: {
           _id: otherUser._id,
           name: otherUser.name,
-          username: otherUser.username,
-          imageUrl: otherUser.imageUrl,
+          username: otherUser.username ?? undefined,
+          imageUrl: otherUser.imageUrl ?? undefined,
           inboxEnabled: otherUser.inboxEnabled ?? true, // Default to enabled
         },
         lastMessage,
@@ -835,8 +835,8 @@ export const getConversation = query({
       otherUser: {
         _id: otherUser._id,
         name: otherUser.name,
-        username: otherUser.username,
-        imageUrl: otherUser.imageUrl,
+        username: otherUser.username ?? undefined,
+        imageUrl: otherUser.imageUrl ?? undefined,
         inboxEnabled: otherUser.inboxEnabled ?? true,
       },
     };
@@ -973,8 +973,8 @@ export const listMessages = query({
         sender: {
           _id: sender._id,
           name: sender.name,
-          username: sender.username,
-          imageUrl: sender.imageUrl,
+          username: sender.username ?? undefined,
+          imageUrl: sender.imageUrl ?? undefined,
         },
         reactions: reactionsList,
       });

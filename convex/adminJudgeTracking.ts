@@ -135,9 +135,9 @@ export const getGroupJudgeTracking = query({
             userProfile = {
               _id: user._id,
               name: user.name,
-              username: user.username,
-              imageUrl: user.imageUrl,
-              email: user.email,
+              username: user.username ?? undefined,
+              imageUrl: user.imageUrl ?? undefined,
+              email: user.email ?? undefined,
             };
           }
         }
@@ -553,7 +553,7 @@ export const getJudgeTrackingExportData = query({
       if (judge.userId) {
         const user = await ctx.db.get(judge.userId);
         if (user) {
-          judgeUsername = user.username;
+          judgeUsername = user.username ?? undefined;
           linkedUserId = user._id;
         }
       }

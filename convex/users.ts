@@ -606,7 +606,7 @@ export const listUserComments = query({
           storyTitle: story?.title,
           storySlug: story?.slug,
           authorName: author?.name, // Name of the comment's author
-          authorUsername: author?.username, // Username of the comment's author
+          authorUsername: author?.username ?? undefined, // Username of the comment's author
           isHidden: comment.isHidden === undefined ? false : comment.isHidden, // Ensure isHidden is a boolean
         } as CommentDetailsForProfile; // Assert to the specific type
       }),
@@ -660,14 +660,14 @@ export const getUserProfileByUsername = query({
       _creationTime: userDoc._creationTime,
       name: userDoc.name,
       clerkId: userDoc.clerkId,
-      email: userDoc.email, // Will be undefined if not set, validator handles optional
-      username: userDoc.username,
-      imageUrl: userDoc.imageUrl,
-      bio: userDoc.bio,
-      website: userDoc.website,
-      twitter: userDoc.twitter,
-      bluesky: userDoc.bluesky,
-      linkedin: userDoc.linkedin,
+      email: userDoc.email ?? undefined, // Will be undefined if not set, validator handles optional
+      username: userDoc.username ?? undefined,
+      imageUrl: userDoc.imageUrl ?? undefined,
+      bio: userDoc.bio ?? undefined,
+      website: userDoc.website ?? undefined,
+      twitter: userDoc.twitter ?? undefined,
+      bluesky: userDoc.bluesky ?? undefined,
+      linkedin: userDoc.linkedin ?? undefined,
       isVerified: userDoc.isVerified ?? false, // Include isVerified field
     };
 
@@ -762,8 +762,8 @@ export const getUserProfileByUsername = query({
         return {
           ...storyDoc, // Base story fields
           authorName: author?.name,
-          authorUsername: author?.username,
-          authorImageUrl: author?.imageUrl,
+          authorUsername: author?.username ?? undefined,
+          authorImageUrl: author?.imageUrl ?? undefined,
           authorIsVerified: author?.isVerified ?? false, // Add verified status for author
           tags: validTags, // Use the explicitly constructed validTags
           screenshotUrl: screenshotUrl,

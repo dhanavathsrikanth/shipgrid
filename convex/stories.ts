@@ -188,9 +188,9 @@ const fetchTagsAndCountsForStories = async (
         tags: processedStoryTags, // Use the new explicitly constructed array
         commentsCount: calculatedCommentsCount,
         authorName: author?.name,
-        authorUsername: author?.username,
-        authorImageUrl: author?.imageUrl,
-        authorEmail: author?.email,
+        authorUsername: author?.username ?? undefined,
+        authorImageUrl: author?.imageUrl ?? undefined,
+        authorEmail: author?.email ?? undefined,
         averageRating,
         votesCount,
       };
@@ -2422,11 +2422,11 @@ export const getWeeklyLeaderboardStories = query({
     // Fetch author details for these stories
     const storiesToReturn: LeaderboardStory[] = [];
     for (const story of recentTopStoriesRaw) {
-      let authorUsername: string | null | undefined = undefined;
+      let authorUsername: string | undefined = undefined;
       let authorName: string | undefined = undefined;
       if (story.userId) {
         const author = await ctx.db.get(story.userId);
-        authorUsername = author?.username;
+        authorUsername = author?.username ?? undefined;
         authorName = author?.name;
       }
       storiesToReturn.push({

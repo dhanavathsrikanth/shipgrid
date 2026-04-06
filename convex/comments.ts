@@ -61,10 +61,10 @@ export const listApprovedByStory = query({
         const author = comment.userId ? await ctx.db.get(comment.userId) : null;
         return {
           ...comment,
-          authorName: author?.name,
-          authorUsername: author?.username ?? null,
-          authorRole: author?.role ?? null,
-          authorBio: author?.bio ?? null,
+          authorName: author?.name ?? undefined,
+          authorUsername: (author?.username ?? null) as string | null,
+          authorRole: (author?.role ?? null) as string | null | undefined,
+          authorBio: (author?.bio ?? null) as string | null | undefined,
         };
       }),
     );
@@ -163,10 +163,10 @@ export const listAllCommentsAdmin = query({
             : null;
           return {
             ...comment,
-            authorName: author?.name,
-            authorUsername: author?.username ?? null,
-            authorRole: author?.role ?? null,
-            authorBio: author?.bio ?? null,
+            authorName: author?.name ?? undefined,
+            authorUsername: (author?.username ?? null) as string | null,
+            authorRole: (author?.role ?? null) as string | null | undefined,
+            authorBio: (author?.bio ?? null) as string | null | undefined,
           };
         }),
       );
@@ -263,10 +263,10 @@ export const listAllCommentsAdmin = query({
             : null;
           return {
             ...comment,
-            authorName: author?.name,
-            authorUsername: author?.username ?? null,
-            authorRole: author?.role ?? null,
-            authorBio: author?.bio ?? null,
+            authorName: author?.name ?? undefined,
+            authorUsername: (author?.username ?? null) as string | null,
+            authorRole: (author?.role ?? null) as string | null | undefined,
+            authorBio: (author?.bio ?? null) as string | null | undefined,
           };
         }),
       );
