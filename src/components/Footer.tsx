@@ -40,7 +40,7 @@ export function Footer() {
   return (
     <footer className="bg-background border-t border-border pt-16 pb-12 mt-20">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-16">
           <div className="space-y-4">
             <Link href="/" className="inline-block text-xl font-bold text-foreground hover:opacity-80 transition-opacity">
               {siteTitle}
@@ -90,6 +90,21 @@ export function Footer() {
               </li>
               <li>
                 <button onClick={() => setShowAboutModal(true)} className="text-muted-foreground hover:text-foreground transition-colors text-left">About the Project</button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Legal</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</Link>
               </li>
             </ul>
           </div>
@@ -161,7 +176,7 @@ export function Footer() {
               </p>
               
               <p>
-                Powered by <a href="https://convex.dev?utm_source=vibeapps-dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Convex</a>, this platform delivers real-time updates and seamless state management.
+                Powered by <a href="https://convex.dev?utm_source=goshipgrid-app" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Convex</a>, this platform delivers real-time updates and seamless state management.
               </p>
               
               <div className="bg-muted p-4 rounded-2xl border border-border space-y-2">

@@ -1,4 +1,4 @@
-# VibeApps
+# ShipGrid
 
 The community where you go to show off what you've built, and see what others are building. Built with React, TypeScript, Convex, and Clerk Auth.
 
@@ -149,7 +149,7 @@ The community where you go to show off what you've built, and see what others ar
 ## Project Structure
 
 ```
-vibeapps/
+shipgrid/
 ├── src/
 │   ├── components/          # Reusable React components
 │   │   ├── admin/          # Admin dashboard components
@@ -179,7 +179,7 @@ vibeapps/
 
 ```bash
 git clone <repository-url>
-cd vibeapps
+cd shipgrid
 ```
 
 2. Install dependencies

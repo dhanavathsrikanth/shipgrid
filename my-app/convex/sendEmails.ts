@@ -26,12 +26,12 @@ export const sendTestEmail = mutation({
 
     try {
       const result = await resend.sendEmail(ctx, {
-        from: "VibeApps Updates <alerts@updates.vibeapps.dev>",
+        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
         to: args.to,
-        subject: "VibeApps Updates: Test email from admin",
+        subject: "ShipGrid Updates: Test email from admin",
         html: `
           <h2>Test Email Success!</h2>
-          <p>This test email was sent from the VibeApps admin dashboard.</p>
+          <p>This test email was sent from the ShipGrid admin dashboard.</p>
           <p><strong>Sent to:</strong> ${args.to}</p>
           <p><strong>Time:</strong> ${new Date().toISOString()}</p>
           <p>If you received this, your email system is working perfectly! 🎉</p>
@@ -63,12 +63,12 @@ export const sendTestEmailInternal = internalMutation({
   handler: async (ctx, args) => {
     try {
       const result = await resend.sendEmail(ctx, {
-        from: "VibeApps Updates <alerts@updates.vibeapps.dev>",
+        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
         to: args.to || "wayne@convex.dev", // Default to your email
-        subject: "VibeApps Updates: Test email from admin",
+        subject: "ShipGrid Updates: Test email from admin",
         html: `
           <h2>Test Email Success!</h2>
-          <p>This test email was sent from the VibeApps admin dashboard.</p>
+          <p>This test email was sent from the ShipGrid admin dashboard.</p>
           <p><strong>Sent to:</strong> ${args.to || "wayne@convex.dev"}</p>
           <p><strong>Time:</strong> ${new Date().toISOString()}</p>
           <p>If you received this, your email system is working perfectly! 🎉</p>
@@ -102,7 +102,7 @@ export const sendEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       await resend.sendEmail(ctx, {
-        from: "VibeApps Updates <alerts@updates.vibeapps.dev>",
+        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
         to: args.to,
         subject: withSubjectPrefix(args.subject),
         html: args.html,
@@ -123,6 +123,6 @@ export const sendEmail = internalAction({
 
 // Helper to wrap subjects to always have the required prefix
 export function withSubjectPrefix(subject: string): string {
-  const prefix = "VibeApps Updates: ";
+  const prefix = "ShipGrid Updates: ";
   return subject.startsWith(prefix) ? subject : `${prefix}${subject}`;
 }

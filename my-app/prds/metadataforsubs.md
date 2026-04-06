@@ -61,7 +61,7 @@ Currently, when users share story URLs like `/s/my-awesome-app`, social media pl
 <meta property="og:title" content="{story.title} | Vibe Apps" />
 <meta property="og:description" content="{story.description}" />
 <meta property="og:image" content="{story.screenshotUrl || default}" />
-<meta property="og:url" content="https://vibeapps.dev/s/{story.slug}" />
+<meta property="og:url" content="https://goshipgrid.app/s/{story.slug}" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Vibe Apps" />
 ```
@@ -82,7 +82,7 @@ Currently, when users share story URLs like `/s/my-awesome-app`, social media pl
 ```html
 <title>{story.title} | Vibe Apps</title>
 <meta name="description" content="{story.description}" />
-<link rel="canonical" href="https://vibeapps.dev/s/{story.slug}" />
+<link rel="canonical" href="https://goshipgrid.app/s/{story.slug}" />
 ```
 
 ### Implementation Architecture (Final)
@@ -136,8 +136,8 @@ function generateStoryHTML(story: {
 }) {
   const imageUrl =
     story.screenshotUrl ||
-    "https://vibeapps.dev/vibe-apps-open-graphi-image.png";
-  const canonicalUrl = `https://vibeapps.dev/s/${story.slug}`;
+    "https://goshipgrid.app/vibe-apps-open-graphi-image.png";
+  const canonicalUrl = `https://goshipgrid.app/s/${story.slug}`;
   const siteName = "Vibe Apps";
   const twitterHandle = "@waynesutton";
 
@@ -282,7 +282,7 @@ function = "botMeta"
   - On errors: Falls back to SPA to ensure users always get content
 
 - Homepage meta tags (index.html): Use absolute URLs for images:
-  - `og:image` and `twitter:image` set to `https://vibeapps.dev/vibe-apps-open-graphi-image.png`
+  - `og:image` and `twitter:image` set to `https://goshipgrid.app/vibe-apps-open-graphi-image.png`
 
 ### Data Requirements
 
@@ -551,8 +551,8 @@ The implementation uses a three-layer approach:
 
 ### Test URLs (Examples):
 
-- **Story with Screenshot**: https://vibeapps.dev/s/test-4-images-v1
-- **Story without Screenshot**: https://vibeapps.dev/s/convex
+- **Story with Screenshot**: https://goshipgrid.app/s/test-4-images-v1
+- **Story without Screenshot**: https://goshipgrid.app/s/convex
 - **Meta Endpoint (prod)**: https://whimsical-dalmatian-205.convex.site/meta/s?slug=sandcastle
 
 ### Social Media Validators (Use canonical `/s/{slug}`):

@@ -156,7 +156,7 @@ Convex Dashboard → Functions →
 🚀 Triggering daily admin email...
 
 # 4. Check inbox
-Subject: VibeApps Daily Report - 2025-10-11
+Subject: ShipGrid Daily Report - 2025-10-11
 Content shows:
 - New Apps Submitted: 150 ✅ (matches!)
 - Total Platform Users: 89 ✅ (matches!)
@@ -351,7 +351,7 @@ If emails are not fetching fresh data:
    - See `TESTING_SUMMARY.md` for complete testing system overview
    - See `EMAIL_DATE_RANGE_FIX.md` for date range calculation details
    - See `addresend.md` Phase 11 for recent bug fixes
-5. Check GitHub issues: https://github.com/waynesutton/vibeapps/issues
+5. Check GitHub issues: https://github.com/waynesutton/shipgrid/issues
 
 ## Summary
 

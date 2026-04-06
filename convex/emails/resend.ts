@@ -67,7 +67,7 @@ export const sendEmail = internalAction({
       // Send via Resend with enforced subject prefix and from address
       const emailData: any = {
         to: args.to,
-        from: "VibeApps Updates <alerts@updates.vibeapps.dev>",
+        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
         subject: withSubjectPrefix(args.subject),
         html: args.html,
       };
@@ -77,7 +77,7 @@ export const sendEmail = internalAction({
         emailData.headers = [
           {
             name: "List-Unsubscribe",
-            value: `<https://vibeapps.dev/api/unsubscribe?token=${args.unsubscribeToken}>`,
+            value: `<https://goshipgrid.app/api/unsubscribe?token=${args.unsubscribeToken}>`,
           },
           {
             name: "List-Unsubscribe-Post",

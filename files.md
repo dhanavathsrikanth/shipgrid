@@ -1,4 +1,4 @@
-# VibeApps Codebase Files
+# ShipGrid Codebase Files
 
 ## Root Directory Structure
 

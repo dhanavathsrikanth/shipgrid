@@ -2,7 +2,7 @@
 
 ## Overview
 
-This PRD defines one to one direct messages with opt-in inbox control. The inbox icon is always visible on all user profiles next to the follow button. Each user controls whether their inbox is enabled or disabled via a toggle on their own profile. Messaging is available to anyone when the recipient's inbox is enabled, regardless of follow status. The feature integrates with existing VibeApps stack (Clerk auth, Convex backend, alerts, Resend emails) with comprehensive rate limiting and admin moderation.
+This PRD defines one to one direct messages with opt-in inbox control. The inbox icon is always visible on all user profiles next to the follow button. Each user controls whether their inbox is enabled or disabled via a toggle on their own profile. Messaging is available to anyone when the recipient's inbox is enabled, regardless of follow status. The feature integrates with existing ShipGrid stack (Clerk auth, Convex backend, alerts, Resend emails) with comprehensive rate limiting and admin moderation.
 
 ## Why this matters
 
@@ -221,7 +221,7 @@ You received X new messages in your inbox. [View Inbox →]
 
 ### DM Report Email (Immediate)
 
-- Subject: "VibeApps Updates: New Inbox Report - [type] Reported"
+- Subject: "ShipGrid Updates: New Inbox Report - [type] Reported"
 - Sent immediately to all admins and managers
 - Includes reporter, reported user, reason, message preview (if applicable)
 - Links to admin moderation dashboard

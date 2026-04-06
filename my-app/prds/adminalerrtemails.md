@@ -1,8 +1,8 @@
-# Admin Alert Emails PRD - VibeApps
+# Admin Alert Emails PRD - ShipGrid
 
 ## Overview
 
-This document outlines the comprehensive admin alert email system for VibeApps, building on the existing Resend email infrastructure to provide immediate email notifications to administrators, managers, and organizers when users report content, users, or direct messages, and when critical moderation events occur.
+This document outlines the comprehensive admin alert email system for ShipGrid, building on the existing Resend email infrastructure to provide immediate email notifications to administrators, managers, and organizers when users report content, users, or direct messages, and when critical moderation events occur.
 
 ## Email System Integration
 
@@ -87,7 +87,7 @@ This admin alert system leverages the fully implemented email infrastructure doc
 
 ### Email System Integration
 
-- **Resend Component**: `convex/sendEmails.ts` with proper subject prefix "VibeApps Updates:" and from address `alerts@updates.vibeapps.dev`
+- **Resend Component**: `convex/sendEmails.ts` with proper subject prefix "ShipGrid Updates:" and from address `alerts@updates.goshipgrid.app`
 - **Email Templates**: `convex/emails/templates.ts` with template generation system
 - **Email Logging**: `convex/emails/queries.ts` with comprehensive logging and tracking
 - **Global Kill Switch**: `appSettings.emailsEnabled` controls all email sending
@@ -111,7 +111,7 @@ This admin alert system leverages the fully implemented email infrastructure doc
 **Content Structure**:
 
 ```
-Subject: VibeApps Updates: New Report - [StoryTitle]
+Subject: ShipGrid Updates: New Report - [StoryTitle]
 
 Hey [AdminName],
 
@@ -132,7 +132,7 @@ Submission Details:
 
 This report requires admin attention. Please review and take appropriate action.
 
-- The VibeApps Team
+- The ShipGrid Team
 ```
 
 **Email Type**: `admin_report_notification`
@@ -161,7 +161,7 @@ This report requires admin attention. Please review and take appropriate action.
 **Content Structure**:
 
 ```
-Subject: VibeApps Updates: User Report - [ReportedUserName]
+Subject: ShipGrid Updates: User Report - [ReportedUserName]
 
 Hey [AdminName],
 
@@ -174,7 +174,7 @@ A user has been reported and requires immediate review:
 🕐 Reported: [Timestamp]
 
 User Details:
-• Profile: https://vibeapps.dev/[ReportedUsername]
+• Profile: https://goshipgrid.app/[ReportedUsername]
 • User since: [JoinDate]
 • Total Submissions: [SubmissionCount]
 • Total Comments: [CommentCount]
@@ -183,7 +183,7 @@ User Details:
 
 This report requires admin attention. Please review and take appropriate action.
 
-- The VibeApps Team
+- The ShipGrid Team
 ```
 
 **Email Type**: `admin_user_report_notification`
@@ -211,7 +211,7 @@ This report requires admin attention. Please review and take appropriate action.
 **Content Structure**:
 
 ```
-Subject: VibeApps Updates: DM Report - Inappropriate Message
+Subject: ShipGrid Updates: DM Report - Inappropriate Message
 
 Hey [AdminName],
 
@@ -236,7 +236,7 @@ This report requires admin attention. You can hide the message, warn/ban the sen
 
 Note: You can only view reported messages, not all user conversations (privacy protection).
 
-- The VibeApps Team
+- The ShipGrid Team
 ```
 
 **Email Type**: `admin_dm_report_notification`
@@ -472,7 +472,7 @@ export const sendReportNotificationEmails = internalAction({
           reportReason: report.reason,
           reportTimestamp: report._creationTime,
           storyCreationTime: story._creationTime,
-          dashboardUrl: `https://vibeapps.dev/admin?tab=users&subtab=reports`,
+          dashboardUrl: `https://goshipgrid.app/admin?tab=users&subtab=reports`,
           unsubscribeToken,
         },
       );
@@ -575,8 +575,8 @@ export const sendUserReportNotificationEmails = internalAction({
           userJoinDate: reportedUser._creationTime,
           submissionCount: userStats.submissionCount,
           commentCount: userStats.commentCount,
-          dashboardUrl: `https://vibeapps.dev/admin?tab=users&subtab=user-reports`,
-          profileUrl: `https://vibeapps.dev/${reportedUser.username}`,
+          dashboardUrl: `https://goshipgrid.app/admin?tab=users&subtab=user-reports`,
+          profileUrl: `https://goshipgrid.app/${reportedUser.username}`,
           unsubscribeToken,
         },
       );
@@ -691,7 +691,7 @@ export const sendDmReportNotificationEmails = internalAction({
           conversationId: args.conversationId,
           messageCount: conversationStats.messageCount,
           messageId: args.messageId,
-          dashboardUrl: `https://vibeapps.dev/admin/inbox-moderation`,
+          dashboardUrl: `https://goshipgrid.app/admin/inbox-moderation`,
           unsubscribeToken,
         },
       );
@@ -766,9 +766,9 @@ export const generateAdminReportEmail = internalQuery({
       <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <!-- VibeApps Logo -->
+            <!-- ShipGrid Logo -->
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px;">
+              <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px;">
             </div>
 
             <h1 style="color: #292929; margin-bottom: 10px;">Content Report Requires Review</h1>
@@ -834,7 +834,7 @@ export const generateAdminReportEmail = internalQuery({
             <!-- Action Buttons -->
             <div style="text-align: center; margin: 30px 0;">
               <a href="${args.dashboardUrl}" style="display: inline-block; background: #d63384; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: 500; margin: 0 10px;">Review Report</a>
-              <a href="https://vibeapps.dev/s/${args.storyTitle
+              <a href="https://goshipgrid.app/s/${args.storyTitle
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "-")
                 .replace(
@@ -852,14 +852,14 @@ export const generateAdminReportEmail = internalQuery({
             <!-- Footer -->
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                You received this email because you are an administrator at VibeApps.
+                You received this email because you are an administrator at ShipGrid.
               </p>
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                <a href="https://vibeapps.dev/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Manage email preferences</a> | 
-                <a href="https://vibeapps.dev/admin" style="color: #666;">Admin Dashboard</a>
+                <a href="https://goshipgrid.app/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Manage email preferences</a> | 
+                <a href="https://goshipgrid.app/admin" style="color: #666;">Admin Dashboard</a>
               </p>
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                VibeApps • <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">Contact Support</a>
+                ShipGrid • <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">Contact Support</a>
               </p>
             </div>
           </div>
@@ -916,7 +916,7 @@ export const generateAdminUserReportEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px;">
+              <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px;">
             </div>
 
             <h1 style="color: #292929; margin-bottom: 10px;">User Report Requires Review</h1>
@@ -988,11 +988,11 @@ export const generateAdminUserReportEmail = internalQuery({
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                You received this email because you are an administrator at VibeApps.
+                You received this email because you are an administrator at ShipGrid.
               </p>
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                <a href="https://vibeapps.dev/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Manage email preferences</a> | 
-                <a href="https://vibeapps.dev/admin" style="color: #666;">Admin Dashboard</a>
+                <a href="https://goshipgrid.app/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Manage email preferences</a> | 
+                <a href="https://goshipgrid.app/admin" style="color: #666;">Admin Dashboard</a>
               </p>
             </div>
           </div>
@@ -1050,7 +1050,7 @@ export const generateAdminDmReportEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px;">
+              <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px;">
             </div>
 
             <h1 style="color: #292929; margin-bottom: 10px;">DM Report Requires Review</h1>
@@ -1121,11 +1121,11 @@ export const generateAdminDmReportEmail = internalQuery({
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                You received this email because you are an administrator at VibeApps.
+                You received this email because you are an administrator at ShipGrid.
               </p>
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                <a href="https://vibeapps.dev/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Manage email preferences</a> | 
-                <a href="https://vibeapps.dev/admin" style="color: #666;">Admin Dashboard</a>
+                <a href="https://goshipgrid.app/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Manage email preferences</a> | 
+                <a href="https://goshipgrid.app/admin" style="color: #666;">Admin Dashboard</a>
               </p>
             </div>
           </div>
@@ -1377,7 +1377,7 @@ export const sendEmail = internalAction({
 ### Visual Design (Match App Style)
 
 - **Brand Colors**: #292929 (primary), #d63384 (warning/reports), #f9f9f9 (background)
-- **Logo**: VibeApps logo (48x48px) at top center, linked to homepage
+- **Logo**: ShipGrid logo (48x48px) at top center, linked to homepage
 - **Layout**: Maximum 600px width for mobile compatibility
 - **Typography**: Arial, sans-serif for cross-client compatibility
 - **Warning Design**: Yellow background (#fff3cd) with orange border for report summaries
@@ -1459,7 +1459,7 @@ export const sendEmail = internalAction({
 
 ---
 
-This comprehensive admin alert email system ensures administrators and managers are immediately notified of all content reports, enabling rapid response to moderation issues while maintaining the high-quality community standards of VibeApps.
+This comprehensive admin alert email system ensures administrators and managers are immediately notified of all content reports, enabling rapid response to moderation issues while maintaining the high-quality community standards of ShipGrid.
 
 ## Implementation Summary
 
@@ -1517,7 +1517,7 @@ To complete user report email integration:
 2. **Role-Based**: Only admins and managers receive report emails (not organizers)
 3. **Production Ready**: Uses existing Resend infrastructure with automatic daily reset
 4. **Privacy Protected**: DM reports only show reported messages, not full conversations
-5. **Consistent Design**: All email templates match VibeApps black/white aesthetic
+5. **Consistent Design**: All email templates match ShipGrid black/white aesthetic
 6. **Comprehensive Logging**: All emails tracked in `emailLogs` with metadata
 7. **Testable**: Admin utilities available for development and testing
 

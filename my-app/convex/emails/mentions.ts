@@ -75,7 +75,7 @@ export const sendMentionNotifications = internalAction({
           internal.emails.templates.generateMentionEmail,
           {
             userId: target.userId,
-            userName: targetUser.name || "VibeApps User",
+            userName: targetUser.name || "ShipGrid User",
             userUsername: targetUser.username ?? undefined,
             mentionAuthor: author.name || "Someone",
             storyTitle: story.title,

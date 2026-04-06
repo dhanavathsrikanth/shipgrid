@@ -768,7 +768,7 @@ export function EmailManagement() {
               type="text"
               value={broadcastSubject}
               onChange={(e) => setBroadcastSubject(e.target.value)}
-              placeholder="Enter email subject (will be prefixed with 'VibeApps Updates:')"
+              placeholder="Enter email subject (will be prefixed with 'ShipGrid Updates:')"
               className="w-full px-3 py-2 bg-white border border-border rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
               disabled={isSendingBroadcast}
             />
@@ -792,7 +792,7 @@ export function EmailManagement() {
             />
             <p className="text-xs text-gray-500 mt-1">
               You can use HTML tags for formatting. The content will be wrapped
-              in the VibeApps email template with proper branding, unsubscribe
+              in the ShipGrid email template with proper branding, unsubscribe
               links, and List-Unsubscribe headers for compliance.
             </p>
           </div>
@@ -868,11 +868,11 @@ export function EmailManagement() {
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="text-sm text-yellow-800 space-y-1">
             <p>
-              • <strong>From Address:</strong> VibeApps Updates
-              &lt;alerts@updates.vibeapps.dev&gt;
+              • <strong>From Address:</strong> ShipGrid Updates
+              &lt;alerts@updates.goshipgrid.app&gt;
             </p>
             <p>
-              • <strong>Subject Prefix:</strong> "VibeApps Updates:"
+              • <strong>Subject Prefix:</strong> "ShipGrid Updates:"
             </p>
             <p>
               • <strong>Mention Notifications:</strong> Included in daily digest

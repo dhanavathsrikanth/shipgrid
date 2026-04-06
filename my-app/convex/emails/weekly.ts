@@ -149,7 +149,7 @@ export const sendWeeklyDigest = internalAction({
         internal.emails.templates.generateWeeklyDigest,
         {
           userId: user._id,
-          userName: user.name || "VibeApps User",
+          userName: user.name || "ShipGrid User",
           userUsername: user.username ?? undefined,
           topApps: topApps.map((app: any) => ({
             storyId: app.storyId as any, // Type assertion to handle mixed ID types

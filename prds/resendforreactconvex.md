@@ -1,10 +1,10 @@
 # Resend Email Integration for React + Convex Apps
 
-**Status**: Production-ready implementation guide based on VibeApps successful deployment
+**Status**: Production-ready implementation guide based on ShipGrid successful deployment
 
 ## Overview
 
-This PRD provides a comprehensive guide for integrating Resend email functionality into React applications using Convex.dev as the backend. Based on the successful implementation in VibeApps, this guide covers everything from initial setup to production deployment with real-world best practices and lessons learned.
+This PRD provides a comprehensive guide for integrating Resend email functionality into React applications using Convex.dev as the backend. Based on the successful implementation in ShipGrid, this guide covers everything from initial setup to production deployment with real-world best practices and lessons learned.
 
 ## What Worked Well
 

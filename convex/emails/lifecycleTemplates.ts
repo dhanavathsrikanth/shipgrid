@@ -43,7 +43,7 @@ export const generateBetaLaunchEmail = internalQuery({
 
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>You're receiving this because you followed ${args.productName} on Trova.</p>
-              ${args.unsubscribeToken ? `<p><a href="https://vibeapps.dev/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Unsubscribe</a></p>` : ""}
+              ${args.unsubscribeToken ? `<p><a href="https://goshipgrid.app/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Unsubscribe</a></p>` : ""}
             </div>
           </div>
         </body>
@@ -87,7 +87,7 @@ export const generateChangelogEmail = internalQuery({
 
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>You're receiving this because you followed ${args.productName} on Trova.</p>
-              ${args.unsubscribeToken ? `<p><a href="https://vibeapps.dev/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Unsubscribe</a></p>` : ""}
+              ${args.unsubscribeToken ? `<p><a href="https://goshipgrid.app/api/unsubscribe?token=${args.unsubscribeToken}" style="color: #666;">Unsubscribe</a></p>` : ""}
             </div>
           </div>
         </body>

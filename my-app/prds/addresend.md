@@ -1,19 +1,19 @@
-# Resend Email Integration PRD VibeApps ✅ FULLY IMPLEMENTED
+# Resend Email Integration PRD ShipGrid ✅ FULLY IMPLEMENTED
 
 **Status**: Production ready email system with all features working, critical bugs fixed, and comprehensive debugging capabilities
 
 ## Domains and environments
 
-- Primary app domain: `vibeapps.dev`
-- Email sending subdomain: `updates.vibeapps.dev` (from: `alerts@updates.vibeapps.dev`)
+- Primary app domain: `goshipgrid.app`
+- Email sending subdomain: `updates.goshipgrid.app` (from: `alerts@updates.goshipgrid.app`)
 - Local development UI: `http://localhost:5173/`
 - Convex development and production have distinct Clerk webhook secrets and Resend keys (already configured).
 
-All subjects are prefixed: `VibeApps Updates: <topic>`.
+All subjects are prefixed: `ShipGrid Updates: <topic>`.
 
 ## Overview
 
-This document outlines the implementation of Resend email integration for VibeApps, providing automated email notifications for admin reporting, user engagement, onboarding, and messaging. The system leverages Convex.dev's real-time capabilities with Resend's email API to deliver timely, relevant communications to users and administrators.
+This document outlines the implementation of Resend email integration for ShipGrid, providing automated email notifications for admin reporting, user engagement, onboarding, and messaging. The system leverages Convex.dev's real-time capabilities with Resend's email API to deliver timely, relevant communications to users and administrators.
 
 ## System Behavior & Duplicate Prevention
 
@@ -198,7 +198,7 @@ if (emailSettings?.unsubscribedAt) {
 
 ## Email Types
 
-VibeApps sends the following types of emails:
+ShipGrid sends the following types of emails:
 
 1. **Daily Admin Status Email** (line 106) - Daily platform metrics and health report for administrators
 2. **Daily User Engagement Email** (line 141) - Personalized activity summary for users with recent engagement
@@ -226,7 +226,7 @@ VibeApps sends the following types of emails:
 
 4. Core Email Sender
    - Use Convex Resend Component wrapper in `convex/sendEmails.ts` and route `/resend-webhook` in `convex/http.ts` for event intake.
-   - Enforce from `VibeApps Updates <alerts@updates.vibeapps.dev>` and subject prefix `VibeApps Updates:` via helper.
+   - Enforce from `ShipGrid Updates <alerts@updates.goshipgrid.app>` and subject prefix `ShipGrid Updates:` via helper.
    - Read global `emailsEnabled` kill‑switch before sending. Log results in `emailLogs`.
 
 5. Unsubscribe
@@ -265,7 +265,7 @@ VibeApps sends the following types of emails:
 
 ### Existing Infrastructure
 
-- **Domain**: vibeapps.dev hosted on Netlify; email subdomain updates.vibeapps.dev
+- **Domain**: goshipgrid.app hosted on Netlify; email subdomain updates.goshipgrid.app
 - **Database**: Convex.dev with real-time reactivity
 - **Authentication**: Clerk Auth with webhook sync to Convex
 - **Admin System**: Comprehensive admin dashboard with metrics tracking
@@ -307,7 +307,7 @@ VibeApps sends the following types of emails:
 **Content Structure**:
 
 ```
-Subject: VibeApps Daily Report - [Date]
+Subject: ShipGrid Daily Report - [Date]
 
 Daily Metrics Summary:
 • New Apps Submitted: X (vs. yesterday: +/-Y)
@@ -368,7 +368,7 @@ New submissions from people you follow:
 [Read Comments]  [View App Stats]  [See New Followers]
 
 Keep building amazing things!
-- The VibeApps Team
+- The ShipGrid Team
 ```
 
 **Conditions**:
@@ -418,11 +418,11 @@ Top submissions this week (by vibes):
 **Content Structure**:
 
 ```
-Subject: Welcome to VibeApps! Let's get you started 🚀
+Subject: Welcome to ShipGrid! Let's get you started 🚀
 
 Hey [UserName],
 
-Welcome to VibeApps - the community for discovering and sharing amazing web applications!
+Welcome to ShipGrid - the community for discovering and sharing amazing web applications!
 
 Here's how to get started:
 
@@ -445,7 +445,7 @@ Here's how to get started:
 Need help? Reply to this email or visit our help center.
 
 Happy building!
-- The VibeApps Team
+- The ShipGrid Team
 
 [Unsubscribe] | [Help Center] | [Follow us]
 ```
@@ -461,7 +461,7 @@ Happy building!
 **Content Structure**:
 
 ```
-Subject: New message from [SenderName] on VibeApps
+Subject: New message from [SenderName] on ShipGrid
 
 Hey [RecipientName],
 
@@ -469,11 +469,11 @@ You have a new message from [SenderName]:
 
 "[First 150 characters of message...]"
 
-[Reply on VibeApps] [View All Messages]
+[Reply on ShipGrid] [View All Messages]
 
 Manage your notification preferences: [Settings Link]
 
-- The VibeApps Team
+- The ShipGrid Team
 ```
 
 **Conditions**:
@@ -540,7 +540,7 @@ Reason: [ReportReason]
 
 [Review Report in Admin Dashboard]
 
-- The VibeApps Team
+- The ShipGrid Team
 ```
 
 **Conditions**:
@@ -858,14 +858,14 @@ export const generateDailyAdminEmail = internalQuery({
       return ` (${sign}${diff})`;
     };
 
-    const subject = `VibeApps Daily Report - ${metrics.date}`;
+    const subject = `ShipGrid Daily Report - ${metrics.date}`;
 
     const html = `
       <!DOCTYPE html>
       <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #292929;">VibeApps Daily Report</h1>
+            <h1 style="color: #292929;">ShipGrid Daily Report</h1>
             <p style="color: #666; font-size: 14px;">${metrics.date}</p>
             
             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -898,11 +898,11 @@ export const generateDailyAdminEmail = internalQuery({
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://vibeapps.dev/admin" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Admin Dashboard</a>
+              <a href="https://goshipgrid.app/admin" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Admin Dashboard</a>
             </div>
 
             <p style="color: #666; font-size: 12px; text-align: center;">
-              This is an automated report from VibeApps admin system.
+              This is an automated report from ShipGrid admin system.
             </p>
           </div>
         </body>
@@ -923,18 +923,18 @@ export const generateWelcomeEmail = internalQuery({
     html: v.string(),
   }),
   handler: async (ctx, args) => {
-    const subject = "Welcome to VibeApps! Let's get you started";
+    const subject = "Welcome to ShipGrid! Let's get you started";
 
     const html = `
       <!DOCTYPE html>
       <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #292929;">Welcome to VibeApps!</h1>
+            <h1 style="color: #292929;">Welcome to ShipGrid!</h1>
             
             <p>Hey ${args.userName},</p>
             
-            <p>Welcome to VibeApps - the community for discovering and sharing amazing web applications!</p>
+            <p>Welcome to ShipGrid - the community for discovering and sharing amazing web applications!</p>
             
             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="margin-top: 0;">Here's how to get started:</h2>
@@ -942,35 +942,35 @@ export const generateWelcomeEmail = internalQuery({
               <div style="margin: 15px 0;">
                 <strong>Explore Apps</strong><br>
                 Browse our collection of apps by category<br>
-                <a href="https://vibeapps.dev" style="color: #292929;">Explore Apps →</a>
+                <a href="https://goshipgrid.app" style="color: #292929;">Explore Apps →</a>
               </div>
               
               <div style="margin: 15px 0;">
                 <strong>Submit Your App</strong><br>
                 Share your project with the community<br>
-                <a href="https://vibeapps.dev/submit" style="color: #292929;">Submit App →</a>
+                <a href="https://goshipgrid.app/submit" style="color: #292929;">Submit App →</a>
               </div>
               
               <div style="margin: 15px 0;">
                 <strong>Connect & Follow</strong><br>
                 Follow creators you admire<br>
-                <a href="https://vibeapps.dev/users" style="color: #292929;">Browse Creators →</a>
+                <a href="https://goshipgrid.app/users" style="color: #292929;">Browse Creators →</a>
               </div>
               
               <div style="margin: 15px 0;">
                 <strong>Join Conversations</strong><br>
                 Comment and rate apps you love<br>
-                <a href="https://vibeapps.dev/trending" style="color: #292929;">See Trending →</a>
+                <a href="https://goshipgrid.app/trending" style="color: #292929;">See Trending →</a>
               </div>
             </div>
 
             <p>Need help? Reply to this email or visit our help center.</p>
             
-            <p>Happy building!<br>- The VibeApps Team</p>
+            <p>Happy building!<br>- The ShipGrid Team</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="https://vibeapps.dev/settings" style="color: #666; font-size: 12px;">Manage email preferences</a> | 
-              <a href="https://vibeapps.dev/help" style="color: #666; font-size: 12px;">Help Center</a>
+              <a href="https://goshipgrid.app/settings" style="color: #666; font-size: 12px;">Manage email preferences</a> | 
+              <a href="https://goshipgrid.app/help" style="color: #666; font-size: 12px;">Help Center</a>
             </div>
           </div>
         </body>
@@ -1028,7 +1028,7 @@ export const generateEngagementEmail = internalQuery({
           <ul style="list-style: none; padding: 0;">
             ${engagements.map((eng) => `<li>• ${eng}</li>`).join("")}
           </ul>
-          <a href="https://vibeapps.dev/app/${app.storyId}" style="color: #292929; text-decoration: none;">View App →</a>
+          <a href="https://goshipgrid.app/app/${app.storyId}" style="color: #292929; text-decoration: none;">View App →</a>
         </div>
       `;
     };
@@ -1047,14 +1047,14 @@ export const generateEngagementEmail = internalQuery({
             ${args.engagementSummary.storyEngagements.map(generateAppSection).join("")}
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://vibeapps.dev/dashboard" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Your Dashboard</a>
+              <a href="https://goshipgrid.app/dashboard" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Your Dashboard</a>
             </div>
 
             <p>Keep building amazing things!</p>
-            <p>- The VibeApps Team</p>
+            <p>- The ShipGrid Team</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="https://vibeapps.dev/settings" style="color: #666; font-size: 12px;">Manage email preferences</a>
+              <a href="https://goshipgrid.app/settings" style="color: #666; font-size: 12px;">Manage email preferences</a>
             </div>
           </div>
         </body>
@@ -1743,7 +1743,7 @@ export const createComment = mutation({
         storyId: args.storyId,
         authorId: args.authorId,
         rawText: args.content,
-        permalink: `https://vibeapps.dev/s/${args.storySlug}#c-${String(commentId)}`,
+        permalink: `https://goshipgrid.app/s/${args.storySlug}#c-${String(commentId)}`,
       },
     );
     return commentId;
@@ -1772,7 +1772,7 @@ export const addSubmissionNote = mutation({
         storyId: args.storyId,
         authorId: args.judgeId as any, // judge as user id or mapped
         rawText: args.content,
-        permalink: `https://vibeapps.dev/judging/${args.groupSlug}?story=${String(args.storyId)}#n-${String(noteId)}`,
+        permalink: `https://goshipgrid.app/judging/${args.groupSlug}?story=${String(args.storyId)}#n-${String(noteId)}`,
       },
     );
     return noteId;
@@ -1789,8 +1789,8 @@ Required environment variables for Netlify deployment:
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
 
 # Email Configuration
-RESEND_FROM_DOMAIN=updates.vibeapps.dev
-ADMIN_EMAIL=alerts@updates.vibeapps.dev
+RESEND_FROM_DOMAIN=updates.goshipgrid.app
+ADMIN_EMAIL=alerts@updates.goshipgrid.app
 
 # Existing Convex/Clerk vars
 VITE_CONVEX_URL=https://xxx.convex.cloud
@@ -1804,10 +1804,10 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 - **Brand Colors**: #292929 (primary), #f9f9f9 (surface light), #ffffff (background)
 - **Typography**: Arial, sans-serif for cross-client compatibility
 - **Layout**: Maximum 600px width for mobile compatibility
-- **Logo**: VibeApps logo (android-chrome-512x512.png) at top left of all emails, 48x48px, linking to homepage
+- **Logo**: ShipGrid logo (android-chrome-512x512.png) at top left of all emails, 48x48px, linking to homepage
 - **CTA Buttons**: Consistent styling with #292929 background
 - **Footer**: Standard unsubscribe and settings links plus comprehensive contact/social footer with:
-  - Contact link to GitHub issues (https://github.com/waynesutton/vibeapps/issues)
+  - Contact link to GitHub issues (https://github.com/waynesutton/shipgrid/issues)
   - Social media links (Twitter: @convex_dev, LinkedIn: convex-dev)
   - Open source project information
   - Legal address: Convex 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA
@@ -1827,10 +1827,10 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 - **Footer**: Standardized footer with contact links, social media, open source info, and legal information
 - **Mention Rate Limiting**: Daily engagement emails include maximum 10 mentions to prevent spam
 - **Manage Email Preferences Link**: All emails use a consistent smart link pattern that:
-  - Directs to user's profile page if they have a username: `https://vibeapps.dev/{username}`
-  - Directs to username setup page if authenticated but no username: `https://vibeapps.dev/set-username`
-  - Directs to sign-in page with redirect if not authenticated: `https://vibeapps.dev/sign-in?redirect_url=...`
-  - Implemented as: `${userUsername ? \`https://vibeapps.dev/${userUsername}\` : userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}`
+  - Directs to user's profile page if they have a username: `https://goshipgrid.app/{username}`
+  - Directs to username setup page if authenticated but no username: `https://goshipgrid.app/set-username`
+  - Directs to sign-in page with redirect if not authenticated: `https://goshipgrid.app/sign-in?redirect_url=...`
+  - Implemented as: `${userUsername ? \`https://goshipgrid.app/${userUsername}\` : userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}`
   - This ensures users can always access email preferences from the "Manage Profile & Account" section on their profile page
 
 ## Implementation Timeline ✅ COMPLETED
@@ -1882,7 +1882,7 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 
 ### Phase 7: Template Enhancement & UX ✅ COMPLETED
 
-- [x] Added VibeApps logo to all email templates (48x48px, top-left, linked to homepage)
+- [x] Added ShipGrid logo to all email templates (48x48px, top-left, linked to homepage)
 - [x] Fixed all email links to use proper story slugs and user profile URLs
 - [x] Enhanced manage preferences links to handle logged-out users gracefully
 - [x] Added comprehensive footer with contact, social, and legal information
@@ -1997,7 +1997,7 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 
 ### Email Deliverability
 
-- **SPF/DKIM**: Configure proper DNS records for vibeapps.dev
+- **SPF/DKIM**: Configure proper DNS records for goshipgrid.app
 - **DMARC**: Set up DMARC policy for domain protection
 - **Reputation**: Monitor sending reputation and feedback loops
 - **List Hygiene**: Automatic removal of bounced emails
@@ -2013,7 +2013,7 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
   emailData.headers = [
     {
       name: "List-Unsubscribe",
-      value: `<https://vibeapps.dev/api/unsubscribe?token=${token}>`,
+      value: `<https://goshipgrid.app/api/unsubscribe?token=${token}>`,
     },
     { name: "List-Unsubscribe-Post", value: "List-Unsubscribe=One-Click" },
   ];
@@ -2028,10 +2028,10 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 **Profile URL Format Issue (September 2025)**:
 
 - **Problem**: Email templates were generating incorrect profile URLs using userId instead of username
-- **Error**: Links like `https://vibeapps.dev/user/ks71bgz29jgvx28xsgjtdhx8b97rgbjj` instead of `https://vibeapps.dev/someusername`
-- **Root Cause**: VibeApps uses `/${username}` URL format for profiles, not `/user/${userId}`
+- **Error**: Links like `https://goshipgrid.app/user/ks71bgz29jgvx28xsgjtdhx8b97rgbjj` instead of `https://goshipgrid.app/someusername`
+- **Root Cause**: ShipGrid uses `/${username}` URL format for profiles, not `/user/${userId}`
 - **Solution**: Updated all email templates in `convex/emails/templates.ts`:
-  - Changed URL construction from `https://vibeapps.dev/user/${args.userId}` to `https://vibeapps.dev/${args.userUsername}`
+  - Changed URL construction from `https://goshipgrid.app/user/${args.userId}` to `https://goshipgrid.app/${args.userUsername}`
   - Updated conditions to check `args.userUsername` instead of `args.userId`
   - Fixed mention email template to pass missing `userUsername` parameter
   - Verified all email functions correctly pass `userUsername` to templates
@@ -2085,7 +2085,7 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 
 ---
 
-This comprehensive email integration will enhance user engagement, provide valuable admin insights, and create a more connected VibeApps community experience.
+This comprehensive email integration will enhance user engagement, provide valuable admin insights, and create a more connected ShipGrid community experience.
 
 ## References
 

@@ -40,7 +40,7 @@ export const generateDailyAdminEmail = internalQuery({
       return ` (${sign}${diff})`;
     };
 
-    const subject = `VibeApps Updates: Daily Report - ${metrics.date}`;
+    const subject = `ShipGrid Updates: Daily Report - ${metrics.date}`;
 
     const html = `
       <!DOCTYPE html>
@@ -48,11 +48,11 @@ export const generateDailyAdminEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: left; margin-bottom: 30px;">
-              <a href="https://vibeapps.dev" style="text-decoration: none;">
-                <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px; border-radius: 8px;" />
+              <a href="https://goshipgrid.app" style="text-decoration: none;">
+                <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
-            <h1 style="color: #292929;">VibeApps Daily Report</h1>
+            <h1 style="color: #292929;">ShipGrid Daily Report</h1>
             <p style="color: #666; font-size: 14px;">${metrics.date}</p>
             
             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -85,20 +85,20 @@ export const generateDailyAdminEmail = internalQuery({
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://vibeapps.dev/admin" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Admin Dashboard</a>
+              <a href="https://goshipgrid.app/admin" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Admin Dashboard</a>
             </div>
 
             <p style="color: #666; font-size: 12px; text-align: center;">
-              This is an automated report from VibeApps admin system.
+              This is an automated report from ShipGrid admin system.
             </p>
             
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">VibeApps is an <a href="https://github.com/waynesutton/vibeapps" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
                 <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
                 <p style="margin: 5px 0;">
                   Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
@@ -131,7 +131,7 @@ export const generateWelcomeEmail = internalQuery({
     html: v.string(),
   }),
   handler: async (ctx, args) => {
-    const subject = "Welcome to VibeApps! Let's get you started";
+    const subject = "Welcome to ShipGrid! Let's get you started";
 
     const html = `
       <!DOCTYPE html>
@@ -139,15 +139,15 @@ export const generateWelcomeEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: left; margin-bottom: 30px;">
-              <a href="https://vibeapps.dev" style="text-decoration: none;">
-                <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px; border-radius: 8px;" />
+              <a href="https://goshipgrid.app" style="text-decoration: none;">
+                <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
-            <h1 style="color: #292929;">Welcome to VibeApps!</h1>
+            <h1 style="color: #292929;">Welcome to ShipGrid!</h1>
             
             <p>Hey ${args.userName},</p>
             
-            <p>Welcome to VibeApps, the community where you go to show off what you've built, and see what others are building!</p>
+            <p>Welcome to ShipGrid, the community where you go to show off what you've built, and see what others are building!</p>
             
             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="margin-top: 0;">Here's how to get started:</h2>
@@ -155,39 +155,39 @@ export const generateWelcomeEmail = internalQuery({
               <div style="margin: 15px 0;">
                 <strong>Explore Apps</strong><br>
                 Browse apps by category<br>
-                <a href="https://vibeapps.dev" style="color: #292929;">Explore Apps →</a>
+                <a href="https://goshipgrid.app" style="color: #292929;">Explore Apps →</a>
               </div>
               
               <div style="margin: 15px 0;">
                 <strong>Submit Your App</strong><br>
                 Share your project with the community<br>
-                <a href="https://vibeapps.dev/submit" style="color: #292929;">Submit App →</a>
+                <a href="https://goshipgrid.app/submit" style="color: #292929;">Submit App →</a>
               </div>
               
               <div style="margin: 15px 0;">
                 <strong>See what's trending</strong><br>
                 Vote  for your favorite apps<br>
-                <a href="https://vibeapps.dev/leaderboard" style="color: #292929;">Check out the leaderboard →</a>
+                <a href="https://goshipgrid.app/leaderboard" style="color: #292929;">Check out the leaderboard →</a>
               </div>
               
               <div style="margin: 15px 0;">
                 <strong>Set up your profile</strong><br>
                 Choose your username, add your bio, upload a profile picture and enable or disable email notifications for your inbox. <br>
-                <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : "https://vibeapps.dev/set-username"}" style="color: #292929;">Complete your profile →</a>
+                <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : "https://goshipgrid.app/set-username"}" style="color: #292929;">Complete your profile →</a>
               </div>
             </div>
 
           
             
-            <p>Happy building!<br>VibeApps.dev</p>
+            <p>Happy building!<br>ShipGrid.dev</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666; font-size: 12px;">Manage email preferences in the Manage Profile & Account section on your profile page.</a>${args.unsubscribeToken ? ` ` : ""}
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences in the Manage Profile & Account section on your profile page.</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">VibeApps is an <a href="https://github.com/waynesutton/vibeapps" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
                 <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
                 <p style="margin: 5px 0;">
                   Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
@@ -286,7 +286,7 @@ export const generateEngagementEmail = internalQuery({
     html: v.string(),
   }),
   handler: async (ctx, args) => {
-    const subject = "VibeApps Updates: Your apps received engagement today";
+    const subject = "ShipGrid Updates: Your apps received engagement today";
 
     const generateAppSection = (app: any) => {
       const engagements = [];
@@ -311,7 +311,7 @@ export const generateEngagementEmail = internalQuery({
           <ul style="list-style: none; padding: 0;">
             ${engagements.map((eng) => `<li>• ${eng}</li>`).join("")}
           </ul>
-          <a href="https://vibeapps.dev/s/${app.storySlug || app.storyId}" style="color: #292929; text-decoration: none;">View App →</a>
+          <a href="https://goshipgrid.app/s/${app.storySlug || app.storyId}" style="color: #292929; text-decoration: none;">View App →</a>
         </div>
       `;
     };
@@ -334,7 +334,7 @@ export const generateEngagementEmail = internalQuery({
       <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 10px 0;">
         <h3 style="margin-top: 0; color: #292929;">New submissions from people you follow:</h3>
         <ul style="list-style: none; padding: 0;">
-          ${args.followedSubmissions.map((sub) => `<li>• <a href="https://vibeapps.dev/s/${sub.storySlug || sub.storyId}" style="color: #292929; text-decoration: none;">"${sub.title}"</a> by ${sub.author}</li>`).join("")}
+          ${args.followedSubmissions.map((sub) => `<li>• <a href="https://goshipgrid.app/s/${sub.storySlug || sub.storyId}" style="color: #292929; text-decoration: none;">"${sub.title}"</a> by ${sub.author}</li>`).join("")}
         </ul>
       </div>
     `
@@ -358,7 +358,7 @@ export const generateEngagementEmail = internalQuery({
             )
             .join("")}
         </ul>
-        ${args.mentions.length > 10 ? `<p style="text-align: center; margin: 10px 0;"><a href="https://vibeapps.dev/notifications" style="color: #292929;">View all ${args.mentions.length} mentions →</a></p>` : ""}
+        ${args.mentions.length > 10 ? `<p style="text-align: center; margin: 10px 0;"><a href="https://goshipgrid.app/notifications" style="color: #292929;">View all ${args.mentions.length} mentions →</a></p>` : ""}
       </div>
     `
         : "";
@@ -381,7 +381,7 @@ export const generateEngagementEmail = internalQuery({
             )
             .join("")}
         </ul>
-        ${args.replies.length > 10 ? `<p style="text-align: center; margin: 10px 0;"><a href="https://vibeapps.dev/notifications" style="color: #292929;">View all ${args.replies.length} replies →</a></p>` : ""}
+        ${args.replies.length > 10 ? `<p style="text-align: center; margin: 10px 0;"><a href="https://goshipgrid.app/notifications" style="color: #292929;">View all ${args.replies.length} replies →</a></p>` : ""}
       </div>
     `
         : "";
@@ -431,7 +431,7 @@ export const generateEngagementEmail = internalQuery({
             .join("")}
         </ul>
         <p style="margin: 10px 0;">
-          <a href="https://vibeapps.dev/inbox" style="color: #292929; text-decoration: none; font-weight: 500;">View your inbox →</a>
+          <a href="https://goshipgrid.app/inbox" style="color: #292929; text-decoration: none; font-weight: 500;">View your inbox →</a>
         </p>
       </div>
     `
@@ -443,8 +443,8 @@ export const generateEngagementEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: left; margin-bottom: 30px;">
-              <a href="https://vibeapps.dev" style="text-decoration: none;">
-                <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px; border-radius: 8px;" />
+              <a href="https://goshipgrid.app" style="text-decoration: none;">
+                <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
             <h1 style="color: #292929;">Your apps received engagement today</h1>
@@ -470,19 +470,19 @@ export const generateEngagementEmail = internalQuery({
             ${inboxSection}
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/profile"}" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Your Profile</a>
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/profile"}" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Your Profile</a>
             </div>
 
             <p>Keep shipping amazing things!</p>
-            <p>VibeApps.dev. </p>
+            <p>ShipGrid.dev. </p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">VibeApps is an <a href="https://github.com/waynesutton/vibeapps" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
                 <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
                 <p style="margin: 5px 0;">
                   Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
@@ -522,7 +522,7 @@ export const generateWeeklyDigest = internalQuery({
     html: v.string(),
   }),
   handler: async (ctx, args) => {
-    const subject = "VibeApps Updates: Most Vibes This Week";
+    const subject = "ShipGrid Updates: Most Vibes This Week";
 
     const html = `
       <!DOCTYPE html>
@@ -530,8 +530,8 @@ export const generateWeeklyDigest = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: left; margin-bottom: 30px;">
-              <a href="https://vibeapps.dev" style="text-decoration: none;">
-                <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px; border-radius: 8px;" />
+              <a href="https://goshipgrid.app" style="text-decoration: none;">
+                <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
             <h1 style="color: #292929;">Most Vibes This Week</h1>
@@ -546,7 +546,7 @@ export const generateWeeklyDigest = internalQuery({
                   .map(
                     (app, index) => `
                   <li style="margin: 10px 0;">
-                    <a href="https://vibeapps.dev/s/${app.storySlug || app.storyId}" style="color: #292929; text-decoration: none;">
+                    <a href="https://goshipgrid.app/s/${app.storySlug || app.storyId}" style="color: #292929; text-decoration: none;">
                       <strong>${app.title}</strong>
                     </a> — ${app.vibes} vibes
                   </li>
@@ -557,18 +557,18 @@ export const generateWeeklyDigest = internalQuery({
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://vibeapps.dev/leaderboard" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Weekly Leaderboard</a>
+              <a href="https://goshipgrid.app/leaderboard" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Weekly Leaderboard</a>
             </div>
 
-            <p>VibeApps.dev</p>
+            <p>ShipGrid.dev</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">VibeApps is an <a href="https://github.com/waynesutton/vibeapps" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
                 <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
                 <p style="margin: 5px 0;">
                   Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
@@ -602,7 +602,7 @@ export const generateBroadcastEmail = internalQuery({
     html: v.string(),
   }),
   handler: async (ctx, args) => {
-    const subject = `VibeApps Updates: ${args.subject}`;
+    const subject = `ShipGrid Updates: ${args.subject}`;
 
     const html = `
       <!DOCTYPE html>
@@ -610,12 +610,12 @@ export const generateBroadcastEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: left; margin-bottom: 30px;">
-              <a href="https://vibeapps.dev" style="text-decoration: none;">
-                <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px; border-radius: 8px;" />
+              <a href="https://goshipgrid.app" style="text-decoration: none;">
+                <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
             <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #292929; margin: 0; font-size: 24px;">VibeApps</h1>
+              <h1 style="color: #292929; margin: 0; font-size: 24px;">ShipGrid</h1>
               <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">The community where you go to show off what you've built, and see what others are building.</p>
             </div>
             
@@ -624,19 +624,19 @@ export const generateBroadcastEmail = internalQuery({
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://vibeapps.dev" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Visit VibeApps</a>
+              <a href="https://goshipgrid.app" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Visit ShipGrid</a>
             </div>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <p style="color: #666; font-size: 12px; margin: 0 0 10px 0;">
-                This message was sent by the VibeApps team to keep you updated on platform news and features.
+                This message was sent by the ShipGrid team to keep you updated on platform news and features.
               </p>
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">VibeApps is an <a href="https://github.com/waynesutton/vibeapps" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
                 <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
                 <p style="margin: 5px 0;">
                   Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
@@ -671,7 +671,7 @@ export const generateMentionEmail = internalQuery({
   }),
   handler: async (ctx, args) => {
     const contextText = args.context === "comment" ? "comment" : "judge note";
-    const subject = `VibeApps Updates: You were mentioned by ${args.mentionAuthor}`;
+    const subject = `ShipGrid Updates: You were mentioned by ${args.mentionAuthor}`;
 
     const html = `
       <!DOCTYPE html>
@@ -679,8 +679,8 @@ export const generateMentionEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: left; margin-bottom: 30px;">
-              <a href="https://vibeapps.dev" style="text-decoration: none;">
-                <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px; border-radius: 8px;" />
+              <a href="https://goshipgrid.app" style="text-decoration: none;">
+                <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
             <h1 style="color: #292929;">You were mentioned</h1>
@@ -697,15 +697,15 @@ export const generateMentionEmail = internalQuery({
               <a href="${args.permalink}" style="background: #292929; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View Thread</a>
             </div>
 
-            <p>- The VibeApps Team</p>
+            <p>- The ShipGrid Team</p>
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
-              <a href="${args.userUsername ? `https://vibeapps.dev/${args.userUsername}` : args.userId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
+              <a href="${args.userUsername ? `https://goshipgrid.app/${args.userUsername}` : args.userId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666; font-size: 12px;">Manage email preferences</a>${args.unsubscribeToken ? ` ` : ""}
               
               <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666; line-height: 1.4;">
-                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/vibeapps/issues" style="color: #666;">contact us!</a></p>
+                <p style="margin: 5px 0;">If you have any questions, feedback, ideas or problems <a href="https://github.com/waynesutton/shipgrid/issues" style="color: #666;">contact us!</a></p>
                 <p style="margin: 5px 0;">You can manage which email notifications you receive and unsubscribe from your profile page.</p>
-                <p style="margin: 5px 0;">VibeApps is an <a href="https://github.com/waynesutton/vibeapps" style="color: #666;">open-source project</a>.</p>
+                <p style="margin: 5px 0;">ShipGrid is an <a href="https://github.com/waynesutton/shipgrid" style="color: #666;">open-source project</a>.</p>
                 <p style="margin: 5px 0;">Convex, 444 De Haro St Ste 218, San Francisco, CA 94107-2398 USA</p>
                 <p style="margin: 5px 0;">
                   Follow us on <a href="https://twitter.com/convex_dev" style="color: #666;">Twitter</a> or <a href="https://www.linkedin.com/company/convex-dev/" style="color: #666;">LinkedIn</a>. 
@@ -768,7 +768,7 @@ export const generateAdminUserReportEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px;">
+              <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px;">
             </div>
 
             <h1 style="color: #292929; margin-bottom: 10px;">User Report Requires Review</h1>
@@ -840,11 +840,11 @@ export const generateAdminUserReportEmail = internalQuery({
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                You received this email because you are an administrator at VibeApps.
+                You received this email because you are an administrator at ShipGrid.
               </p>
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                <a href="${args.adminUsername ? `https://vibeapps.dev/${args.adminUsername}` : args.adminUserId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666;">Manage email preferences</a> | 
-                <a href="https://vibeapps.dev/admin" style="color: #666;">Admin Dashboard</a>
+                <a href="${args.adminUsername ? `https://goshipgrid.app/${args.adminUsername}` : args.adminUserId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666;">Manage email preferences</a> | 
+                <a href="https://goshipgrid.app/admin" style="color: #666;">Admin Dashboard</a>
               </p>
             </div>
           </div>
@@ -898,7 +898,7 @@ export const generateReportNotificationEmail = internalQuery({
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <img src="https://vibeapps.dev/android-chrome-512x512.png" alt="VibeApps" style="width: 48px; height: 48px;">
+              <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px;">
             </div>
 
             <h1 style="color: #292929; margin-bottom: 10px;">Story Report Requires Review</h1>
@@ -946,11 +946,11 @@ export const generateReportNotificationEmail = internalQuery({
 
             <div style="text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #eee;">
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                You received this email because you are an administrator at VibeApps.
+                You received this email because you are an administrator at ShipGrid.
               </p>
               <p style="color: #666; font-size: 12px; margin: 5px 0;">
-                <a href="${args.adminUsername ? `https://vibeapps.dev/${args.adminUsername}` : args.adminUserId ? "https://vibeapps.dev/set-username" : "https://vibeapps.dev/sign-in?redirect_url=" + encodeURIComponent("https://vibeapps.dev/profile")}" style="color: #666;">Manage email preferences</a> | 
-                <a href="https://vibeapps.dev/admin" style="color: #666;">Admin Dashboard</a>
+                <a href="${args.adminUsername ? `https://goshipgrid.app/${args.adminUsername}` : args.adminUserId ? "https://goshipgrid.app/set-username" : "https://goshipgrid.app/sign-in?redirect_url=" + encodeURIComponent("https://goshipgrid.app/profile")}" style="color: #666;">Manage email preferences</a> | 
+                <a href="https://goshipgrid.app/admin" style="color: #666;">Admin Dashboard</a>
               </p>
             </div>
           </div>

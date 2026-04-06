@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Submission Judging System is a comprehensive judging platform integrated with the VibeApps admin dashboard. This feature functions as a lightweight judging CRM, allowing administrators to organize submissions into judging groups, define scoring criteria, and enable external judges to score submissions through a dedicated judging interface.
+The Submission Judging System is a comprehensive judging platform integrated with the ShipGrid admin dashboard. This feature functions as a lightweight judging CRM, allowing administrators to organize submissions into judging groups, define scoring criteria, and enable external judges to score submissions through a dedicated judging interface.
 
 **Current Status**: ✅ Fully Implemented and Production-Ready
 

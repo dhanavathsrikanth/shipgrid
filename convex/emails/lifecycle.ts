@@ -48,7 +48,7 @@ export const notifyBetaLaunch = internalAction({
         tagline: story.description,
         icpRoles: story.icpRoles,
         productUrl: story.url,
-        trovaUrl: `https://vibeapps.dev/s/${story.slug || story._id}`,
+        trovaUrl: `https://goshipgrid.app/s/${story.slug || story._id}`,
         unsubscribeToken,
       });
 
@@ -104,7 +104,7 @@ export const notifyChangelogUpdate = internalAction({
         productName: story.title,
         changelogTitle,
         changelogContentExcerpt: changelogExcerpt,
-        trovaUrl: `https://vibeapps.dev/s/${story.slug || story._id}`,
+        trovaUrl: `https://goshipgrid.app/s/${story.slug || story._id}`,
         unsubscribeToken,
       });
 

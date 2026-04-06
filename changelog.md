@@ -1003,8 +1003,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Problem**: New users receive welcome emails before completing username setup, causing broken profile links
   - **Root Cause**: Users created via Clerk don't immediately have usernames set in Convex database
   - **Solution**: Updated email template logic with three-tier fallback system:
-    - If user has username: `https://vibeapps.dev/username` (direct to profile)
-    - If user exists but no username: `https://vibeapps.dev/set-username` (setup flow)
+    - If user has username: `https://goshipgrid.app/username` (direct to profile)
+    - If user exists but no username: `https://goshipgrid.app/set-username` (setup flow)
     - If no user data: Sign-in page with redirect
   - **Welcome Email Enhancement**: Updated welcome email content to guide users through profile setup
 
@@ -1027,7 +1027,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Story Report Alerts**: Instant email notifications to all admin/manager users when content is reported
   - **Message Report Integration**: Future-ready system for inbox message report notifications
   - **User Report System**: Extensible framework for user-to-user reporting with admin alerts
-  - **Email Templates**: Professional HTML templates with VibeApps branding and actionable admin links
+  - **Email Templates**: Professional HTML templates with ShipGrid branding and actionable admin links
   - **Integration Points**: Seamless integration with existing `convex/reports.ts` and alert system
   - **Rate Limiting**: No rate limits for critical admin notifications to ensure immediate delivery
   - **Resend Integration**: Built on existing email infrastructure with proper logging and tracking

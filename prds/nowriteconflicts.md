@@ -257,7 +257,7 @@ Check your Convex dashboard for:
 - [Mutation Functions](https://docs.convex.dev/functions/mutation-functions)
 - [Query Functions](https://docs.convex.dev/functions/query-functions)
 
-## Real-World Fixes Applied to VibeApps
+## Real-World Fixes Applied to ShipGrid
 
 ### Write Conflicts Fixed (November 2025)
 

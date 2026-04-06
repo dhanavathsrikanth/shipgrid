@@ -161,7 +161,7 @@ export function Footer() {
               </p>
               
               <p>
-                Powered by <a href="https://convex.dev?utm_source=vibeapps-dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Convex</a>, this platform delivers real-time updates and seamless state management.
+                Powered by <a href="https://convex.dev?utm_source=shipgrid-dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Convex</a>, this platform delivers real-time updates and seamless state management.
               </p>
               
               <div className="bg-muted p-4 rounded-2xl border border-border space-y-2">

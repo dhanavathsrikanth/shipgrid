@@ -64,8 +64,8 @@ function generateStoryHTML(story: {
 }) {
   const imageUrl =
     story.screenshotUrl ||
-    "https://vibeapps.dev/vibe-apps-open-graphi-image.png";
-  const canonicalUrl = `https://vibeapps.dev/s/${story.slug}`;
+    "https://goshipgrid.app/vibe-apps-open-graphi-image.png";
+  const canonicalUrl = `https://goshipgrid.app/s/${story.slug}`;
   const siteName = "Vibe Apps";
   const twitterHandle = "@waynesutton";
 
@@ -180,8 +180,8 @@ function generateSubmissionPageHTML(page: {
   slug: string;
 }) {
   const imageUrl =
-    page.imageUrl || "https://vibeapps.dev/vibe-apps-open-graphi-image.png";
-  const canonicalUrl = `https://vibeapps.dev/submit/${page.slug}`;
+    page.imageUrl || "https://goshipgrid.app/vibe-apps-open-graphi-image.png";
+  const canonicalUrl = `https://goshipgrid.app/submit/${page.slug}`;
   const siteName = "Vibe Apps";
   const twitterHandle = "@waynesutton";
 
@@ -375,7 +375,7 @@ http.route({
           <body>
             <h1 class="error">Invalid Unsubscribe Link</h1>
             <p>The unsubscribe link is missing required information. Please contact support if you continue to receive unwanted emails.</p>
-            <a href="https://vibeapps.dev">Return to VibeApps</a>
+            <a href="https://goshipgrid.app">Return to ShipGrid</a>
           </body>
         </html>
       `,
@@ -409,9 +409,9 @@ http.route({
             </head>
             <body>
               <h1 class="success">Successfully Unsubscribed</h1>
-              <p>You have been unsubscribed from VibeApps emails. You will no longer receive email notifications.</p>
+              <p>You have been unsubscribed from ShipGrid emails. You will no longer receive email notifications.</p>
               <p>You can manage your email preferences anytime from your profile page.</p>
-              <a href="https://vibeapps.dev" class="button">Return to VibeApps</a>
+              <a href="https://goshipgrid.app" class="button">Return to ShipGrid</a>
             </body>
           </html>
         `,
@@ -436,7 +436,7 @@ http.route({
             <body>
               <h1 class="warning">Unsubscribe Link Expired</h1>
               <p>This unsubscribe link has expired or has already been used. You can manage your email preferences from your profile page.</p>
-              <a href="https://vibeapps.dev" class="button">Go to VibeApps</a>
+              <a href="https://goshipgrid.app" class="button">Go to ShipGrid</a>
             </body>
           </html>
         `,
@@ -462,7 +462,7 @@ http.route({
           <body>
             <h1 class="error">Unsubscribe Error</h1>
             <p>There was an error processing your unsubscribe request. Please contact support.</p>
-            <a href="https://vibeapps.dev">Return to VibeApps</a>
+            <a href="https://goshipgrid.app">Return to ShipGrid</a>
           </body>
         </html>
       `,

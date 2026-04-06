@@ -2,7 +2,7 @@
 
 ## Overview
 
-Welcome to the VibeApps judging platform! Each judge will review and score app submissions based on the Scoring Criteria outlined below. This guide will walk you through the judging process and explain how to use the platform effectively.
+Welcome to the ShipGrid judging platform! Each judge will review and score app submissions based on the Scoring Criteria outlined below. This guide will walk you through the judging process and explain how to use the platform effectively.
 
 ## How Judging Works
 
