@@ -41,6 +41,7 @@ type AdminUserView = {
   isBanned: boolean;
   isPaused: boolean;
   isVerified: boolean;
+  role?: string;
 };
 
 type StatusFilter =

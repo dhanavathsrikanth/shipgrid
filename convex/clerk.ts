@@ -82,18 +82,14 @@ export const handleClerkWebhook = internalAction({
         const userData = event.data; // This is the Clerk User object
 
         // Extract primary email
-        let primaryEmail: string | undefined = undefined;
-        if (userData.primary_email_address_id && userData.email_addresses) {
-          const foundEmail = userData.email_addresses.find(
-            (ea: any) => ea.id === userData.primary_email_address_id
-          );
-          if (foundEmail) {
-            primaryEmail = foundEmail.email_address;
-          }
-        }
-        if (!primaryEmail && userData.email_addresses && userData.email_addresses.length > 0) {
-          // Fallback to the first email if primary is not clearly identified
-          primaryEmail = userData.email_addresses[0].email_address;
+        const primaryEmailId = userData.primary_email_address_id;
+        const emails = (userData.email_addresses || []) as any[];
+        
+        let primaryEmail = emails.find(e => e.id === primaryEmailId)?.email_address;
+        
+        // Fallback to first if primary not explicitly identified
+        if (!primaryEmail && emails.length > 0) {
+          primaryEmail = emails[0].email_address;
         }
 
         // Use scheduler.runAfter(0, ...) to process the mutation in the background.

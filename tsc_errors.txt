@@ -1,0 +1,135 @@
+.next/dev/types/validator.ts(170,39): error TS2307: Cannot find module '../../../src/app/(main)/compare/slugs/page.js' or its corresponding type declarations.
+convex/sendEmails.ts(12,3): error TS2322: Type 'FunctionReference<"mutation", "internal", DefaultFunctionArgs, any, string | undefined>' is not assignable to type 'FunctionReference<"mutation", FunctionVisibility, { id: EmailId; event: { type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; ... 8 more ...; subject: string; }; } | ... 6 more ... | { ...; }; }>'.
+  Types of property '_args' are incompatible.
+    Type 'DefaultFunctionArgs' is missing the following properties from type '{ id: EmailId; event: { type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | ... 1 more ... | undefined; ... 6 more ...; subject: string; }; } | ... 6 more ... | { ...; }; }': id, event
+convex/sendEmails.ts(98,5): error TS2322: Type 'VUnion<{ type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; ... 6 more ...; subject: string; }; } | ... 6 more ... | { ...; }, [...], "required", "type" | ... 28 more ......' is not assignable to type 'Validator<any, OptionalProperty, any>'.
+  Type 'VUnion<{ type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; ... 6 more ...; subject: string; }; } | ... 6 more ... | { ...; }, [...], "required", "type" | ... 28 more ......' is not assignable to type 'VUnion<any, Validator<any, "required", any>[], OptionalProperty, any>'.
+    Types of property 'members' are incompatible.
+      Type '[VObject<{ type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; ... 6 more ...; subject: string; }; }, { ...; }, "required", "type" | ... 13 more ... | `data.tags.${string}...' is not assignable to type 'Validator<any, "required", any>[]'.
+        Type 'VObject<{ type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; ... 6 more ...; subject: string; }; }, { ...; }, "required", "type" | ... 13 more ... | `data.tags.${string}`...' is not assignable to type 'Validator<any, "required", any>'.
+          Type 'VObject<{ type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; ... 6 more ...; subject: string; }; }, { ...; }, "required", "type" | ... 13 more ... | `data.tags.${string}`>' is not assignable to type 'Validator<any, "required", any>'.
+            Type 'VObject<{ type: "email.sent"; created_at: string; data: { broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; ... 6 more ...; subject: string; }; }, { ...; }, "required", "type" | ... 13 more ... | `data.tags.${string}`>' is not assignable to type 'VObject<any, Record<string, Validator<any, OptionalProperty, any>>, "required", any>'.
+              Types of property 'fields' are incompatible.
+                Type '{ type: VLiteral<"email.sent", "required">; created_at: VString<string, "required">; data: VObject<{ broadcast_id?: string | undefined; cc?: string | string[] | undefined; ... 8 more ...; subject: string; }, { ...; }, "required", "tags" | ... 10 more ... | `tags.${string}`>; }' is not assignable to type 'Record<string, Validator<any, OptionalProperty, any>>'.
+                  Property 'data' is incompatible with index signature.
+                    Type 'VObject<{ broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; headers?: { name: string; value: string; }[] | undefined; ... 5 more ...; subject: string; }, { ...; }, "required", "tags" | ... 10 more ... | `tags.${string...' is not assignable to type 'Validator<any, OptionalProperty, any>'.
+                      Type 'VObject<{ broadcast_id?: string | undefined; cc?: string | string[] | undefined; bcc?: string | string[] | undefined; reply_to?: string | string[] | undefined; headers?: { name: string; value: string; }[] | undefined; ... 5 more ...; subject: string; }, { ...; }, "required", "tags" | ... 10 more ... | `tags.${string...' is not assignable to type 'VObject<any, Record<string, Validator<any, OptionalProperty, any>>, OptionalProperty, any>'.
+                        Types of property 'omit' are incompatible.
+                          Type '<K extends "tags" | "subject" | "headers" | "to" | "created_at" | "broadcast_id" | "email_id" | "from" | "cc" | "bcc" | "reply_to">(...fields: K[]) => VObject<Expand<Omit<{ broadcast_id?: string | undefined; ... 9 more ...; subject: string; }, K>>, Expand<...>, "required", { [Property in keyof Expand<...>]: Property...' is not assignable to type '<K extends string>(...fields: K[]) => VObject<Expand<Omit<any, K>>, Expand<Omit<Record<string, Validator<any, OptionalProperty, any>>, K>>, OptionalProperty, { [Property in keyof Expand<...>]: Property | `${Property & string}.${Expand<...>[Property]["fieldPaths"]}`; }[keyof Expand<...>] & string>'.
+                            Types of parameters 'fields' and 'fields' are incompatible.
+                              Type 'K' is not assignable to type '"tags" | "subject" | "headers" | "to" | "created_at" | "broadcast_id" | "email_id" | "from" | "cc" | "bcc" | "reply_to"'.
+                                Type 'string' is not assignable to type '"tags" | "subject" | "headers" | "to" | "created_at" | "broadcast_id" | "email_id" | "from" | "cc" | "bcc" | "reply_to"'.
+convex/sendEmails.ts(101,23): error TS18046: 'args.event' is of type 'unknown'.
+convex/sendEmails.ts(116,9): error TS2322: Type '{}' is not assignable to type 'string'.
+convex/sendEmails.ts(118,19): error TS18046: 'args.event' is of type 'unknown'.
+my-app/src/app/layout.tsx(4,10): error TS2614: Module '"@/components/ConvexClientProvider"' has no exported member 'ConvexClientProvider'. Did you mean to use 'import ConvexClientProvider from "@/components/ConvexClientProvider"' instead?
+src/app/(main)/matched/page.tsx(12,45): error TS2551: Property 'getMatchedStoriesAction' does not exist on type '{ getMatchedStories: FunctionReference<"action", "public", {}, any[], string | undefined>; }'. Did you mean 'getMatchedStories'?
+src/components/admin/ContentModeration.tsx(438,5): error TS2304: Cannot find name 'updateCustomMessage'.
+src/components/admin/ContentModeration.tsx(1942,9): error TS2322: Type '{ type: "story"; _id: Id<"stories">; _creationTime: number; email?: string | undefined; icpRoles?: string[] | undefined; longDescription?: string | undefined; submitterName?: string | undefined; ... 48 more ...; votesCount: number; }[] | { ...; }[]' is not assignable to type 'ModeratableItem[]'.
+  Type '{ type: "comment"; authorName: string | undefined; authorUsername: string | null; authorRole: string | null | undefined; authorBio: string | null | undefined; _id: Id<"comments">; ... 7 more ...; storyId: Id<...>; }[]' is not assignable to type 'ModeratableItem[]'.
+    Type '{ type: "comment"; authorName: string | undefined; authorUsername: string | null; authorRole: string | null | undefined; authorBio: string | null | undefined; _id: Id<"comments">; ... 7 more ...; storyId: Id<...>; }' is not assignable to type 'ModeratableItem'.
+      Type '{ type: "comment"; authorName: string | undefined; authorUsername: string | null; authorRole: string | null | undefined; authorBio: string | null | undefined; _id: Id<"comments">; ... 7 more ...; storyId: Id<...>; }' is not assignable to type '{ _id: Id<"comments">; _creationTime: number; isHidden?: boolean | undefined; parentId?: Id<"comments"> | undefined; userId: Id<"users">; votes: number; status: string; content: string; storyId: Id<...>; } & { ...; } & { ...; }'.
+        Type '{ type: "comment"; authorName: string | undefined; authorUsername: string | null; authorRole: string | null | undefined; authorBio: string | null | undefined; _id: Id<"comments">; ... 7 more ...; storyId: Id<...>; }' is not assignable to type '{ authorName?: string | undefined; authorUsername?: string | undefined; }'.
+          Types of property 'authorUsername' are incompatible.
+            Type 'string | null' is not assignable to type 'string | undefined'.
+              Type 'null' is not assignable to type 'string | undefined'.
+src/components/admin/ReportManagement.tsx(367,35): error TS2322: Type '"destructive_outline"' is not assignable to type '"link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined'.
+src/components/admin/UserModeration.tsx(326,125): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/components/admin/UserModeration.tsx(327,36): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/components/admin/UserModeration.tsx(342,144): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/components/admin/UserModeration.tsx(343,73): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/components/admin/UserModeration.tsx(344,39): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/components/admin/UserModeration.tsx(346,33): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/components/admin/UserModeration.tsx(347,39): error TS2339: Property 'role' does not exist on type 'AdminUserView'.
+src/views/LeaderboardPage.tsx(31,50): error TS2322: Type '{ authorName?: string | undefined; authorUsername?: string | null | undefined; title: string; slug: string; votes: number; _id: Id<"stories">; }' is not assignable to type '{ _id: string; title: string; slug: string; votes: number; authorUsername?: string | undefined; authorName?: string | undefined; }'.
+  Types of property 'authorUsername' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/views/NavTestPage.tsx(132,24): error TS2741: Property 'children' is missing in type '{}' but required in type '{ children: ReactNode; }'.
+src/views/UserProfilePage.tsx(484,39): error TS2339: Property 'externalId' does not exist on type '{ _id: Id<"users">; _creationTime: number; email?: string | undefined; username?: string | undefined; role?: string | undefined; imageUrl?: string | undefined; bio?: string | undefined; ... 15 more ...; clerkId: string; }'.
+typescript path=convex/auth.ts(2,39): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/auth.ts(3,21): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/auth.ts(18,40): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/comments.ts(1,33): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/comments.ts(4,20): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/comments.ts(11,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/comments.ts(11,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/comments.ts(17,37): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/comments.ts(27,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/comments.ts(27,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/comments.ts(35,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/comments.ts(35,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/comments.ts(43,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/comments.ts(43,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/comments.ts(51,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/comments.ts(51,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/convexBoxConfig.ts(1,33): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/convexBoxConfig.ts(4,20): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/convexBoxConfig.ts(12,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/convexBoxConfig.ts(29,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/convexBoxConfig.ts(29,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/convexBoxConfig.ts(50,50): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(1,51): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/forms.ts(4,25): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/forms.ts(7,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(15,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(15,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/forms.ts(21,38): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/forms.ts(35,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(35,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/forms.ts(50,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(50,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/forms.ts(73,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(73,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/forms.ts(78,39): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/forms.ts(81,50): error TS7006: Parameter 'ef' implicitly has an 'any' type.
+typescript path=convex/forms.ts(81,74): error TS7006: Parameter 'f' implicitly has an 'any' type.
+typescript path=convex/forms.ts(99,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(99,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/forms.ts(102,82): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/forms.ts(106,86): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/forms.ts(116,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/forms.ts(116,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/forms.ts(120,32): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/reports.ts(1,65): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/reports.ts(3,25): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/reports.ts(5,21): error TS2307: Cannot find module './_generated/api' or its corresponding type declarations.
+typescript path=convex/reports.ts(14,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/reports.ts(44,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/reports.ts(44,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/reports.ts(69,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/reports.ts(69,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/reports.ts(95,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/reports.ts(95,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/settings.ts(1,33): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/settings.ts(4,21): error TS2307: Cannot find module '../_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/settings.ts(21,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/settings.ts(35,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/settings.ts(35,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/settings.ts(54,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/settings.ts(54,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/stories.ts(1,33): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/stories.ts(4,20): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/stories.ts(13,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/stories.ts(13,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/stories.ts(25,37): error TS7006: Parameter 'q' implicitly has an 'any' type.
+typescript path=convex/stories.ts(35,21): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/stories.ts(35,26): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/stories.ts(44,21): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/stories.ts(44,26): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/stories.ts(53,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/stories.ts(53,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/stories.ts(66,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/stories.ts(66,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/stories.ts(74,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/stories.ts(74,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/tags.ts(1,33): error TS2307: Cannot find module './_generated/server' or its corresponding type declarations.
+typescript path=convex/tags.ts(4,20): error TS2307: Cannot find module './_generated/dataModel' or its corresponding type declarations.
+typescript path=convex/tags.ts(8,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/tags.ts(15,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/tags.ts(35,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/tags.ts(35,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/tags.ts(76,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/tags.ts(76,24): error TS7006: Parameter 'args' implicitly has an 'any' type.
+typescript path=convex/tags.ts(119,19): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+typescript path=convex/tags.ts(119,24): error TS7006: Parameter 'args' implicitly has an 'any' type.

@@ -39,7 +39,7 @@ export function LeaderboardPage() {
 }
 
 interface LeaderboardItemProps {
-  story: { _id: string; title: string; slug: string; votes: number; authorUsername?: string; authorName?: string };
+  story: { _id: string; title: string; slug: string; votes: number; authorUsername?: string | null; authorName?: string | null };
   rank: number;
 }
 

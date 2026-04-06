@@ -50,8 +50,8 @@ import { toast } from "sonner";
 import { useDialog } from "@/hooks/useDialog";
 
 type Comment = Doc<"comments"> & {
-  authorName?: string;
-  authorUsername?: string;
+  authorName?: string | null;
+  authorUsername?: string | null;
 };
 
 type ModeratableItem =
@@ -434,12 +434,19 @@ export function ContentModeration() {
     setEditingMessageId(null);
     setCurrentMessage("");
   };
-  const handleSaveMessage = (storyId: Id<"stories">) => {
-    updateCustomMessage({
-      storyId,
-      customMessage: currentMessage || undefined,
-    });
-    handleCancelEditMessage(); // Close editor on save
+  const handleSaveMessage = async (storyId: Id<"stories">) => {
+    try {
+      await adminUpdateStory({
+        storyId,
+        updates: {
+          customMessage: currentMessage || undefined,
+        },
+      });
+      toast.success("Custom message updated");
+      handleCancelEditMessage(); // Close editor on save
+    } catch (err: any) {
+      toast.error(`Failed to update message: ${err.message}`);
+    }
   };
 
   // Handlers for tag management

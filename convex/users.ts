@@ -27,6 +27,20 @@ import {
   ratingWithStoryDetailsValidator,
 } from "./validators"; // Updated import path
 import { paginationOptsValidator } from "convex/server"; // Added import
+import { UserIdentity } from "convex/server";
+
+/**
+ * Centrally extracts a primary email from a Clerk UserIdentity object.
+ * Handles different field mappings used by Clerk/Convex.
+ */
+export function extractEmailFromIdentity(identity: UserIdentity): string | undefined {
+  if (typeof identity.email === "string") return identity.email;
+  if (typeof (identity as any).emailAddress === "string") return (identity as any).emailAddress;
+  if (typeof (identity as any).primaryEmailAddress?.emailAddress === "string") {
+    return (identity as any).primaryEmailAddress.emailAddress;
+  }
+  return undefined;
+}
 
 /**
  * Ensures a user record exists in the Convex database for the authenticated user.
@@ -45,16 +59,7 @@ export const ensureUser = mutation({
     }
 
     // 1. Extract email and basic info first
-    let clerkEmail: string | undefined = undefined;
-    if (typeof identity.email === "string") {
-      clerkEmail = identity.email;
-    } else if (typeof identity.emailAddress === "string") {
-      clerkEmail = identity.emailAddress;
-    } else if (
-      typeof (identity as any).primaryEmailAddress?.emailAddress === "string"
-    ) {
-      clerkEmail = (identity as any).primaryEmailAddress.emailAddress;
-    }
+    const clerkEmail = extractEmailFromIdentity(identity);
 
     let candidateUsername: string | null = null;
     const jwtUsername_any = (identity as any).username || identity.nickname || identity.preferredUsername;
@@ -230,7 +235,7 @@ export async function getAuthenticatedUserId(
   }
 
   // 2. Secondary lookup: by Email (supports identity migration/re-sign-ups)
-  const email = (identity.email || (identity as any).emailAddress || (identity as any).primaryEmailAddress?.emailAddress) as string | undefined;
+  const email = extractEmailFromIdentity(identity);
   if (email) {
     user = await ctx.db
       .query("users")
@@ -2175,26 +2180,6 @@ export const getAllWithIcpInternal = internalQuery({
     return users.filter((u) => !!u.icpRoles);
   },
 });
-/**
- * Internal mutation to update a user's email address.
- * Used by the clerkSync action to backfill missing emails.
- */
-export const updateEmailInternal = internalMutation({
-  args: {
-    userId: v.id("users"),
-    email: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-    if (user.email !== args.email) {
-      await ctx.db.patch(args.userId, { email: args.email });
-      console.log(`Updated email for user ${user.clerkId}: ${args.email}`);
-    }
-  },
-});
 
 /**
  * Internal query to fetch a user by Clerk ID for syncing.
@@ -2237,14 +2222,28 @@ export const syncUserFromClerkWebhook = internalMutation({
     publicMetadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    console.log(`Syncing user from Clerk: ${args.clerkId}`);
+    console.log(`[Webhook Sync] Processing Clerk ID: ${args.clerkId}`);
 
-    const existingUser = await ctx.db
+    // 1. Primary lookup by Clerk ID
+    let existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .first();
 
-    // Normalize nulls to undefined for schema compatibility
+    // 2. Identity Recovery: If not found by Clerk ID, try Email to prevent duplicates
+    if (!existingUser && args.email) {
+      existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", args.email!))
+        .first();
+      
+      if (existingUser) {
+        console.log(`[Webhook Sync] Recovered existing record ${existingUser._id} for new Clerk ID ${args.clerkId} via email ${args.email}`);
+        // Link the existing record to the new Clerk ID
+        await ctx.db.patch(existingUser._id, { clerkId: args.clerkId });
+      }
+    }
+
     const firstName = args.firstName ?? undefined;
     const lastName = args.lastName ?? undefined;
     const imageUrl = args.imageUrl ?? undefined;
@@ -2260,21 +2259,32 @@ export const syncUserFromClerkWebhook = internalMutation({
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
+      // Email Sync
       if (args.email && args.email !== existingUser.email) {
         updates.email = args.email;
         changed = true;
       }
+      
+      // Name Sync
       if (name && name !== existingUser.name) {
         updates.name = name;
         changed = true;
       }
+      
+      // Image Sync
       if (imageUrl && imageUrl !== existingUser.imageUrl) {
         updates.imageUrl = imageUrl;
         changed = true;
       }
       
+      // Role Sync
+      if (role && role !== existingUser.role) {
+        updates.role = role;
+        changed = true;
+      }
+      
+      // Username Sync (Idempotent)
       if (username && username !== existingUser.username) {
-        // Ensure username is unique before setting it
         const conflictingUser = await ctx.db
           .query("users")
           .withIndex("by_username", (q) => q.eq("username", username))
@@ -2284,40 +2294,36 @@ export const syncUserFromClerkWebhook = internalMutation({
         if (!conflictingUser) {
           updates.username = username;
           changed = true;
+        } else {
+          console.warn(`[Webhook Sync] Username conflict for ${username}, skip sync`);
         }
-      }
-
-      if (role && role !== existingUser.role) {
-        updates.role = role;
-        changed = true;
       }
 
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
-        console.log(`Updated existing user: ${args.clerkId}`);
-      } else {
-        console.log(`No changes needed for user: ${args.clerkId}`);
+        console.log(`[Webhook Sync] Updated user: ${args.clerkId}`);
       }
     } else {
-      // If user doesn't exist, create them
-      if (args.email) {
-        await ctx.db.insert("users", {
-          clerkId: args.clerkId,
-          email: args.email,
-          name: name || "Anonymous",
-          imageUrl: imageUrl,
-          role: role,
-          username: username,
-          isBanned: false,
-          isPaused: false,
-          isVerified: false,
-          inboxEnabled: true,
-          emojiTheme: "default",
-        });
-        console.log(`Created new user from Clerk webhook: ${args.clerkId}`);
-      } else {
-        console.warn(`User ${args.clerkId} has no email, skipping creation.`);
+      // 3. New user insertion
+      if (!args.email) {
+        console.warn(`[Webhook Sync] Skipping creation for ${args.clerkId}: No email found.`);
+        return;
       }
+
+      await ctx.db.insert("users", {
+        clerkId: args.clerkId,
+        email: args.email,
+        name: name || "Anonymous",
+        imageUrl: imageUrl,
+        role: role,
+        username: username,
+        isBanned: false,
+        isPaused: false,
+        isVerified: false,
+        inboxEnabled: true,
+        emojiTheme: "default",
+      });
+      console.log(`[Webhook Sync] Created new record for ${args.clerkId}`);
     }
   },
 });

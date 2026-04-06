@@ -1398,7 +1398,7 @@ export const deleteOwnStory = mutation({
       // This would require an additional check like:
       // const identity = await ctx.auth.getUserIdentity();
       // const userDoc = await ctx.db.query("users").withIndex("by_clerk_id", q => q.eq("clerkId", identity.subject)).unique();
-      // if (!userDoc?.roles?.includes("admin")) {
+      // if (userDoc?.role !== "admin") {
       //   throw new Error("User not authorized to delete this story.");
       // }
       // For now, strict ownership for this mutation:
