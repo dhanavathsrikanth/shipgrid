@@ -11,6 +11,21 @@ import {
 import { v, ConvexError } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 
+/**
+ * Diagnostic query to find duplicate user records by clerkId.
+ */
+export const checkUserDuplicates = query({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+    return {
+      totalUsers: users.length,
+      deploymentUrl: process.env.CONVEX_URL || "UNKNOWN",
+      users: users.map(u => ({ ...u })),
+    };
+  },
+});
+
 export const getUserByIdInternal = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
