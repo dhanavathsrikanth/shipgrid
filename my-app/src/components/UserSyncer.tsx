@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -15,6 +15,7 @@ export function UserSyncer() {
   // the record is guaranteed to exist, preventing a race where setUsername fires
   // before the user row is created.
   const [ensureUserDone, setEnsureUserDone] = useState(false);
+  const ensureUserRunning = useRef(false); // Add execution guard
 
   const convexUserDoc = useQuery(
     api.users.getMyUserDocument,
@@ -25,7 +26,8 @@ export function UserSyncer() {
 
   // Step 1: Run ensureUser once Clerk is ready; only proceed to routing after it resolves
   useEffect(() => {
-    if (isClerkLoaded && isSignedIn && clerkUser && !ensureUserDone) {
+    if (isClerkLoaded && isSignedIn && clerkUser && !ensureUserDone && !ensureUserRunning.current) {
+      ensureUserRunning.current = true;
       ensureUserMutation()
         .then(() => {
           setEnsureUserDone(true);
@@ -33,6 +35,7 @@ export function UserSyncer() {
         .catch((error) => {
           console.error("Error running ensureUser mutation:", error);
           setEnsureUserDone(true); // unblock routing even on error
+          ensureUserRunning.current = false; // Reset on error so we could optionally retry
         });
     }
   }, [isClerkLoaded, isSignedIn, clerkUser, ensureUserMutation, ensureUserDone]);
