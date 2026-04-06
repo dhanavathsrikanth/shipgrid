@@ -122,16 +122,16 @@ export function UserModeration() {
 
   const handleSyncClerk = async () => {
     setIsSyncing(true);
-    toast.promise(syncAllMissingAction(), {
-      loading: "Syncing users with Clerk (this may take a few minutes for large batches)...",
-      success: "User sync complete! Refreshing list...",
-      error: (err) => `Sync failed: ${err.message || "Unknown error"}`,
-    });
     
     try {
-      await syncAllMissingAction();
+      // toast.promise returns the result of the promise
+      await toast.promise(syncAllMissingAction(), {
+        loading: "Syncing users with Clerk (this may take a few minutes for large batches)...",
+        success: (data: any) => `Successfully synced ${data.count || 0} users! Refreshing list...`,
+        error: (err) => `Sync failed: ${err.message || "Unknown error"}`,
+      });
     } catch (err) {
-      console.error(err);
+      console.error("Clerk sync error:", err);
     } finally {
       setIsSyncing(false);
     }
