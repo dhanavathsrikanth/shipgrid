@@ -454,13 +454,4 @@ http.route({
   }),
 });
 
-// Resend Component: Mount webhook to handle email delivery events
-http.route({
-  path: "/resend-webhook",
-  method: "POST",
-  handler: httpAction(async (ctx, request) => {
-    return await resend.handleResendEventWebhook(ctx, request);
-  }),
-});
-
 export default http;
