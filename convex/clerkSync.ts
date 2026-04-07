@@ -64,82 +64,33 @@ async function _syncAllMissingEmails(ctx: ActionCtx) {
   }
 
   let totalSynced = 0;
-  let hasMore = true;
-  let offset = 0;
 
-  console.log("[Bulk Sync] Starting full Clerk-to-Convex synchronization...");
+  console.log("[Bulk Sync] Starting Convex-driven Clerk-to-Convex synchronization...");
 
-  while (hasMore) {
-    try {
-      const url = new URL("https://api.clerk.com/v1/users");
-      url.searchParams.set("limit", "100");
-      url.searchParams.set("order_by", "+created_at");
-      url.searchParams.set("offset", offset.toString());
-
-      const response = await fetch(url.toString(), {
-        headers: {
-          Authorization: `Bearer ${clerkSecretKey}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        console.error(`[Bulk Sync] Clerk API failed: ${response.statusText}`);
-        break;
-      }
-
-      const clerkUsers = await response.json();
-      if (!clerkUsers || clerkUsers.length === 0) {
-        hasMore = false;
-        break;
-      }
-
-      console.log(`[Bulk Sync] Processing batch of ${clerkUsers.length} users at offset ${offset}...`);
-
-      // Process each user in the batch
-      for (const clerkUser of clerkUsers) {
-        let primaryEmail: string | undefined = undefined;
-        if (clerkUser.primary_email_address_id && clerkUser.email_addresses) {
-          const foundEmail = clerkUser.email_addresses.find(
-            (ea: any) => ea.id === clerkUser.primary_email_address_id
-          );
-          if (foundEmail) {
-            primaryEmail = foundEmail.email_address;
-          }
-        }
-        if (!primaryEmail && clerkUser.email_addresses?.[0]) {
-          primaryEmail = clerkUser.email_addresses[0].email_address;
-        }
-
-        // Trigger the internal mutation to sync this user
-        try {
-          await ctx.runMutation(internal.users.syncUserFromClerkWebhook, {
-            clerkId: clerkUser.id,
-            email: primaryEmail,
-            firstName: clerkUser.first_name,
-            lastName: clerkUser.last_name,
-            imageUrl: clerkUser.image_url,
-            username: clerkUser.username,
-            publicMetadata: clerkUser.public_metadata,
-          });
-          totalSynced++;
-        } catch (syncErr) {
-          console.error(`[Bulk Sync] Failed to sync individual user ${clerkUser.id}:`, syncErr);
-        }
-      }
-
-      offset += clerkUsers.length;
-      
-      if (clerkUsers.length < 100) {
-        hasMore = false;
-      } else {
-        // Brief pause between pages to be nice to the API
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
-    } catch (error) {
-      console.error(`[Bulk Sync] Fatal error during sync loop:`, error);
-      hasMore = false;
+  try {
+    // 1. Get all Convex users that are missing an email
+    const usersNeedingSync = await ctx.runQuery(internal.users.getUsersNeedingEmailSync);
+    
+    if (!usersNeedingSync || usersNeedingSync.length === 0) {
+      console.log("[Bulk Sync] No users found missing emails. Sync complete.");
+      return 0;
     }
+
+    console.log(`[Bulk Sync] Found ${usersNeedingSync.length} users missing emails. Syncing...`);
+
+    // 2. Fetch from Clerk API for each specific user
+    for (const user of usersNeedingSync) {
+      if (user.clerkId) {
+        const result = await _syncUserEmailByClerkId(ctx, user.clerkId);
+        if (result.synced) {
+          totalSynced++;
+        }
+        // Small delay to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  } catch (error) {
+    console.error(`[Bulk Sync] Fatal error during sync loop:`, error);
   }
 
   console.log(`[Bulk Sync] Operation complete. Total users processed: ${totalSynced}`);

@@ -187,7 +187,7 @@ export const Navbar5 = ({
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
-                {settings?.showHackathon && convexUserDoc?.role === "admin" && (
+                {settings?.showHackathon && (
                   <NavigationMenuItem>
                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                       <Link href="/hackathon">
@@ -196,7 +196,7 @@ export const Navbar5 = ({
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 )}
-                {settings?.showJudging && convexUserDoc?.role === "admin" && (
+                {settings?.showJudging && (
                   <NavigationMenuItem>
                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                       <Link href="/judging">
@@ -406,8 +406,8 @@ export const Navbar5 = ({
                          <Sparkles size={16} /> Browse
                        </Link>
                        <Link href="/leaderboard" className="font-semibold text-sm px-1">Leaderboard</Link>
-                       {settings?.showHackathon && convexUserDoc?.role === "admin" && <Link href="/hackathon" className="font-semibold text-sm px-1">Hackathon</Link>}
-                       {settings?.showJudging && convexUserDoc?.role === "admin" && <Link href="/judging" className="font-semibold text-sm px-1">Judging</Link>}
+                       {settings?.showHackathon && <Link href="/hackathon" className="font-semibold text-sm px-1">Hackathon</Link>}
+                       {settings?.showJudging && <Link href="/judging" className="font-semibold text-sm px-1">Judging</Link>}
                        <Link href="/notifications" className="font-semibold text-sm px-1">Notifications</Link>
                     </div>
                   </div>

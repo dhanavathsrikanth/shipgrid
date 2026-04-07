@@ -2334,6 +2334,13 @@ export const syncUserFromClerkWebhook = internalMutation({
       });
 
       console.log(`[Webhook Sync] Created new record for ${args.clerkId}`);
+
+      // Schedule welcome email for new user created via webhook
+      await ctx.scheduler.runAfter(
+        8000, // 8 second delay — gives ensureUser time to run first and avoids duplicate
+        internal.emails.welcome.sendWelcomeEmail,
+        { userId },
+      );
     }
   },
 });
@@ -2352,5 +2359,13 @@ export const deleteUserByClerkId = internalMutation({
     } else {
       console.warn(`Attempted to delete non-existent user: ${args.clerkId}`);
     }
+  },
+});
+
+export const getUsersNeedingEmailSync = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const allUsers = await ctx.db.query("users").collect();
+    return allUsers.filter(u => !u.email && u.clerkId);
   },
 });
