@@ -100,20 +100,49 @@ export const ensureUser = mutation({
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
-      // Handle username update if missing
-      if ((existingUser.username === undefined || existingUser.username === null) && candidateUsername !== null) {
+      // Email Sync
+      if (clerkEmail && clerkEmail !== existingUser.email) {
+        updates.email = clerkEmail;
+        changed = true;
+      }
+
+      // Username Sync (Idempotent)
+      if (candidateUsername && candidateUsername !== existingUser.username) {
         const conflictingUser = await ctx.db
           .query("users")
           .withIndex("by_username", (q) => q.eq("username", candidateUsername!))
+          .filter((q) => q.neq(q.field("_id"), existingUser._id))
           .first();
+          
         if (!conflictingUser) {
           updates.username = candidateUsername;
           changed = true;
+        } else {
+          console.warn(`ensureUser: Username conflict for ${candidateUsername}, skipping sync`);
         }
+      }
+
+      // Name Sync
+      if (nameToStore !== existingUser.name) {
+        updates.name = nameToStore;
+        changed = true;
+      }
+      
+      // Image Sync
+      if (clerkImageUrl && clerkImageUrl !== existingUser.imageUrl) {
+        updates.imageUrl = clerkImageUrl;
+        changed = true;
+      }
+      
+      // Role Sync
+      if (clerkRole && clerkRole !== (existingUser as any).role) {
+        updates.role = clerkRole;
+        changed = true;
       }
 
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
+        console.log(`ensureUser: Updated existing user ${existingUser._id} with fields: ${Object.keys(updates).join(", ")}`);
       }
       return existingUser._id;
     }
@@ -2212,15 +2241,30 @@ export const syncUserFromClerkWebhook = internalMutation({
     firstName: v.optional(v.union(v.string(), v.null())),
     lastName: v.optional(v.union(v.string(), v.null())),
     imageUrl: v.optional(v.union(v.string(), v.null())),
+    username: v.optional(v.union(v.string(), v.null())),
     publicMetadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     console.log(`syncUserFromClerkWebhook: Processing update for Clerk ID ${args.clerkId}`);
-    const existingUser = await ctx.db
+    // 1. Primary lookup by Clerk ID
+    let existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .first();
 
+    // 2. Identity Recovery: If not found by Clerk ID, try Email to prevent duplicates
+    if (!existingUser && args.email) {
+      existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .first();
+      
+      if (existingUser) {
+        console.log(`syncUserFromClerkWebhook: Identity Recovered! Linked Clerk ID ${args.clerkId} to existing record ${existingUser._id} via email ${args.email}`);
+        // Link the existing record to the new Clerk ID
+        await ctx.db.patch(existingUser._id, { clerkId: args.clerkId });
+      }
+    }
 
     const userRole = args.publicMetadata?.role as string | undefined;
     const name = [args.firstName, args.lastName].filter(Boolean).join(" ") || "Anonymous";
@@ -2233,7 +2277,22 @@ export const syncUserFromClerkWebhook = internalMutation({
         updates.email = args.email;
         changed = true;
       }
-      if (name !== (existingUser as any).name) {
+      if (args.username && args.username !== existingUser.username) {
+        // Unique Username Check: Ensure this username isn't already taken by another ID
+        const conflictingUser = await ctx.db
+          .query("users")
+          .withIndex("by_username", (q) => q.eq("username", args.username!))
+          .filter((q) => q.neq(q.field("_id"), existingUser!._id))
+          .first();
+          
+        if (!conflictingUser) {
+          updates.username = args.username;
+          changed = true;
+        } else {
+          console.warn(`syncUserFromClerkWebhook: Username conflict for ${args.username}, skipping field update`);
+        }
+      }
+      if (name !== existingUser.name) {
         updates.name = name;
         changed = true;
       }
@@ -2248,17 +2307,30 @@ export const syncUserFromClerkWebhook = internalMutation({
 
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
-        console.log(`Synced user ${args.clerkId} from Clerk webhook.`);
+        console.log(`Synced user ${args.clerkId} from Clerk webhook. Updated fields: ${Object.keys(updates).join(", ")}`);
       }
     } else {
       // Create user if they don't exist
+      let usernameForDbInsert: string | undefined = undefined;
+      if (args.username) {
+        const conflictingUser = await ctx.db
+          .query("users")
+          .withIndex("by_username", (q) => q.eq("username", args.username!))
+          .first();
+        if (!conflictingUser) {
+          usernameForDbInsert = args.username;
+        } else {
+          console.warn(`syncUserFromClerkWebhook: Username conflict for ${args.username}, inserting with null username`);
+        }
+      }
+
       const userId = await ctx.db.insert("users", {
         clerkId: args.clerkId,
         email: args.email,
         name: name,
         imageUrl: args.imageUrl || undefined,
         role: userRole || "user",
-        username: undefined,
+        username: usernameForDbInsert,
       });
 
       // Initialize email settings for new user

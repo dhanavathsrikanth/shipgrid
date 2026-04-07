@@ -82,15 +82,16 @@ export const handleClerkWebhook = internalAction({
         const userData = event.data; // This is the Clerk User object
 
         // Extract primary email
-        const primaryEmailId = userData.primary_email_address_id;
         const emails = (userData.email_addresses || []) as any[];
-        
-        let primaryEmail = emails.find(e => e.id === primaryEmailId)?.email_address;
-        
-        // Fallback to first if primary not explicitly identified
+        let primaryEmail = emails.find(
+          (e: any) => e.id === userData.primary_email_address_id
+        )?.email_address;
+
         if (!primaryEmail && emails.length > 0) {
           primaryEmail = emails[0].email_address;
         }
+
+        console.log(`Syncing user ${userData.id} with email: ${primaryEmail}`);
 
         // Use scheduler.runAfter(0, ...) to process the mutation in the background.
         // This ensures the HTTP request returns 200 OK immediately to Clerk.

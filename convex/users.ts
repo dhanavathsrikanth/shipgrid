@@ -2251,24 +2251,6 @@ export const syncUserFromClerkWebhook = internalMutation({
         changed = true;
       }
       
-      // Name Sync
-      if (name && name !== existingUser.name) {
-        updates.name = name;
-        changed = true;
-      }
-      
-      // Image Sync
-      if (imageUrl && imageUrl !== existingUser.imageUrl) {
-        updates.imageUrl = imageUrl;
-        changed = true;
-      }
-      
-      // Role Sync
-      if (role && role !== existingUser.role) {
-        updates.role = role;
-        changed = true;
-      }
-      
       // Username Sync (Idempotent)
       if (username && username !== existingUser.username) {
         const conflictingUser = await ctx.db
@@ -2285,9 +2267,27 @@ export const syncUserFromClerkWebhook = internalMutation({
         }
       }
 
+      // Name Sync
+      if (name && name !== (existingUser as any).name) {
+        updates.name = name;
+        changed = true;
+      }
+      
+      // Image Sync
+      if (imageUrl && imageUrl !== existingUser.imageUrl) {
+        updates.imageUrl = imageUrl;
+        changed = true;
+      }
+      
+      // Role Sync
+      if (role && role !== (existingUser as any).role) {
+        updates.role = role;
+        changed = true;
+      }
+
       if (changed) {
         await ctx.db.patch(existingUser._id, updates);
-        console.log(`[Webhook Sync] Updated user: ${args.clerkId}`);
+        console.log(`[Webhook Sync] Updated user: ${args.clerkId}. Fields: ${Object.keys(updates).join(", ")}`);
       }
     } else {
       // 3. New user insertion
@@ -2296,19 +2296,43 @@ export const syncUserFromClerkWebhook = internalMutation({
         return;
       }
 
-      await ctx.db.insert("users", {
+      let usernameForDbInsert: string | undefined = undefined;
+      if (username) {
+        const conflictingUser = await ctx.db
+          .query("users")
+          .withIndex("by_username", (q) => q.eq("username", username))
+          .first();
+        if (!conflictingUser) {
+          usernameForDbInsert = username;
+        } else {
+          console.warn(`[Webhook Sync] Username conflict for ${username}, inserting with null username`);
+        }
+      }
+
+      const userId = await ctx.db.insert("users", {
         clerkId: args.clerkId,
         email: args.email,
         name: name || "Anonymous",
         imageUrl: imageUrl,
         role: role,
-        username: username,
+        username: usernameForDbInsert,
         isBanned: false,
         isPaused: false,
         isVerified: false,
         inboxEnabled: true,
         emojiTheme: "default",
       });
+      
+      // Initialize email settings for new user
+      await ctx.db.insert("emailSettings", {
+        userId,
+        dailyEngagementEmails: true,
+        messageNotifications: true,
+        marketingEmails: false,
+        weeklyDigestEmails: true,
+        mentionNotifications: true,
+      });
+
       console.log(`[Webhook Sync] Created new record for ${args.clerkId}`);
     }
   },
