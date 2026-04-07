@@ -104,7 +104,27 @@ export const syncUserEmail = action({
   args: { clerkId: v.string() },
   returns: v.object({ success: v.boolean(), synced: v.boolean() }),
   handler: async (ctx, args) => {
-    await requireAdminRole(ctx);
+    // Allow admins to sync anyone, OR allow users to sync themselves
+    let isAdmin = false;
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (identity) {
+        // If they are just syncing themselves, we don't strictly require admin
+        if (identity.subject === args.clerkId) {
+          isAdmin = true; // Effectively authorize them
+        } else {
+          // If trying to sync someone else, require admin
+          await requireAdminRole(ctx);
+          isAdmin = true;
+        }
+      } else {
+        await requireAdminRole(ctx); // Will fail
+      }
+    } catch(e) {
+      // requireAdminRole threw an error
+      throw new Error("Unauthorized to sync this user's email.");
+    }
+    
     const result = await _syncUserEmailByClerkId(ctx, args.clerkId);
     return { success: true, ...result };
   },
