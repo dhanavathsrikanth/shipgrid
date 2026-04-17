@@ -13,13 +13,7 @@ const clerkUserPayload = v.object({
   first_name: v.optional(v.union(v.string(), v.null())),
   last_name: v.optional(v.union(v.string(), v.null())),
   image_url: v.optional(v.union(v.string(), v.null())),
-  email_addresses: v.array(
-    v.object({
-      email_address: v.string(),
-      id: v.string(),
-      // Add other fields if needed like 'verification'
-    })
-  ),
+  email_addresses: v.array(v.any()),
   primary_email_address_id: v.optional(v.union(v.string(), v.null())),
   public_metadata: v.optional(v.any()), // Using v.any() for flexibility, or define a stricter object
   username: v.optional(v.union(v.string(), v.null())),
@@ -89,6 +83,10 @@ export const handleClerkWebhook = internalAction({
 
         if (!primaryEmail && emails.length > 0) {
           primaryEmail = emails[0].email_address;
+        }
+
+        if (!primaryEmail) {
+          console.error(`No email found for user ${userData.id}. email_addresses count: ${emails.length}, primary_email_address_id: ${userData.primary_email_address_id}`);
         }
 
         console.log(`Syncing user ${userData.id} with email: ${primaryEmail}`);

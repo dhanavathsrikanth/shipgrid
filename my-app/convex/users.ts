@@ -2273,7 +2273,7 @@ export const syncUserFromClerkWebhook = internalMutation({
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
-      if (args.email !== existingUser.email) {
+      if (args.email && args.email !== existingUser.email) {
         updates.email = args.email;
         changed = true;
       }

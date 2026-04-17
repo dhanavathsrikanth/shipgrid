@@ -2,8 +2,18 @@
 
 import { internalAction } from "../_generated/server";
 import { v } from "convex/values";
-import { internal, api } from "../_generated/api";
-import { resend, withSubjectPrefix } from "../sendEmails";
+import { internal, components } from "../_generated/api";
+import { Resend } from "@convex-dev/resend";
+
+// Create resend instance in Node runtime (can't import from V8 sendEmails.ts)
+const resend = new Resend(components.resend, {
+  testMode: false,
+});
+
+function withSubjectPrefix(subject: string): string {
+  const prefix = "ShipGrid Updates: ";
+  return subject.startsWith(prefix) ? subject : `${prefix}${subject}`;
+}
 
 /**
  * Core email sending action with logging and global kill switch
