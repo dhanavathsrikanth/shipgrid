@@ -30,13 +30,20 @@ const commentWithAuthorValidator = v.object({
   storyId: v.id("stories"),
   parentId: v.optional(v.id("comments")),
   votes: v.number(),
-  status: v.string(), // Assuming status is a string based on previous usage
+  status: v.string(),
   isHidden: v.optional(v.boolean()),
-  // Added author details
+  // Quality signals
+  isMakerResponse: v.optional(v.boolean()),
+  wordCount: v.optional(v.number()),
+  isQuestion: v.optional(v.boolean()),
+  qualityScore: v.optional(v.number()),
+  flaggedAsLowQuality: v.optional(v.boolean()),
+  // Author details
   authorName: v.optional(v.string()),
   authorUsername: v.union(v.string(), v.null()),
   authorRole: v.optional(v.union(v.string(), v.null())),
   authorBio: v.optional(v.union(v.string(), v.null())),
+  authorIsVerified: v.optional(v.boolean()),
 });
 
 // Query to list APPROVED comments for a specific story, now with author details
@@ -65,6 +72,7 @@ export const listApprovedByStory = query({
           authorUsername: (author?.username ?? null) as string | null,
           authorRole: (author?.role ?? null) as string | null | undefined,
           authorBio: (author?.bio ?? null) as string | null | undefined,
+          authorIsVerified: author?.isVerified ?? undefined,
         };
       }),
     );
@@ -307,6 +315,19 @@ export const add = mutation({
       }
     }
 
+    // Compute quality signals before insert
+    const isMakerResponse = story.userId === userId;
+    const words = args.content.trim().split(/\s+/);
+    const wordCount = words.length;
+    const isQuestion = args.content.includes("?");
+    // qualityScore: base word depth + question signal + maker response bonus
+    const qualityScore =
+      Math.min(wordCount * 0.5, 30) +
+      (isQuestion ? 10 : 0) +
+      (isMakerResponse ? 25 : 0);
+    const flaggedAsLowQuality =
+      wordCount < 8 && !isQuestion && !isMakerResponse;
+
     // All validation complete - now perform writes
     const commentId = await ctx.db.insert("comments", {
       storyId: args.storyId,
@@ -315,6 +336,11 @@ export const add = mutation({
       parentId: args.parentId,
       votes: 0,
       status: "approved",
+      isMakerResponse,
+      wordCount,
+      isQuestion,
+      qualityScore,
+      flaggedAsLowQuality,
     });
 
     // Increment comment count using previously read value

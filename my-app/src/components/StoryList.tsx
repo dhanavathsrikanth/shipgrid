@@ -10,6 +10,8 @@ import {
   Pin,
   Bookmark,
   BookmarkCheck,
+  Star,
+  Info,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Story } from "../types";
@@ -20,6 +22,7 @@ import { useAuth } from "@clerk/nextjs";
 import { AuthRequiredDialog } from "./ui/AuthRequiredDialog";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { useDialog } from "../hooks/useDialog";
+import { StageBadge } from "./StageBadge";
 
 interface StoryListProps {
   stories: Story[];
@@ -137,6 +140,27 @@ export function StoryList({
     }
   };
 
+  // Comment engagement quality dot
+  const getQualityDot = (story: Story) => {
+    const votes = (story as any).votesCount ?? story.votes ?? 1;
+    const comments = story.commentCount ?? 0;
+    const ratio = votes > 0 ? comments / votes : 0;
+    if (ratio >= 0.10) return { color: "bg-emerald-500", label: "Active Discussion" };
+    if (ratio >= 0.03) return { color: "bg-amber-400", label: "Some Discussion" };
+    return null;
+  };
+
+  // Average rating display
+  const renderRating = (rating: number | undefined) => {
+    if (!rating || rating === 0) return null;
+    return (
+      <span className="flex items-center gap-0.5" title={`${rating}/10 avg rating`}>
+        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+        <span className="text-xs text-muted-foreground">{rating.toFixed(1)}</span>
+      </span>
+    );
+  };
+
   const mainContentContainerClass =
     viewMode === "vibe" ? "flex-grow" : "w-full";
 
@@ -170,21 +194,39 @@ export function StoryList({
                             </span>
                             <div className="text-xs">Vibes</div>
                           </div>
-                          <button
-                            onClick={() => handleVote(story._id)}
-                            className="bg-card border border-t-0 border-border text-foreground hover:bg-muted/80 w-full rounded-b-md py-1 px-2 flex items-center justify-center gap-1 text-sm font-normal h-[24px] transition-colors"
-                          >
-                            Vibe it
-                          </button>
+                          <div className="relative group w-full">
+                            <button
+                              onClick={() => handleVote(story._id)}
+                              className="bg-card border border-t-0 border-border text-foreground hover:bg-muted/80 w-full rounded-b-md py-1 px-2 flex items-center justify-center gap-1 text-sm font-normal h-[24px] transition-colors"
+                            >
+                              Vibe it
+                            </button>
+                            <Link
+                              href="/scoring"
+                              className="absolute -right-5 top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="How is ranking calculated?"
+                            >
+                              <Info className="w-3 h-3 text-muted-foreground" />
+                            </Link>
+                          </div>
                         </div>
                       ) : (
                         <>
-                          <button
-                            onClick={() => handleVote(story._id)}
-                            className="text-foreground hover:bg-muted p-1 rounded"
-                          >
-                            <ChevronUp className="w-5 h-5" />
-                          </button>
+                          <div className="relative group">
+                            <button
+                              onClick={() => handleVote(story._id)}
+                              className="text-foreground hover:bg-muted p-1 rounded"
+                            >
+                              <ChevronUp className="w-5 h-5" />
+                            </button>
+                            <Link
+                              href="/scoring"
+                              className="absolute left-full top-0 ml-0.5 hidden group-hover:block"
+                              title="How is ranking calculated?"
+                            >
+                              <Info className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                            </Link>
+                          </div>
                           <span className="text-foreground font-medium text-sm">
                             {story.votes}
                           </span>
@@ -247,7 +289,7 @@ export function StoryList({
                           </>
                         )}
                         <h2
-                          className={`${viewMode === "vibe" || viewMode === "list" ? "text-[15px]" : "text-base"} text-foreground font-bold truncate`}
+                          className={`${viewMode === "vibe" || viewMode === "list" ? "text-[15px]" : "text-base"} text-foreground font-bold truncate flex items-center gap-2`}
                         >
                           <Link
                             href={`/s/${story.slug}`}
@@ -255,6 +297,11 @@ export function StoryList({
                           >
                             {story.title}
                           </Link>
+                          {(story as any).stage && (
+                            <span className="flex-shrink-0">
+                              <StageBadge stage={(story as any).stage} betaOpenedAt={(story as any).betaOpenedAt} />
+                            </span>
+                          )}
                         </h2>
                       </div>
                       {viewMode === "vibe" && (
@@ -351,15 +398,30 @@ export function StoryList({
                           </span>
                         )}
                         <span>{formatDate(story._creationTime)}</span>
+
+                        {/* Comment count with quality engagement dot */}
                         <Link
                           href={`/s/${story.slug}#comments`}
-                          className="flex items-center gap-2 hover:text-muted-foreground"
+                          className="flex items-center gap-1 hover:text-muted-foreground"
                         >
+                          {(() => {
+                            const dot = getQualityDot(story);
+                            return dot ? (
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${dot.color} flex-shrink-0`}
+                                title={dot.label}
+                              />
+                            ) : null;
+                          })()}
                           <MessageSquare
                             className={`${viewMode === "vibe" || viewMode === "list" ? "w-3.5 h-3.5" : "w-4 h-4"}`}
                           />
                           {story.commentCount}
                         </Link>
+
+                        {/* Average rating */}
+                        {renderRating((story as any).averageRating)}
+
                         <BookmarkButton
                           storyId={story._id}
                           showMessage={showMessage}

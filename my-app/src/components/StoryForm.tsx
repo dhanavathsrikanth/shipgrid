@@ -23,6 +23,14 @@ interface Tag extends Doc<"tags"> {
   // Inherits _id, _creationTime, name, showInHeader, isHidden?, backgroundColor?, textColor?
 }
 
+const mapTeamCount = (count: number): "1" | "2-5" | "6-20" | "20+" | undefined => {
+  if (!count || count < 1) return undefined;
+  if (count === 1) return "1";
+  if (count >= 2 && count <= 5) return "2-5";
+  if (count >= 6 && count <= 20) return "6-20";
+  return "20+";
+};
+
 export function StoryForm() {
   const router = useRouter();
   const { isSignedIn, isLoaded: isClerkLoaded } = useAuth();
@@ -231,7 +239,7 @@ export function StoryForm() {
           showTeamInfo && teamData.teamName ? teamData.teamName : undefined,
         teamMemberCount:
           showTeamInfo && teamData.teamName
-            ? teamData.teamMemberCount
+            ? mapTeamCount(teamData.teamMemberCount)
             : undefined,
         teamMembers:
           showTeamInfo && teamData.teamName

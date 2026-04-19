@@ -33,6 +33,7 @@ export const sendEmail = internalAction({
       v.literal("admin_broadcast"),
       v.literal("admin_report_notification"),
       v.literal("admin_user_report_notification"),
+      v.literal("follow_up_30day"),
     ),
     userId: v.optional(v.id("users")),
     metadata: v.optional(v.any()),

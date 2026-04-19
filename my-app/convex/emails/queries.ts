@@ -17,6 +17,7 @@ export const hasReceivedEmailToday = internalQuery({
       v.literal("admin_broadcast"),
       v.literal("admin_report_notification"),
       v.literal("admin_user_report_notification"),
+      v.literal("follow_up_30day"),
     ),
   },
   returns: v.boolean(),
@@ -99,6 +100,7 @@ export const insertEmailLog = internalMutation({
       v.literal("admin_broadcast"),
       v.literal("admin_report_notification"),
       v.literal("admin_user_report_notification"),
+      v.literal("follow_up_30day"),
     ),
     recipientEmail: v.string(),
     status: v.union(

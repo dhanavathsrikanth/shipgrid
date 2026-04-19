@@ -5,6 +5,7 @@ export default defineSchema({
   users: defineTable({
     name: v.string(), // User's name
     clerkId: v.string(), // Clerk User ID for linking
+    externalId: v.optional(v.string()), // Legacy id from before Clerk was made standard
     email: v.optional(v.string()), // Added user's email
     username: v.optional(v.union(v.string(), v.null())), // Added username, make it unique
     role: v.optional(v.union(v.string(), v.null())), // User's role, e.g., "admin"
@@ -25,6 +26,8 @@ export default defineSchema({
     region: v.optional(v.union(v.string(), v.null())),
     icpComplete: v.optional(v.boolean()),
     icpRoles: v.optional(v.array(v.string())),
+    // Community features
+    followedTagIds: v.optional(v.array(v.id("tags"))),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_username", ["username"]) // Index for fetching by username
@@ -59,31 +62,74 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("approved"),
       v.literal("rejected"),
+    ), // Submission status
+    isHidden: v.optional(v.boolean()), // Content moderation flag
+    isPinned: v.optional(v.boolean()), // Admin stickying
+    customMessage: v.optional(v.string()), // Admin feedback
+    // Extended submission form fields
+    email: v.optional(v.string()), // Used for notifications, distinct from auth email
+    teamName: v.optional(v.string()), // Startup or team name
+    teamMemberCount: v.optional(
+      v.union(
+        v.literal("1"),
+        v.literal("2-5"),
+        v.literal("6-20"),
+        v.literal("20+"),
+      ),
     ),
-    isHidden: v.boolean(),
-    isPinned: v.boolean(),
-    wasPinned: v.optional(v.boolean()), // Track if story was ever pinned in the past
-    isArchived: v.optional(v.boolean()), // Archive submissions to hide from default view
-    customMessage: v.optional(v.string()),
-    isApproved: v.optional(v.boolean()),
-    rejectionReason: v.optional(v.string()),
-    email: v.optional(v.string()),
-    // Hackathon team info
-    teamName: v.optional(v.string()),
-    teamMemberCount: v.optional(v.number()),
     teamMembers: v.optional(
       v.array(
         v.object({
           name: v.string(),
           email: v.string(),
+        })
+      )
+    ),
+    teamMemberRoles: v.optional(v.string()), // Primary roles (e.g., Engineer, Designer)
+    targetAudience: v.optional(
+      v.union(
+        v.literal("Developers"),
+        v.literal("Designers"),
+        v.literal("Founders"),
+        v.literal("Marketers"),
+        v.literal("General Public"),
+        v.string(), // Allow other specific audiences
+      ),
+    ),
+    revenueModel: v.optional(
+      v.union(
+        v.literal("Free"),
+        v.literal("Freemium"),
+        v.literal("Paid"),
+        v.literal("Subscription"),
+        v.literal("Open Source"),
+      ),
+    ),
+    techStack: v.optional(v.array(v.string())), // Key technologies used
+    competitors: v.optional(v.string()), // Main competitors or alternatives
+    isApproved: v.optional(v.boolean()),
+    // Admin review fields
+    reviewedAt: v.optional(v.number()), // When the review occurred
+    reviewedBy: v.optional(v.id("users")), // Admin who conducted the review
+    rejectionReason: v.optional(v.string()), // Reason if status is "rejected"
+    isAutoApproved: v.optional(v.boolean()), // Flag for trusted submissions
+    
+    // Feature tracking history
+    statusHistory: v.optional(
+      v.array(
+        v.object({
+          status: v.string(),
+          changedAt: v.number(),
+          changedBy: v.id("users"),
+          reason: v.optional(v.string()), // Generic reason field for history
         }),
       ),
     ),
-    // Changelog tracking for user edits
-    changeLog: v.optional(
+    contentChanges: v.optional(
       v.array(
         v.object({
-          timestamp: v.number(),
+          changedAt: v.number(),
+          changedBy: v.id("users"),
           textChanges: v.optional(
             v.array(
               v.object({
@@ -118,7 +164,14 @@ export default defineSchema({
     icpProblem: v.optional(v.string()),
     icpBudget: v.optional(v.string()),
     notFor: v.optional(v.string()),
-    stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+    stage: v.optional(v.union(
+      v.literal("idea"),
+      v.literal("building"), 
+      v.literal("beta"), 
+      v.literal("live"),
+      v.literal("acquired"),
+      v.literal("sunset")
+    )),
     betaOpenedAt: v.optional(v.number()),
     faqs: v.optional(
       v.array(
@@ -128,6 +181,49 @@ export default defineSchema({
         })
       )
     ),
+    // Fair Discovery fields
+    trendingScore: v.optional(v.number()),    // computed hourly by cron
+    featuredUntil: v.optional(v.number()),   // 48h guaranteed window timestamp
+    
+    // Anti-Gaming fields
+    suspiciousActivityFlag: v.optional(v.boolean()), // True if sudden spike in suspicious votes detected
+    
+    // Additional tracking & state
+    changeLog: v.optional(
+      v.array(
+        v.object({
+          timestamp: v.number(),
+          textChanges: v.optional(
+            v.array(
+              v.object({
+                field: v.string(),
+                oldValue: v.string(),
+                newValue: v.string(),
+              })
+            )
+          ),
+          linkChanges: v.optional(
+            v.array(
+              v.object({
+                field: v.string(),
+                oldValue: v.optional(v.string()),
+                newValue: v.optional(v.string()),
+              })
+            )
+          ),
+          tagChanges: v.optional(
+            v.object({
+              added: v.array(v.string()),
+              removed: v.array(v.string()),
+            })
+          ),
+          videoChanged: v.optional(v.boolean()),
+          imagesChanged: v.optional(v.boolean()),
+        })
+      )
+    ),
+    isArchived: v.optional(v.boolean()),
+    wasPinned: v.optional(v.boolean()),
   })
     .index("by_slug", ["slug"])
     .index("by_status", ["status"])
@@ -135,7 +231,9 @@ export default defineSchema({
     .index("by_userId_isApproved", ["userId", "isApproved"])
     .index("by_votes", ["votes"])
     .index("by_status_isHidden_votes", ["status", "isHidden", "votes"])
-    .index("by_status_isHidden", ["status", "isHidden"])
+    .index("by_status_isApproved", ["status", "isApproved"])
+    .index("by_stage", ["stage"])
+    .index("by_status_trendingScore", ["status", "trendingScore"]) // New index for trending sort
     .searchIndex("search_all", {
       searchField: "title",
       filterFields: ["status", "isHidden"],
@@ -149,6 +247,12 @@ export default defineSchema({
     votes: v.number(),
     status: v.string(),
     isHidden: v.optional(v.boolean()),
+    // Quality signals — computed at insert time
+    isMakerResponse: v.optional(v.boolean()),      // true if commenter owns the story
+    wordCount: v.optional(v.number()),              // word count of comment
+    isQuestion: v.optional(v.boolean()),            // ends with / contains "?"
+    qualityScore: v.optional(v.number()),           // 0–100 quality score
+    flaggedAsLowQuality: v.optional(v.boolean()),   // collapsed by default if true
   })
     .index("by_storyId_status", ["storyId", "status"])
     .index("by_user", ["userId"])
@@ -162,6 +266,7 @@ export default defineSchema({
   votes: defineTable({
     userId: v.id("users"),
     storyId: v.id("stories"),
+    isSuspicious: v.optional(v.boolean()), // Flag for suspected coordinated voting accounts
   })
     .index("by_user_story", ["userId", "storyId"])
     .index("by_story", ["storyId"])
@@ -573,6 +678,7 @@ export default defineSchema({
       v.literal("admin_broadcast"),
       v.literal("admin_report_notification"),
       v.literal("admin_user_report_notification"),
+      v.literal("follow_up_30day"),
     ),
     recipientEmail: v.string(),
     sentAt: v.number(),
@@ -832,4 +938,72 @@ export default defineSchema({
     ),
     scannedAt: v.number(),
   }).index("by_storyId", ["storyId"]),
+
+  // Phase 3: "I'm Interested" signals per product
+  productInterests: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    interestedAt: v.number(),
+    useCase: v.optional(v.string()),   // "What would you use this for?"
+  })
+    .index("by_storyId", ["storyId"])
+    .index("by_userId", ["userId"])
+    .index("by_storyId_userId", ["storyId", "userId"]),
+
+  // Phase 3: Per-product feature request board
+  featureRequests: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    title: v.string(),
+    description: v.optional(v.string()),
+    votes: v.number(),
+    status: v.union(
+      v.literal("open"),
+      v.literal("planned"),
+      v.literal("shipped"),
+      v.literal("declined"),
+    ),
+  })
+    .index("by_storyId", ["storyId"])
+    .index("by_storyId_votes", ["storyId", "votes"])
+    .index("by_userId", ["userId"]),
+
+  // Phase 3: Upvotes on feature requests
+  featureRequestVotes: defineTable({
+    requestId: v.id("featureRequests"),
+    userId: v.id("users"),
+  })
+    .index("by_request_user", ["requestId", "userId"])
+    .index("by_user", ["userId"]),
+
+  // Phase 3: per-product follows (for changelog notifications)
+  product_follows: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    followedAt: v.number(),
+  })
+    .index("by_storyId", ["storyId"])
+    .index("by_userId", ["userId"])
+    .index("by_storyId_userId", ["storyId", "userId"]),
+
+  // Phase 2: Comment upvotes (who voted on which comment)
+  commentVotes: defineTable({
+    commentId: v.id("comments"),
+    userId: v.id("users"),
+    votedAt: v.number(),
+  })
+    .index("by_comment_user", ["commentId", "userId"])
+    .index("by_user", ["userId"]),
+
+  // Phase 5.6: 30-day follow-up email dedup log
+  // One record per story — prevents resending the follow-up on subsequent cron runs.
+  followUpEmailLog: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    sentAt: v.number(),
+  })
+    .index("by_story", ["storyId"])
+    .index("by_user", ["userId"]),
 });
+
+

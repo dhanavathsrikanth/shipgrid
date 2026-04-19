@@ -30,12 +30,19 @@ const commentWithAuthorValidator = v.object({
   storyId: v.id("stories"),
   parentId: v.optional(v.id("comments")),
   votes: v.number(),
-  status: v.string(), // Assuming status is a string based on previous usage
+  status: v.string(),
   isHidden: v.optional(v.boolean()),
-  // Added author details
+  // Quality signals
+  isMakerResponse: v.optional(v.boolean()),
+  wordCount: v.optional(v.number()),
+  isQuestion: v.optional(v.boolean()),
+  qualityScore: v.optional(v.number()),
+  flaggedAsLowQuality: v.optional(v.boolean()),
+  // Author details
   authorName: v.optional(v.string()),
   authorUsername: v.optional(v.union(v.string(), v.null())),
   authorImageUrl: v.optional(v.union(v.string(), v.null())),
+  authorIsVerified: v.optional(v.boolean()),
 });
 
 // Query to list APPROVED comments for a specific story, now with author details
@@ -63,7 +70,9 @@ export const listApprovedByStory = query({
         return {
           ...comment,
           authorName: author?.name,
-          authorUsername: author?.username,
+          authorUsername: author?.username ?? null,
+          authorImageUrl: author?.imageUrl ?? null,
+          authorIsVerified: author?.isVerified ?? false,
         };
       }),
     );
@@ -308,7 +317,28 @@ export const add = mutation({
       }
     }
 
-    // All validation complete - now perform writes
+    // All validation complete — compute quality signals
+    const wordCount = args.content.trim().split(/\s+/).filter(Boolean).length;
+    const isQuestion =
+      args.content.includes("?") ||
+      /^(what|how|why|when|where|is|are|do|does|can|should|would|will)\b/i.test(
+        args.content.trim(),
+      );
+    const isMakerResponse =
+      story.userId !== undefined && story.userId === userId;
+
+    // Quality heuristic: 0–100
+    let qualityScore = 0;
+    if (wordCount >= 8) qualityScore += 40;
+    else if (wordCount >= 4) qualityScore += 20;
+    if (isQuestion) qualityScore += 20;
+    if (isMakerResponse) qualityScore += 30;
+    if (wordCount >= 20) qualityScore += 10;
+    qualityScore = Math.min(100, qualityScore);
+
+    const flaggedAsLowQuality = !isMakerResponse && wordCount < 8 && !isQuestion;
+
+    // Now perform writes
     const commentId = await ctx.db.insert("comments", {
       storyId: args.storyId,
       content: args.content,
@@ -316,6 +346,11 @@ export const add = mutation({
       parentId: args.parentId,
       votes: 0,
       status: "approved",
+      isMakerResponse,
+      wordCount,
+      isQuestion,
+      qualityScore,
+      flaggedAsLowQuality,
     });
 
     // Increment comment count using previously read value
@@ -509,3 +544,82 @@ export const deleteOwnComment = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Toggle upvote on a comment.
+ * Prevents duplicate votes. Returns the updated vote count.
+ */
+export const voteComment = mutation({
+  args: { commentId: v.id("comments") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthenticatedUserId(ctx);
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment) throw new Error("Comment not found.");
+
+    const existing = await ctx.db
+      .query("commentVotes")
+      .withIndex("by_comment_user", (q) =>
+        q.eq("commentId", args.commentId).eq("userId", userId),
+      )
+      .unique();
+
+    if (existing) {
+      // Un-vote
+      await ctx.db.delete(existing._id);
+      await ctx.db.patch(args.commentId, {
+        votes: Math.max(0, (comment.votes ?? 0) - 1),
+      });
+      return { voted: false, votes: Math.max(0, (comment.votes ?? 0) - 1) };
+    }
+
+    // Vote
+    await ctx.db.insert("commentVotes", {
+      commentId: args.commentId,
+      userId,
+      votedAt: Date.now(),
+    });
+    await ctx.db.patch(args.commentId, {
+      votes: (comment.votes ?? 0) + 1,
+    });
+    return { voted: true, votes: (comment.votes ?? 0) + 1 };
+  },
+});
+
+/**
+ * Returns the set of commentIds that the current user has upvoted
+ * for a given story — used to render "already voted" state client-side.
+ */
+export const getVotedCommentIds = query({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [] as string[];
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) =>
+        q.eq("clerkId", identity.subject),
+      )
+      .unique();
+    if (!user) return [] as string[];
+
+    // Get all comments for this story
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_storyId", (q) => q.eq("storyId", args.storyId))
+      .collect();
+
+    const commentIds = new Set(comments.map((c) => c._id));
+
+    // Get all votes by this user and filter to those in this story
+    const votes = await ctx.db
+      .query("commentVotes")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .take(500);
+
+    return votes
+      .filter((v) => commentIds.has(v.commentId))
+      .map((v) => v.commentId as string);
+  },
+});
+

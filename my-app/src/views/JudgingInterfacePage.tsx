@@ -112,7 +112,7 @@ export default function JudgingInterfacePage({ slug }: { slug: string }) {
 
   // Filter submissions based on selected tag, judged status, and judge name
   const displaySubmissions =
-    submissions?.filter((submission) => {
+    submissions?.filter((submission: any) => {
       // Filter by tag
       const matchesTag =
         !selectedTagId ||
@@ -535,7 +535,7 @@ export default function JudgingInterfacePage({ slug }: { slug: string }) {
 
   // Filter for search dropdown (applies search on top of display filters)
   const filteredSubmissions =
-    displaySubmissions?.filter((submission) => {
+    displaySubmissions?.filter((submission: any) => {
       const matchesSearch = submission.title
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -709,7 +709,7 @@ export default function JudgingInterfacePage({ slug }: { slug: string }) {
                         <div className="absolute top-full left-0 right-0 sm:min-w-[300px] mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
                           {filteredSubmissions
                             .slice(0, 10)
-                            .map((submission) => {
+                            .map((submission: any) => {
                               const submissionIndex =
                                 displaySubmissions.findIndex(
                                   (s) => s._id === submission._id,
@@ -782,7 +782,7 @@ export default function JudgingInterfacePage({ slug }: { slug: string }) {
                         className="w-full sm:w-44 h-8 text-sm px-2 pr-8 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                       >
                         <option value="">All Tags</option>
-                        {availableTags.map((tag) => (
+                        {availableTags.map((tag: any) => (
                           <option key={tag._id} value={tag._id}>
                             {tag.emoji ? `${tag.emoji} ` : ""}
                             {tag.name}

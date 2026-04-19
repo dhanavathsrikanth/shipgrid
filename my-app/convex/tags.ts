@@ -426,10 +426,8 @@ export const getWeeklyTopCategories = query({
     // Fetch recent, approved, visible stories
     const recentStories = await ctx.db
       .query("stories")
-      .withIndex(
-        "by_status_isHidden",
-        (q) => q.eq("status", "approved").eq("isHidden", false), // false means visible
-      )
+      .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .filter((q) => q.neq(q.field("isHidden"), true))
       // Order by creation time descending to get the most recent first for the week
       .order("desc")
       .collect();

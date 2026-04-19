@@ -40,6 +40,8 @@ interface LayoutContextType {
   sortPeriod: SortPeriod;
   showMatchedOnly: boolean;
   setShowMatchedOnly: (val: boolean) => void;
+  selectedStage?: string;
+  setSelectedStage: (val?: string) => void;
 }
 
 type SortPeriod =
@@ -59,6 +61,7 @@ const LayoutContext = createContext<LayoutContextType>({
   sortPeriod: "all",
   showMatchedOnly: false,
   setShowMatchedOnly: () => {},
+  setSelectedStage: () => {},
 });
 
 export function useLayoutContext() {
@@ -78,6 +81,7 @@ export function Layout({ children }: { children?: ReactNode }) {
   const [userChangedSortPeriod, setUserChangedSortPeriod] = React.useState(false);
   const [sortPeriod, setSortPeriod] = React.useState<SortPeriod | undefined>(undefined);
   const [selectedTagId, setSelectedTagId] = React.useState<Id<"tags"> | undefined>(undefined);
+  const [selectedStage, setSelectedStage] = React.useState<string | undefined>(undefined);
   const [showMatchedOnly, setShowMatchedOnly] = React.useState(false);
   const [showAuthDialog, setShowAuthDialog] = React.useState(false);
 
@@ -172,6 +176,8 @@ export function Layout({ children }: { children?: ReactNode }) {
     sortPeriod: sortPeriod || "all",
     showMatchedOnly,
     setShowMatchedOnly,
+    selectedStage,
+    setSelectedStage,
   };
 
   return (
@@ -204,10 +210,11 @@ export function Layout({ children }: { children?: ReactNode }) {
           <div className="bg-background border-b py-2 sticky top-[65px] z-40">
             <div className="container mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
+                {/* Category filter */}
                 <div className="relative inline-block text-left">
-                  <select 
-                    value={selectedTagId || ""} 
-                    onChange={(e) => setSelectedTagId(e.target.value ? (e.target.value as Id<"tags">) : undefined)} 
+                  <select
+                    value={selectedTagId || ""}
+                    onChange={(e) => setSelectedTagId(e.target.value ? (e.target.value as Id<"tags">) : undefined)}
                     className="appearance-none cursor-pointer pl-3 pr-8 py-1.5 bg-muted/50 border rounded-md text-xs font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">All Categories</option>
@@ -218,10 +225,11 @@ export function Layout({ children }: { children?: ReactNode }) {
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground"><ChevronDown size={14} /></div>
                 </div>
 
+                {/* Sort period filter */}
                 <div className="relative inline-block text-left">
-                  <select 
-                    value={sortPeriod} 
-                    onChange={(e) => { setSortPeriod(e.target.value as SortPeriod); setUserChangedSortPeriod(true); }} 
+                  <select
+                    value={sortPeriod}
+                    onChange={(e) => { setSortPeriod(e.target.value as SortPeriod); setUserChangedSortPeriod(true); }}
                     className="appearance-none cursor-pointer pl-3 pr-8 py-1.5 bg-muted/50 border rounded-md text-xs font-medium focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="today">Today</option>
@@ -234,6 +242,24 @@ export function Layout({ children }: { children?: ReactNode }) {
                     <option value="votes_month">Most Vibes (Month)</option>
                     <option value="votes_year">Most Vibes (Year)</option>
                     <option value="votes_all">Most Vibes (All Time)</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground"><ChevronDown size={14} /></div>
+                </div>
+
+                {/* Stage filter */}
+                <div className="relative inline-block text-left">
+                  <select
+                    value={selectedStage || ""}
+                    onChange={(e) => setSelectedStage(e.target.value || undefined)}
+                    className="appearance-none cursor-pointer pl-3 pr-8 py-1.5 bg-muted/50 border rounded-md text-xs font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">All Stages</option>
+                    <option value="idea">Idea</option>
+                    <option value="building">Building</option>
+                    <option value="beta">Beta</option>
+                    <option value="live">Live</option>
+                    <option value="acquired">Acquired</option>
+                    <option value="sunset">Sunset</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground"><ChevronDown size={14} /></div>
                 </div>

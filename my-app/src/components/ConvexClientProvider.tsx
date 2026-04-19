@@ -6,7 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { ReactNode } from "react";
 import { Toaster } from "sonner";
 import { UserSyncer } from "./UserSyncer";
-import { DebugIdentity } from "./DebugIdentity";
+
 
 const convex = new ConvexReactClient(
 
@@ -17,7 +17,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (
     <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
       <UserSyncer />
-      <DebugIdentity />
+
       {children}
       <Toaster position="bottom-right" closeButton richColors />
     </ConvexProviderWithClerk>

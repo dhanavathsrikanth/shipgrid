@@ -507,6 +507,7 @@ export const generateWeeklyDigest = internalQuery({
     userId: v.optional(v.id("users")),
     userName: v.string(),
     userUsername: v.optional(v.string()),
+    personalizedTitle: v.optional(v.string()),
     topApps: v.array(
       v.object({
         storyId: v.id("stories"),
@@ -522,7 +523,8 @@ export const generateWeeklyDigest = internalQuery({
     html: v.string(),
   }),
   handler: async (ctx, args) => {
-    const subject = "ShipGrid Updates: Most Vibes This Week";
+    const subjectTitle = args.personalizedTitle || "Most Vibes This Week";
+    const subject = `ShipGrid Updates: ${subjectTitle}`;
 
     const html = `
       <!DOCTYPE html>
@@ -534,11 +536,11 @@ export const generateWeeklyDigest = internalQuery({
                 <img src="https://goshipgrid.app/android-chrome-512x512.png" alt="ShipGrid" style="width: 48px; height: 48px; border-radius: 8px;" />
               </a>
             </div>
-            <h1 style="color: #292929;">Most Vibes This Week</h1>
+            <h1 style="color: #292929;">${subjectTitle}</h1>
             
             <p>Hey ${args.userName},</p>
             
-            <p>Here are the top submissions this week by vibes:</p>
+            <p>Here are the top submissions this week:</p>
             
             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <ol style="padding-left: 20px;">

@@ -4,7 +4,8 @@ import { api } from "../../../../../convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeftRight, Check, X, ChevronRight, Zap } from "lucide-react";
+import { ArrowLeftRight, Check, X, ChevronRight, Zap, Star, MessageSquare } from "lucide-react";
+import { StageBadge } from "@/components/StageBadge";
 
 interface ComparePageProps {
   params: {
@@ -13,7 +14,8 @@ interface ComparePageProps {
 }
 
 export async function generateMetadata({ params }: ComparePageProps): Promise<Metadata> {
-  const [slugA, slugB] = params.slugs.split("-vs-");
+  const { slugs } = await params;
+  const [slugA, slugB] = slugs.split("-vs-");
   if (!slugA || !slugB) return { title: "Comparison Error" };
 
   const [storyA, storyB] = await Promise.all([
@@ -34,7 +36,8 @@ export async function generateMetadata({ params }: ComparePageProps): Promise<Me
 }
 
 export default async function ComparePage({ params }: ComparePageProps) {
-  const [slugA, slugB] = params.slugs.split("-vs-");
+  const { slugs } = await params;
+  const [slugA, slugB] = slugs.split("-vs-");
   if (!slugA || !slugB) notFound();
 
   const [storyA, storyB] = await Promise.all([
@@ -46,10 +49,12 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   const comparisonPoints = [
     { label: "Description", a: storyA.description, b: storyB.description },
+    { label: "Tags", a: storyA.tags?.map((t: any) => t.name).join(", ") || "None", b: storyB.tags?.map((t: any) => t.name).join(", ") || "None" },
     { label: "Target Audience", a: storyA.icpRoles?.join(", ") || "Founders", b: storyB.icpRoles?.join(", ") || "Founders" },
     { label: "Problem Solved", a: storyA.icpProblem || "General utility", b: storyB.icpProblem || "General utility" },
     { label: "Votes", a: storyA.votes, b: storyB.votes },
-    { label: "Rating", a: storyA.ratingCount > 0 ? (storyA.ratingSum / storyA.ratingCount).toFixed(1) : "N/A", b: storyB.ratingCount > 0 ? (storyB.ratingSum / storyB.ratingCount).toFixed(1) : "N/A" },
+    { label: "Comments", a: storyA.commentsCount || storyA.commentCount || 0, b: storyB.commentsCount || storyB.commentCount || 0 },
+    { label: "Rating", a: storyA.averageRating ? storyA.averageRating.toFixed(1) : (storyA.ratingCount > 0 ? (storyA.ratingSum / storyA.ratingCount).toFixed(1) : "N/A"), b: storyB.averageRating ? storyB.averageRating.toFixed(1) : (storyB.ratingCount > 0 ? (storyB.ratingSum / storyB.ratingCount).toFixed(1) : "N/A") },
   ];
 
   return (
@@ -70,8 +75,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
         {/* Story A Card */}
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
           <img src={storyA.screenshotUrl || "/placeholder.png"} className="w-full h-40 object-cover rounded-lg mb-6 border border-border" />
+          <div className="mb-2"><StageBadge stage={storyA.stage} /></div>
           <h2 className="text-2xl font-bold mb-2">{storyA.title}</h2>
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{storyA.description}</p>
+          <div className="flex gap-4 mb-4 text-muted-foreground mt-2">
+            <div className="flex items-center gap-1.5 font-medium"><Zap className="w-4 h-4 text-emerald-500" />{storyA.votes}</div>
+            <div className="flex items-center gap-1.5"><Star className="w-4 h-4 text-yellow-500" />{storyA.averageRating ? storyA.averageRating.toFixed(1) : "N/A"}</div>
+            <div className="flex items-center gap-1.5"><MessageSquare className="w-4 h-4" />{storyA.commentsCount || storyA.commentCount || 0}</div>
+          </div>
           <Link href={`/s/${storyA.slug}`} className="mt-auto px-4 py-2 bg-foreground text-background rounded-md text-sm font-medium">View Project</Link>
         </div>
 
@@ -84,8 +95,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
         {/* Story B Card */}
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
           <img src={storyB.screenshotUrl || "/placeholder.png"} className="w-full h-40 object-cover rounded-lg mb-6 border border-border" />
+          <div className="mb-2"><StageBadge stage={storyB.stage} /></div>
           <h2 className="text-2xl font-bold mb-2">{storyB.title}</h2>
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{storyB.description}</p>
+          <div className="flex gap-4 mb-4 text-muted-foreground mt-2">
+            <div className="flex items-center gap-1.5 font-medium"><Zap className="w-4 h-4 text-emerald-500" />{storyB.votes}</div>
+            <div className="flex items-center gap-1.5"><Star className="w-4 h-4 text-yellow-500" />{storyB.averageRating ? storyB.averageRating.toFixed(1) : "N/A"}</div>
+            <div className="flex items-center gap-1.5"><MessageSquare className="w-4 h-4" />{storyB.commentsCount || storyB.commentCount || 0}</div>
+          </div>
           <Link href={`/s/${storyB.slug}`} className="mt-auto px-4 py-2 bg-foreground text-background rounded-md text-sm font-medium">View Project</Link>
         </div>
       </div>

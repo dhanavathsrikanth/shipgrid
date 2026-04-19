@@ -1,22 +1,28 @@
 "use client";
 
 import React from "react";
-// import * as Dialog from "@radix-ui/react-dialog"; // Dialog removed
 import { Id } from "../../convex/_generated/dataModel";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation"; // Added
-import { toast } from "sonner"; // Corrected import for toast
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { MentionTextarea } from "./ui/MentionTextarea";
 
 interface CommentFormProps {
-  onSubmit: (content: string) => void; // Removed author from onSubmit
+  onSubmit: (content: string) => void;
   parentId?: Id<"comments">;
 }
+
+const PROMPT_CHIPS = [
+  "What problem does this solve for you?",
+  "What feature is missing?",
+  "How does this compare to alternatives?",
+];
 
 export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
   const [content, setContent] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const { isSignedIn, isLoaded: isClerkLoaded } = useUser(); // Get user for author info
+  const [chipsVisible, setChipsVisible] = React.useState(true);
+  const { isSignedIn, isLoaded: isClerkLoaded } = useUser();
   const router = useRouter();
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -25,34 +31,34 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
 
     if (!isSignedIn) {
       toast.error("Please sign in to comment.");
-      // It might be better to redirect or show a modal for sign-in
       router.push("/sign-in");
       return;
     }
 
-    // Trim whitespace from the beginning and end of the content
     const trimmedContent = content.trim();
-
-    // Validate character count instead of word count
     if (trimmedContent.length < 10) {
       setError("Comment must be at least 10 characters long.");
       return;
     }
-    // Clear any previous error
     setError(null);
-    onSubmit(trimmedContent); // Use trimmed content
-    setContent(""); // Clear the textarea after submission
+    onSubmit(trimmedContent);
+    setContent("");
+    setChipsVisible(true);
   };
 
   const handleContentChange = (value: string) => {
     setContent(value);
-    // Clear error when user starts typing
-    if (error && value.trim().length >= 10) {
-      setError(null);
-    }
+    // Hide chips once user starts typing their own content
+    if (value.trim().length > 0) setChipsVisible(false);
+    if (!value.trim()) setChipsVisible(true);
+    if (error && value.trim().length >= 10) setError(null);
   };
 
-  // Placeholder for a sign-in action, adjust as per your app's routing/UI flow
+  const handleChipClick = (prompt: string) => {
+    setContent(prompt + " ");
+    setChipsVisible(false);
+  };
+
   const handleSignIn = () => {
     router.push("/sign-in");
   };
@@ -63,6 +69,22 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
   return (
     <>
       <form onSubmit={handleSubmit} className="mt-4">
+        {/* Prompt chips — shown when textarea is empty */}
+        {canSubmit && chipsVisible && !parentId && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {PROMPT_CHIPS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => handleChipClick(prompt)}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+
         <MentionTextarea
           value={content}
           onChange={handleContentChange}
@@ -71,17 +93,13 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
               ? "Write your comment... (Markdown supported, min. 10 characters, use @username to mention users)"
               : "Sign in to write your comment..."
           }
-          className={`min-h-[100px] ${
-            error ? "border-destructive ring-destructive" : ""
-          }`}
+          className={`min-h-[100px] ${error ? "border-destructive ring-destructive" : ""}`}
           rows={4}
           required
           disabled={!canSubmit}
         />
         {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
-        <div className="mt-2 text-sm text-muted-foreground">
-          {/* Comments are held for moderation before appearing on the site. */}
-        </div>
+
         <button
           type="submit"
           disabled={!canSubmit || !content.trim() || !isContentValid}
@@ -126,6 +144,3 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
     </>
   );
 }
-
-
-

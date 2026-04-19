@@ -301,6 +301,7 @@ export const getMyUserDocument = query({
       _id: v.id("users"),
       _creationTime: v.number(),
       clerkId: v.string(),
+      externalId: v.optional(v.string()),
       email: v.optional(v.string()),
       name: v.string(),
       username: v.optional(v.union(v.string(), v.null())),
@@ -321,6 +322,7 @@ export const getMyUserDocument = query({
       region: v.optional(v.union(v.string(), v.null())),
       icpComplete: v.optional(v.boolean()),
       icpRoles: v.optional(v.array(v.string())),
+      followedTagIds: v.optional(v.array(v.id("tags"))),
     }),
   ),
 
@@ -754,6 +756,9 @@ export const getUserProfileByUsername = query({
           averageRating: averageRating,
           commentsCount: commentsCount,
           votesCount: votesCount,
+          // Ensure required boolean fields have defaults (schema stores them as optional)
+          isHidden: storyDoc.isHidden ?? false,
+          isPinned: storyDoc.isPinned ?? false,
           // _score is optional, so can be omitted if not applicable here
         };
       },
@@ -2375,5 +2380,19 @@ export const deleteUserByClerkId = internalMutation({
     } else {
       console.warn(`Can't delete user, there is no user record for Clerk ID: ${args.clerkId}`);
     }
+  },
+});
+
+/**
+ * Updates the user's followed tags (Community Phase 5)
+ */
+export const updateFollowedTags = mutation({
+  args: {
+    tagIds: v.array(v.id("tags")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthenticatedUserId(ctx);
+    await ctx.db.patch(userId, { followedTagIds: args.tagIds });
+    return { success: true };
   },
 });

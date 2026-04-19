@@ -1539,7 +1539,7 @@ export default function UserProfilePage({ username }: { username: string }) {
           )}
           {stories.length > 0 && (
             <ul className="space-y-4">
-              {stories.map((story: StoryInProfile) => (
+              {stories.map((story: any) => (
                 <li
                   key={story._id}
                   className="p-4 bg-muted/30 border border-border rounded-md flex justify-between items-center transition-all hover:bg-muted/50"

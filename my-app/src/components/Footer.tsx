@@ -71,6 +71,9 @@ export function Footer() {
                 <Link href="/leaderboard" className="text-muted-foreground hover:text-foreground transition-colors">Leaderboard</Link>
               </li>
               <li>
+                <Link href="/scoring" className="text-muted-foreground hover:text-foreground transition-colors">How Ranking Works</Link>
+              </li>
+              <li>
                 <Link href="/submit" className="text-muted-foreground hover:text-foreground transition-colors font-medium text-primary">Submit App</Link>
               </li>
             </ul>

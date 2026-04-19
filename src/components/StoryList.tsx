@@ -10,6 +10,8 @@ import {
   Pin,
   Bookmark,
   BookmarkCheck,
+  Star,
+  Info,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Story } from "../types";
@@ -138,6 +140,27 @@ export function StoryList({
     }
   };
 
+  // Comment quality engagement dot
+  const getCommentQualityDot = (story: Story) => {
+    const votes = (story as any).votesCount ?? story.votes ?? 1;
+    const comments = story.commentCount ?? 0;
+    const ratio = votes > 0 ? comments / votes : 0;
+    if (ratio >= 0.10) return { color: "bg-emerald-500", label: "Active Discussion" };
+    if (ratio >= 0.03) return { color: "bg-amber-400", label: "Some Discussion" };
+    return null; // don't show dot for very low ratio — avoids noise
+  };
+
+  // Rating stars helper
+  const renderRating = (rating: number) => {
+    if (!rating || rating === 0) return null;
+    return (
+      <span className="flex items-center gap-0.5 text-amber-500" title={`${rating}/10 avg rating`}>
+        <Star className="w-3 h-3 fill-amber-500" />
+        <span className="text-xs font-medium text-muted-foreground">{rating.toFixed(1)}</span>
+      </span>
+    );
+  };
+
   const mainContentContainerClass =
     viewMode === "vibe" ? "flex-grow" : "w-full";
 
@@ -163,7 +186,7 @@ export function StoryList({
                           : "flex-col items-center min-w-[40px] pt-1"
                       }`}
                     >
-                      {viewMode === "vibe" ? (
+                    {viewMode === "vibe" ? (
                         <div className="flex flex-col items-center w-full">
                           <div className="bg-muted/50 rounded-t-md w-full h-[62px] flex flex-col items-center justify-center text-lg border border-border font-normal text-foreground mb-[0px]">
                             <span className="font-alfa-slab-one">
@@ -171,21 +194,37 @@ export function StoryList({
                             </span>
                             <div className="text-xs">Vibes</div>
                           </div>
-                          <button
-                            onClick={() => handleVote(story._id)}
-                            className="bg-card border border-t-0 border-border text-foreground hover:bg-muted/80 w-full rounded-b-md py-1 px-2 flex items-center justify-center gap-1 text-sm font-normal h-[24px] transition-colors"
-                          >
-                            Vibe it
-                          </button>
+                          <div className="relative group">
+                            <button
+                              onClick={() => handleVote(story._id)}
+                              className="bg-card border border-t-0 border-border text-foreground hover:bg-muted/80 w-full rounded-b-md py-1 px-2 flex items-center justify-center gap-1 text-sm font-normal h-[24px] transition-colors"
+                            >
+                              Vibe it
+                            </button>
+                            <Link
+                              href="/scoring"
+                              className="absolute -right-5 top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="How ranking works"
+                            >
+                              <Info className="w-3 h-3 text-muted-foreground" />
+                            </Link>
+                          </div>
                         </div>
                       ) : (
                         <>
-                          <button
-                            onClick={() => handleVote(story._id)}
-                            className="text-foreground hover:bg-muted p-1 rounded"
-                          >
-                            <ChevronUp className="w-5 h-5" />
-                          </button>
+                          <div className="relative group">
+                            <button
+                              onClick={() => handleVote(story._id)}
+                              className="text-foreground hover:bg-muted p-1 rounded"
+                            >
+                              <ChevronUp className="w-5 h-5" />
+                            </button>
+                            <div className="absolute left-full top-0 ml-1 hidden group-hover:flex items-center">
+                              <Link href="/scoring" title="How is ranking calculated?">
+                                <Info className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                              </Link>
+                            </div>
+                          </div>
                           <span className="text-foreground font-medium text-sm">
                             {story.votes}
                           </span>
@@ -357,15 +396,30 @@ export function StoryList({
                           </span>
                         )}
                         <span>{formatDate(story._creationTime)}</span>
+
+                        {/* Comment count with quality dot */}
                         <Link
                           href={`/s/${story.slug}#comments`}
-                          className="flex items-center gap-2 hover:text-muted-foreground"
+                          className="flex items-center gap-1 hover:text-muted-foreground"
                         >
+                          {(() => {
+                            const dot = getCommentQualityDot(story);
+                            return dot ? (
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${dot.color} inline-block`}
+                                title={dot.label}
+                              />
+                            ) : null;
+                          })()}
                           <MessageSquare
                             className={`${viewMode === "vibe" || viewMode === "list" ? "w-3.5 h-3.5" : "w-4 h-4"}`}
                           />
                           {story.commentCount}
                         </Link>
+
+                        {/* Average rating */}
+                        {renderRating((story as any).averageRating)}
+
                         <BookmarkButton
                           storyId={story._id}
                           showMessage={showMessage}

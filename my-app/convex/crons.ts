@@ -55,11 +55,34 @@ crons.cron(
   {},
 );
 
+// Recalculate trending scores every hour
+crons.interval(
+  "recalculate trending scores",
+  { hours: 1 },
+  internal.trending.recalculateAll,
+  {},
+);
+
 // Daily Clerk Sync at 1:00 AM UTC (safety net for missing emails)
 crons.cron(
   "daily sync clerk emails",
   "0 1 * * *",
   internal.clerkSync.syncAllMissingEmails,
+  {},
+);
+// Anti-gaming: Detect coordinated voting (daily at 2:00 AM UTC)
+crons.cron(
+  "detect coordinated voting",
+  "0 2 * * *",
+  internal.antiGaming.detectCoordinatedVoting,
+  {},
+);
+
+// Phase 5.6: 30-Day follow-up email to builders (daily at 10:00 AM PST = 18:00 UTC)
+crons.cron(
+  "30-day builder follow-up",
+  "0 18 * * *", // 10:00 AM PST = 18:00 UTC
+  internal.emails.followUp.sendFollowUpEmails,
   {},
 );
 

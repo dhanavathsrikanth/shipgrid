@@ -12,6 +12,14 @@ import { Input } from "../components/ui/input";
 import { Markdown } from "../components/Markdown";
 import { useAuth } from "@clerk/nextjs";
 
+const mapTeamCount = (count: number): "1" | "2-5" | "6-20" | "20+" | undefined => {
+  if (!count || count < 1) return undefined;
+  if (count === 1) return "1";
+  if (count >= 2 && count <= 5) return "2-5";
+  if (count >= 6 && count <= 20) return "6-20";
+  return "20+";
+};
+
 export function JudgingGroupSubmitPage({ slug }: { slug: string }) {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
@@ -513,7 +521,7 @@ function SubmissionFormContent({
         // Team info (always included if provided)
         teamName: teamData.teamName ? teamData.teamName : undefined,
         teamMemberCount: teamData.teamName
-          ? parseInt(teamData.teamSize) || undefined
+          ? mapTeamCount(parseInt(teamData.teamSize) || 1)
           : undefined,
         teamMembers: teamData.teamName
           ? teamData.teamMembers.filter((m) => m.name.trim() || m.email.trim())

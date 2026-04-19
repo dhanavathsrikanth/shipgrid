@@ -54,7 +54,7 @@ export const baseStoryValidator = {
   email: v.optional(v.string()),
   // Hackathon team info
   teamName: v.optional(v.string()),
-  teamMemberCount: v.optional(v.number()),
+  teamMemberCount: v.optional(v.string()),
   teamMembers: v.optional(
     v.array(
       v.object({
@@ -68,7 +68,14 @@ export const baseStoryValidator = {
   icpProblem: v.optional(v.string()),
   icpBudget: v.optional(v.string()),
   notFor: v.optional(v.string()),
-  stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+  stage: v.optional(v.union(
+    v.literal("idea"),
+    v.literal("building"), 
+    v.literal("beta"), 
+    v.literal("live"),
+    v.literal("acquired"),
+    v.literal("sunset")
+  )),
   betaOpenedAt: v.optional(v.number()),
   // Changelog tracking for user edits
   changeLog: v.optional(
@@ -122,6 +129,7 @@ export const storyWithDetailsValidator = v.object({
   averageRating: v.number(), // Added: average rating for the story
   commentsCount: v.number(), // Added: count of comments (distinct from story.commentCount which might be different)
   votesCount: v.number(), // Added: count of votes (distinct from story.votes which might be raw sum or different metric)
+  voteTrustPercentage: v.optional(v.number()), // For anti-gaming UI
   _score: v.optional(v.number()), // For search results
 });
 
@@ -131,6 +139,7 @@ export const userInProfileValidator = v.object({
   _creationTime: v.number(),
   name: v.string(),
   clerkId: v.string(),
+  externalId: v.optional(v.string()),
   email: v.optional(v.string()),
   username: v.optional(v.union(v.string(), v.null())),
   imageUrl: v.optional(v.union(v.string(), v.null())),
@@ -220,7 +229,7 @@ export type StoryWithDetailsPublic = {
   email?: string;
   // Hackathon team info
   teamName?: string;
-  teamMemberCount?: number;
+  teamMemberCount?: string;
   teamMembers?: Array<{
     name: string;
     email: string;
@@ -230,7 +239,7 @@ export type StoryWithDetailsPublic = {
   icpProblem?: string;
   icpBudget?: string;
   notFor?: string;
-  stage?: "building" | "beta" | "live";
+  stage?: "idea" | "building" | "beta" | "live" | "acquired" | "sunset";
   betaOpenedAt?: number;
   // Changelog tracking for user edits
   changeLog?: Array<{
@@ -274,5 +283,6 @@ export type StoryWithDetailsPublic = {
   averageRating: number; // Added field
   commentsCount: number; // Added field
   votesCount: number; // Added field
+  voteTrustPercentage?: number; // Added field for anti-gaming UI
   _score?: number; // For search results, if applicable
 };

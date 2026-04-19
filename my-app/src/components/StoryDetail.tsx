@@ -17,6 +17,9 @@ import {
   Play,
   Edit3,
   Users,
+  HeartHandshake,
+  BarChart2,
+  ArrowLeftRight,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useQuery, useMutation } from "convex/react"; // Import Convex hooks
@@ -35,12 +38,24 @@ import {
 } from "@/components/ui/dialog"; // Assuming you have a Dialog component
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button"; // For modal buttons
+
+
+const mapTeamCount = (count: number): "1" | "2-5" | "6-20" | "20+" | undefined => {
+  if (!count || count < 1) return undefined;
+  if (count === 1) return "1";
+  if (count >= 2 && count <= 5) return "2-5";
+  if (count >= 6 && count <= 20) return "6-20";
+  return "20+";
+};
 import { toast } from "sonner";
 import { AuthRequiredDialog } from "./ui/AuthRequiredDialog";
 import { ImageGallery } from "./ImageGallery";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { Markdown } from "./Markdown";
 import { useDialog } from "../hooks/useDialog";
+import { ChangelogTab } from "./ChangelogTab";
+import { FeatureRequestsBoard } from "./FeatureRequestsBoard";
+import { StageBadge } from "./StageBadge";
 
 // Removed MOCK_COMMENTS
 
@@ -235,6 +250,50 @@ export function StoryDetail({ story }: StoryDetailProps) {
   const createReportMutation = useMutation(api.reports.createReport);
   const updateOwnStoryMutation = useMutation(api.stories.updateOwnStory);
   const generateUploadUrl = useMutation(api.stories.generateUploadUrl);
+  const toggleInterestMutation = useMutation(api.productInterests.toggle);
+  const trackViewMutation = useMutation(api.stories.trackView);
+
+  // Fire trackView once on mount
+  const trackViewFiredRef = React.useRef(false);
+  React.useEffect(() => {
+    if (trackViewFiredRef.current) return;
+    trackViewFiredRef.current = true;
+    trackViewMutation({ storyId: story._id }).catch(() => {/* silent */});
+  }, [story._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Is interested?
+  const isInterested = useQuery(
+    api.productInterests.isInterested,
+    isSignedIn ? { storyId: story._id } : "skip",
+  );
+
+  // Vote quality ratio (for anti-gaming indicator)
+  const voteQuality = useQuery(api.stories.getSuspiciousVoteRatio, {
+    storyId: story._id,
+  });
+
+  // Get current user's Convex data to check ownership
+  const currentUser = useQuery(
+    api.users.getMyUserDocument,
+    isSignedIn && user ? {} : "skip",
+  );
+
+  // Is owner?
+  const isOwner =
+    isSignedIn && currentUser && story.userId === currentUser._id;
+
+  // Active engagement tab
+  const [activeTab, setActiveTab] = React.useState<"discussion" | "updates" | "requests">("discussion");
+
+  // Comment sort
+  const [commentSort, setCommentSort] = React.useState<"top" | "recent" | "quality">("top");
+
+  // Which comments the current user has already upvoted
+  const votedCommentIds = useQuery(
+    api.comments.getVotedCommentIds,
+    isSignedIn ? { storyId: story._id } : "skip",
+  );
+  const votedSet = new Set<string>(votedCommentIds ?? []);
 
   // Additional queries for editing
   const availableTags = useQuery(api.tags.listHeader);
@@ -269,13 +328,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
   // Fetch enabled form fields for dynamic link display
   const enabledFormFields = useQuery(api.storyFormFields.listEnabled);
-  const settings = useQuery(api.settings.get);
 
-  // Get current user's Convex data to check ownership
-  const currentUser = useQuery(
-    api.users.getMyUserDocument,
-    isSignedIn && user ? {} : "skip",
-  );
+  const settings = useQuery(api.settings.get);
 
   // Handle edit mode initialization
   React.useEffect(() => {
@@ -324,7 +378,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
       // Initialize team data
       setTeamData({
         teamName: story.teamName || "",
-        teamMemberCount: story.teamMemberCount || 1,
+        teamMemberCount: story.teamMemberCount ? 1 : 1,
         teamMembers:
           story.teamMembers && story.teamMembers.length > 0
             ? story.teamMembers
@@ -800,7 +854,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
           showTeamInfo && teamData.teamName ? teamData.teamName : undefined,
         teamMemberCount:
           showTeamInfo && teamData.teamName
-            ? teamData.teamMemberCount
+            ? mapTeamCount(teamData.teamMembers.length)
             : undefined,
         teamMembers:
           showTeamInfo && teamData.teamName
@@ -916,7 +970,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
         <div className="flex-1 min-w-0">
           <article className="bg-card rounded-lg p-4 sm:p-6 border border-border">
             <div className="flex gap-4">
-              <div className="flex flex-col items-center gap-1 pt-1 min-w-[40px]">
+              <div className="flex flex-col items-center gap-1 pt-1 min-w-[40px] relative group">
                 <button
                   onClick={handleVote}
                   disabled={!isClerkLoaded} // Disable while Clerk is loading to prevent premature clicks
@@ -934,9 +988,28 @@ export function StoryDetail({ story }: StoryDetailProps) {
                 <span className="text-muted-foreground font-medium text-sm">
                   {story.votes}
                 </span>
+
+                {/* Vote Quality Indicator - shows when > 15% votes are suspicious */}
+                {voteQuality && voteQuality.establishedPct < 85 && (
+                  <span
+                    className="mt-1 text-[10px] font-medium text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/30 px-1 rounded text-center leading-tight"
+                    title={`${voteQuality.establishedPct}% of votes from established accounts (${voteQuality.suspiciousCount} flagged)`}
+                  >
+                    {voteQuality.establishedPct}%<br />trusted
+                  </span>
+                )}
+
+                {/* Ranking Formula Tooltip trigger - absolute positioned so it doesn't break center flow */}
+                <Link
+                  href="/scoring"
+                  className="absolute -right-2 top-0 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-muted-foreground hover:text-foreground bg-muted w-4 h-4 rounded-full flex items-center justify-center cursor-help"
+                  title="Vibes = votes + ratings×10 + comments×3, time-decayed. See full formula →"
+                >
+                  ?
+                </Link>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl lg:text-1xl font-bold  text-transform: capitalize text-foreground mb-2">
+                <h1 className="flex items-center gap-3 text-xl lg:text-1xl font-bold text-transform: capitalize text-foreground mb-2">
                   <a
                     href={story.url}
                     className="hover:text-muted-foreground break-words"
@@ -945,6 +1018,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                   >
                     {story.title}
                   </a>
+                  {story.stage && <StageBadge stage={story.stage as string} betaOpenedAt={story.betaOpenedAt as number} />}
                 </h1>
                 {story.customMessage && (
                   <div className="mb-4 text-sm text-primary-foreground bg-foreground border border-border rounded-md p-3 italic">
@@ -1015,6 +1089,55 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     {comments?.length ?? 0} Comments
                   </Link>
                   <BookmarkButton storyId={story._id} />
+                  {/* I'm Interested button */}
+                  <Button
+                    size="sm"
+                    variant={isInterested ? "secondary" : "outline"}
+                    onClick={async () => {
+                      if (!isSignedIn) {
+                        setAuthDialogAction("interest");
+                        setShowAuthDialog(true);
+                        return;
+                      }
+                      try {
+                        const result = await toggleInterestMutation({ storyId: story._id });
+                        toast.success(result.interested ? "Marked as Interested!" : "Removed interest.");
+                      } catch (e: any) {
+                        toast.error(e.message);
+                      }
+                    }}
+                    title={isInterested ? "Remove interest" : "I'm interested in this product"}
+                    className="gap-1.5 rounded-full text-xs h-7 px-3"
+                  >
+                    <HeartHandshake className="w-3.5 h-3.5" />
+                    {isInterested ? "Interested ✓" : "I'm Interested"}
+                  </Button>
+                  {/* Compare Link */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    asChild
+                    className="gap-1.5 rounded-full text-xs h-7 px-3"
+                  >
+                    <Link href={`/compare/${story.slug}-vs-competitor`} title="Compare this product">
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                      Compare
+                    </Link>
+                  </Button>
+                  {/* Analytics link — owner only */}
+                  {isOwner && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      asChild
+                      className="gap-1 rounded-full text-xs h-7 px-3"
+                    >
+                      <Link href={`/s/${story.slug}/analytics`} title="View builder analytics">
+                        <BarChart2 className="w-3 h-3" />
+                        Analytics
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -2444,7 +2567,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                 </h3>
                 <p className="text-foreground">
                   {story.teamMemberCount}{" "}
-                  {story.teamMemberCount === 1 ? "member" : "members"}
+                  {story.teamMemberCount === "1" ? "member" : "members"}
                 </p>
               </div>
             )}
@@ -2547,7 +2670,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                 Originally submitted:
               </span>
               <span>
-                {new Date(story._creationTime).toLocaleDateString(undefined, {
+                {new Date(story._creationTime).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -2583,9 +2706,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     };
 
                     const changeDate = new Date(entry.timestamp);
-                    const formattedDate = changeDate.toLocaleDateString(
-                      undefined,
-                      {
+                    const formattedDate = changeDate.toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
@@ -2782,43 +2903,138 @@ export function StoryDetail({ story }: StoryDetailProps) {
         </div>
       )}
 
-      {/* Comments Section */}
+      {/* Discussion / Updates / Requests Tabs */}
       {!isEditing && (
         <div id="comments" className="mt-8 scroll-mt-20">
-          <h2 className="text-xl font-medium text-muted-foreground mb-4">
-            {comments?.length ?? 0}{" "}
-            {(comments?.length ?? 0) === 1 ? "Comment" : "Comments"}
-          </h2>
-          <CommentForm onSubmit={handleCommentSubmit} />
-          <div className="mt-8 space-y-6 border-t border-border pt-6">
-            {comments === undefined && <div>Loading comments...</div>}
-            {comments?.map((commentData: any) => {
-              // Rename variable to avoid conflict
-              // Ensure commentData conforms to CommentType, though validation should happen in backend
-              const comment = commentData as CommentType;
-              return (
-                <React.Fragment key={comment._id}>
-                  <Comment
-                    comment={comment}
-                    onReply={(parentId) => setReplyToId(parentId)}
-                  />
-                  {replyToId === comment._id && (
-                    <div className="pl-8 pt-4">
-                      <CommentForm
-                        onSubmit={handleCommentSubmit}
-                        parentId={comment._id}
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-            {comments && comments.length === 0 && (
-              <div className="text-muted-foreground">
-                No comments yet. Be the first!
-              </div>
-            )}
+          {/* Tab bar */}
+          <div className="flex gap-1 mb-6 border-b border-border">
+            {([
+              { key: "discussion", label: `Discussion (${comments?.length ?? 0})` },
+              { key: "updates",    label: "Updates" },
+              { key: "requests",   label: "Requests" },
+            ] as const).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 text-sm font-medium transition-all border-b-2 -mb-px ${
+                  activeTab === tab.key
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+
+          {/* Discussion tab */}
+          {activeTab === "discussion" && (
+            <>
+              {/* Sort controls */}
+              <div className="flex items-center gap-1 mb-4">
+                <span className="text-xs text-muted-foreground mr-1">Sort:</span>
+                {(["top", "recent", "quality"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setCommentSort(s)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                      commentSort === s
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s === "top" ? "🔥 Top" : s === "recent" ? "🕐 Recent" : "✦ Quality"}
+                  </button>
+                ))}
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {comments?.length ?? 0} {(comments?.length ?? 0) === 1 ? "comment" : "comments"}
+                </span>
+              </div>
+
+              <CommentForm onSubmit={handleCommentSubmit} />
+
+              <div className="mt-8 space-y-4 border-t border-border pt-6">
+                {comments === undefined && (
+                  <div className="space-y-4">
+                    {[1,2,3].map(i => (
+                      <div key={i} className="animate-pulse">
+                        <div className="flex gap-2 items-center mb-2">
+                          <div className="w-6 h-6 rounded-full bg-muted" />
+                          <div className="h-3 w-24 bg-muted rounded" />
+                        </div>
+                        <div className="h-3 w-3/4 bg-muted rounded ml-8 mb-1" />
+                        <div className="h-3 w-1/2 bg-muted rounded ml-8" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {comments && comments.length === 0 && (
+                  <div className="py-8 text-center text-muted-foreground text-sm">
+                    No comments yet — be the first to share your thoughts!
+                  </div>
+                )}
+                {comments && comments.length > 0 && (
+                  <>
+                    {[...comments]
+                      .filter((c: any) => !c.parentId)
+                      .sort((a: any, b: any) => {
+                        if (commentSort === "top") return (b.votes ?? 0) - (a.votes ?? 0);
+                        if (commentSort === "recent") return b._creationTime - a._creationTime;
+                        if (commentSort === "quality") return (b.qualityScore ?? 0) - (a.qualityScore ?? 0);
+                        return 0;
+                      })
+                      .map((commentData: any) => {
+                        const comment = commentData as CommentType;
+                        const replies = comments.filter((c: any) => c.parentId === comment._id);
+                        return (
+                          <React.Fragment key={comment._id}>
+                            <Comment
+                              comment={comment}
+                              onReply={(parentId) => setReplyToId(parentId)}
+                              hasVoted={votedSet.has(comment._id)}
+                              isOwn={!!currentUser && comment.userId === currentUser._id}
+                              depth={0}
+                            />
+                            {/* Inline reply form */}
+                            {replyToId === comment._id && (
+                              <div className="ml-10 pl-4 border-l-2 border-primary/30 mt-2">
+                                <CommentForm
+                                  onSubmit={handleCommentSubmit}
+                                  parentId={comment._id}
+                                />
+                              </div>
+                            )}
+                            {/* Threaded replies */}
+                            {replies
+                              .sort((a: any, b: any) => a._creationTime - b._creationTime)
+                              .map((reply: any) => (
+                                <Comment
+                                  key={reply._id}
+                                  comment={reply as CommentType}
+                                  onReply={(parentId) => setReplyToId(parentId)}
+                                  hasVoted={votedSet.has(reply._id)}
+                                  isOwn={!!currentUser && reply.userId === currentUser._id}
+                                  depth={1}
+                                />
+                              ))}
+                          </React.Fragment>
+                        );
+                      })}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Updates (Changelog) tab */}
+          {activeTab === "updates" && (
+            <ChangelogTab storyId={story._id} isOwner={!!isOwner} />
+          )}
+
+          {/* Feature Requests tab */}
+          {activeTab === "requests" && (
+            <FeatureRequestsBoard storyId={story._id} isOwner={!!isOwner} />
+          )}
         </div>
       )}
 

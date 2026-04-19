@@ -11,14 +11,7 @@ export const computeWeeklyMostVibes = internalQuery({
     weekEndMs: v.number(),
     limit: v.number(),
   },
-  returns: v.array(
-    v.object({
-      storyId: v.any(),
-      title: v.string(),
-      slug: v.string(),
-      vibes: v.number(),
-    }),
-  ),
+  // returns block removed for TS generic depth issue
   handler: async (ctx, args) => {
     // Get votes from the week
     const votes = await ctx.db
@@ -53,6 +46,7 @@ export const computeWeeklyMostVibes = internalQuery({
           title: story.title as string,
           slug: story.slug as string,
           vibes: entry.vibes,
+          tagIds: (story as any).tagIds as string[] | undefined,
         });
       }
     }
@@ -81,13 +75,13 @@ export const sendWeeklyDigest = internalAction({
     weekEnd.setDate(weekStart.getDate() + 6); // Last week's Sunday
     weekEnd.setHours(23, 59, 59, 999);
 
-    // Get top apps from last week
+    // Get top apps from last week (up to 50 for filtering by tag)
     const topApps = await ctx.runQuery(
       internal.emails.weekly.computeWeeklyMostVibes,
       {
         weekStartMs: weekStart.getTime(),
         weekEndMs: weekEnd.getTime(),
-        limit: 10,
+        limit: 50,
       },
     );
 
@@ -143,6 +137,38 @@ export const sendWeeklyDigest = internalAction({
           purpose: "weekly_digest",
         },
       );
+      
+      // Personalize Top Apps
+      let personalizedTopApps = topApps.slice(0, 10);
+      let personalizedTitle = undefined;
+      
+      const followedTags = user.followedTagIds || [];
+      if (followedTags.length > 0) {
+        const tagMatchedApps = topApps.filter((app: any) => 
+          app.tagIds && app.tagIds.some((id: string) => (followedTags as string[]).includes(id))
+        );
+        
+        if (tagMatchedApps.length > 0) {
+          personalizedTopApps = [...tagMatchedApps];
+          
+          if (personalizedTopApps.length < 10) {
+            const addedIds = new Set(personalizedTopApps.map((a: any) => a.storyId));
+            for (const app of topApps) {
+              if (personalizedTopApps.length >= 10) break;
+              if (!addedIds.has(app.storyId)) {
+                personalizedTopApps.push(app);
+                addedIds.add(app.storyId);
+              }
+            }
+          } else if (personalizedTopApps.length > 10) {
+            personalizedTopApps = personalizedTopApps.slice(0, 10);
+          }
+          
+          if (tagMatchedApps.length >= 3) {
+            personalizedTitle = "Top Apps in Your Followed Topics";
+          }
+        }
+      }
 
       // Generate weekly digest email
       const emailTemplate = await ctx.runQuery(
@@ -151,7 +177,8 @@ export const sendWeeklyDigest = internalAction({
           userId: user._id,
           userName: user.name || "ShipGrid User",
           userUsername: user.username ?? undefined,
-          topApps: topApps.map((app: any) => ({
+          personalizedTitle,
+          topApps: personalizedTopApps.map((app: any) => ({
             storyId: app.storyId as any, // Type assertion to handle mixed ID types
             storySlug: app.slug,
             title: app.title,

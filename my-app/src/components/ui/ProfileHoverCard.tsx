@@ -100,7 +100,7 @@ export function ProfileHoverCard({
   }
 
   return (
-    <div
+    <span
       ref={containerRef}
       className="relative inline-block"
       onMouseEnter={handleMouseEnter}
@@ -109,9 +109,9 @@ export function ProfileHoverCard({
       {children}
 
       {showCard && userData && (
-        <div
+        <span
           ref={cardRef}
-          className={`absolute z-50 w-80 max-w-[calc(100vw-2rem)] bg-card rounded-lg border border-border p-4 mt-2 animate-fade-in ${
+          className={`absolute z-50 block w-80 max-w-[calc(100vw-2rem)] bg-card rounded-lg border border-border p-4 mt-2 animate-fade-in ${
             cardPosition === "left" ? "left-0" : "right-0"
           }`}
           onMouseEnter={() => setShowCard(true)}
@@ -236,9 +236,9 @@ export function ProfileHoverCard({
               View Profile
             </Link>
           </div>
-        </div>
+        </span>
       )}
-    </div>
+    </span>
   );
 }
 

@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { StoryList } from "../components/StoryList";
 import { useLayoutContext } from "../components/Layout";
 import type { Story } from "../types";
+import { useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
+import { Check, Plus } from "lucide-react";
 
 export function TagPage({ tagSlug }: { tagSlug: string }) {
   const { viewMode } = useLayoutContext();
+  const { isSignedIn } = useUser();
+  const currentUser = useQuery(api.users.getMyUserDocument);
+  const updateFollowedTags = useMutation(api.users.updateFollowedTags);
 
   const tag = useQuery(api.tags.getBySlug, tagSlug ? { slug: tagSlug } : "skip");
 
@@ -54,6 +60,29 @@ export function TagPage({ tagSlug }: { tagSlug: string }) {
     );
   };
 
+  const isFollowing = Boolean(tag && currentUser?.followedTagIds?.includes(tag._id));
+
+  const handleFollowToggle = async () => {
+    if (!isSignedIn) {
+      toast.error("Please sign in to follow topics");
+      return;
+    }
+    if (!tag?._id) return;
+    
+    try {
+      let newTags = currentUser?.followedTagIds || [];
+      if (isFollowing) {
+        newTags = newTags.filter(id => id !== tag._id);
+      } else {
+        newTags = [...newTags, tag._id];
+      }
+      await updateFollowedTags({ tagIds: newTags });
+      toast.success(isFollowing ? `Unfollowed ${tag.name}` : `Following ${tag.name}`);
+    } catch (e) {
+      toast.error("Failed to update follow status");
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <Link href="/" className="text-muted-foreground hover:text-foreground inline-block mb-6">← Back to Apps</Link>
@@ -61,6 +90,28 @@ export function TagPage({ tagSlug }: { tagSlug: string }) {
         <div className="flex items-center gap-3 mb-4">
           <h1 className="text-2xl font-bold text-foreground">Apps tagged with</h1>
           {getTagDisplay()}
+          {tag && (
+            <button
+              onClick={handleFollowToggle}
+              className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                isFollowing 
+                  ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20" 
+                  : "bg-foreground text-background hover:opacity-90"
+              }`}
+            >
+              {isFollowing ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Following
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Follow Topic
+                </>
+              )}
+            </button>
+          )}
         </div>
         <p className="text-muted-foreground">
           {totalCount === undefined ? "Loading..." : `${totalCount || 0} ${totalCount === 1 ? "app" : "apps"} found`}

@@ -150,6 +150,12 @@ export default defineSchema({
     votes: v.number(),
     status: v.string(),
     isHidden: v.optional(v.boolean()),
+    // Quality signals — computed on insert, power Maker badge + comment ranking
+    isMakerResponse: v.optional(v.boolean()),   // true when commenter is story owner
+    wordCount: v.optional(v.number()),           // word depth signal
+    isQuestion: v.optional(v.boolean()),         // contains "?" — signals genuine curiosity
+    qualityScore: v.optional(v.number()),        // composite: wordCount*0.5 + Q*10 + maker*25
+    flaggedAsLowQuality: v.optional(v.boolean()), // <8 words, no Q, not maker
   })
     .index("by_storyId_status", ["storyId", "status"])
     .index("by_user", ["userId"])

@@ -160,6 +160,8 @@ const fetchTagsAndCountsForStories = async (
         .withIndex("by_story", (q) => q.eq("storyId", story._id))
         .collect();
       const votesCount = storyVotes.length; // Actual number of vote documents
+      const suspiciousVotesCount = storyVotes.filter((v: any) => v.isSuspicious).length;
+      const voteTrustPercentage = votesCount > 0 ? Math.round(((votesCount - suspiciousVotesCount) / votesCount) * 100) : 100;
 
       // Fetch ratings for average
       const storyRatings = await ctx.db
@@ -193,6 +195,7 @@ const fetchTagsAndCountsForStories = async (
         authorEmail: author?.email,
         averageRating,
         votesCount,
+        voteTrustPercentage,
       };
     }),
   );
@@ -223,6 +226,7 @@ export const listApproved = query({
         v.literal("month"),
         v.literal("year"),
         v.literal("all"),
+        v.literal("trending"),
         v.literal("votes_today"),
         v.literal("votes_week"),
         v.literal("votes_month"),
@@ -231,6 +235,7 @@ export const listApproved = query({
       ),
     ),
     searchTerm: v.optional(v.string()),
+    stage: v.optional(v.string()),
   },
   handler: async (
     ctx,
@@ -282,6 +287,46 @@ export const listApproved = query({
     let paginatedResult;
     let initialFilteredStories: Doc<"stories">[];
 
+    // Trending sort — order by trendingScore DESC
+    if (args.sortPeriod === "trending") {
+      const allStories = await ctx.db
+        .query("stories")
+        .withIndex("by_status_trendingScore", (q) =>
+          q.eq("status", "approved"),
+        )
+        .order("desc")
+        .filter((q) => {
+          const conditions = [
+            q.neq(q.field("isHidden"), true),
+          ];
+          if (args.stage) conditions.push(q.eq(q.field("stage"), args.stage));
+          return q.and(...conditions);
+        })
+        .take(200);
+
+      const filtered = args.tagId
+        ? allStories.filter((s) => (s.tagIds ?? []).includes(args.tagId!))
+        : allStories;
+
+      const startIndex = args.paginationOpts.cursor
+        ? parseInt(args.paginationOpts.cursor, 10)
+        : 0;
+      const endIndex = startIndex + args.paginationOpts.numItems;
+      const pageStories = filtered.slice(startIndex, endIndex);
+      const isDone = endIndex >= filtered.length;
+
+      const storiesWithDetails = await fetchTagsAndCountsForStories(
+        ctx,
+        pageStories,
+      );
+
+      return {
+        page: storiesWithDetails,
+        isDone,
+        continueCursor: isDone ? "" : endIndex.toString(),
+      };
+    }
+
     if (args.sortPeriod?.startsWith("votes_")) {
       // For vote-based sorting with tagId, we need to collect all matching stories first
       if (args.tagId) {
@@ -290,13 +335,15 @@ export const listApproved = query({
           .query("stories")
           .withIndex("by_votes")
           .order("desc")
-          .filter((q) =>
-            q.and(
+          .filter((q) => {
+            const conditions = [
               q.eq(q.field("status"), "approved"),
               q.neq(q.field("isHidden"), true),
               q.gte(q.field("_creationTime"), startTime),
-            ),
-          )
+            ];
+            if (args.stage) conditions.push(q.eq(q.field("stage"), args.stage));
+            return q.and(...conditions);
+          })
           .collect();
 
         // Filter by tagId before pagination
@@ -329,13 +376,15 @@ export const listApproved = query({
           .query("stories")
           .withIndex("by_votes")
           .order("desc")
-          .filter((q) =>
-            q.and(
+          .filter((q) => {
+            const conditions = [
               q.eq(q.field("status"), "approved"),
               q.neq(q.field("isHidden"), true),
               q.gte(q.field("_creationTime"), startTime),
-            ),
-          )
+            ];
+            if (args.stage) conditions.push(q.eq(q.field("stage"), args.stage));
+            return q.and(...conditions);
+          })
           .paginate(args.paginationOpts);
 
         const storiesWithDetails = await fetchTagsAndCountsForStories(
@@ -353,13 +402,15 @@ export const listApproved = query({
       // For time-based sorting (or 'all'), filter first, collect all matching, then sort manually for pinning, then paginate manually
       const baseQuery = ctx.db
         .query("stories")
-        .filter((q) =>
-          q.and(
+        .filter((q) => {
+          const conditions = [
             q.eq(q.field("status"), "approved"),
             q.neq(q.field("isHidden"), true),
             q.gte(q.field("_creationTime"), startTime),
-          ),
-        );
+          ];
+          if (args.stage) conditions.push(q.eq(q.field("stage"), args.stage));
+          return q.and(...conditions);
+        });
       initialFilteredStories = await baseQuery.collect();
 
       // Pre-filter by tagId if provided (BEFORE sorting and pagination)
@@ -415,10 +466,11 @@ export const listFollowing = query({
     isDone: boolean;
     continueCursor: string;
   }> => {
-    const userId = await getAuthenticatedUserId(ctx);
-    if (!userId) {
+    const userDoc = await getAuthenticatedUserDoc(ctx);
+    if (!userDoc) {
       return { page: [], isDone: true, continueCursor: "" };
     }
+    const userId = userDoc._id;
 
     const follows = await ctx.db
       .query("follows")
@@ -552,8 +604,8 @@ export const getBySlug = query({
       chefShowUrl: storyWithDetails.chefShowUrl,
       chefAppUrl: storyWithDetails.chefAppUrl,
       status: storyWithDetails.status,
-      isHidden: storyWithDetails.isHidden,
-      isPinned: storyWithDetails.isPinned,
+      isHidden: storyWithDetails.isHidden ?? false,
+      isPinned: storyWithDetails.isPinned ?? false,
       customMessage: storyWithDetails.customMessage,
       isApproved: storyWithDetails.isApproved,
       email: storyWithDetails.email,
@@ -633,7 +685,14 @@ export const submit = mutation({
     email: v.optional(v.string()),
     // Hackathon team info
     teamName: v.optional(v.string()),
-    teamMemberCount: v.optional(v.number()),
+    teamMemberCount: v.optional(
+      v.union(
+        v.literal("1"),
+        v.literal("2-5"),
+        v.literal("6-20"),
+        v.literal("20+"),
+      ),
+    ),
     teamMembers: v.optional(
       v.array(
         v.object({
@@ -755,6 +814,9 @@ export const submit = mutation({
       stage: args.stage,
       betaOpenedAt: args.stage === "beta" ? Date.now() : undefined,
       faqs: args.faqs,
+      // Fair Discovery: 48h guaranteed window
+      featuredUntil: Date.now() + 48 * 60 * 60 * 1000,
+      trendingScore: 0,
     });
 
     // Log the submission
@@ -1002,10 +1064,29 @@ export const voteStory = mutation({
       };
     }
 
+    // Anti-Gaming: Check if vote is suspicious
+    // New account (< 7 days) AND low activity (< 3 votes total)
+    const user = await ctx.db.get(userId);
+    const ageInDays = user
+      ? (Date.now() - user._creationTime) / (1000 * 60 * 60 * 24)
+      : 0;
+
+    let isSuspicious = false;
+    if (ageInDays < 7) {
+      const userVotes = await ctx.db
+        .query("votes")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .take(3);
+      if (userVotes.length < 3) {
+        isSuspicious = true;
+      }
+    }
+
     // User hasn't voted, so add a vote
     await ctx.db.insert("votes", {
       userId: userId,
       storyId: args.storyId,
+      isSuspicious: isSuspicious ? true : undefined,
     });
 
     // Read story AFTER write operations for alert creation and count update
@@ -1487,7 +1568,14 @@ export const updateOwnStory = mutation({
     ),
     // Hackathon team info
     teamName: v.optional(v.string()),
-    teamMemberCount: v.optional(v.number()),
+    teamMemberCount: v.optional(
+      v.union(
+        v.literal("1"),
+        v.literal("2-5"),
+        v.literal("6-20"),
+        v.literal("20+"),
+      ),
+    ),
     teamMembers: v.optional(
       v.array(
         v.object({
@@ -1807,7 +1895,14 @@ export const updateStoryAdmin = mutation({
     chefAppUrl: v.optional(v.string()),
     // Hackathon team info
     teamName: v.optional(v.string()),
-    teamMemberCount: v.optional(v.number()),
+    teamMemberCount: v.optional(
+      v.union(
+        v.literal("1"),
+        v.literal("2-5"),
+        v.literal("6-20"),
+        v.literal("20+"),
+      ),
+    ),
     teamMembers: v.optional(
       v.array(
         v.object({
@@ -2206,8 +2301,8 @@ export const _getStoryDetailsBatch = internalQuery({
         chefShowUrl: story.chefShowUrl,
         chefAppUrl: story.chefAppUrl,
         status: story.status,
-        isHidden: story.isHidden,
-        isPinned: story.isPinned,
+        isHidden: story.isHidden ?? false,
+        isPinned: story.isPinned ?? false,
         customMessage: story.customMessage,
         isApproved: story.isApproved,
 
@@ -2898,6 +2993,96 @@ export const getAllApprovedInternal = internalQuery({
       .query("stories")
       .withIndex("by_status", (q) => q.eq("status", "approved"))
       .collect();
+  },
+});
+
+/**
+ * Track a product page view. Called from StoryDetail on mount.
+ * Deduplicates by viewer+story within the same hour.
+ */
+export const trackView = mutation({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    const story = await ctx.db.get(args.storyId);
+    if (!story || story.status !== "approved") return;
+
+    const identity = await ctx.auth.getUserIdentity();
+    let viewerId: Id<"users"> | undefined;
+    let viewerRole: string | undefined;
+    let viewerProblem: string | undefined;
+    let viewerBudget: string | undefined;
+    let isIcpMatch = false;
+
+    if (identity) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_clerk_id", (q) =>
+          q.eq("clerkId", identity.subject),
+        )
+        .unique();
+      if (user) {
+        viewerId = user._id;
+        // Deduplicate: only 1 view per user per story per hour
+        const oneHourAgo = Date.now() - 60 * 60 * 1000;
+        const recentView = await ctx.db
+          .query("productViews")
+          .withIndex("by_story_viewed", (q) =>
+            q.eq("storyId", args.storyId).gt("viewedAt", oneHourAgo),
+          )
+          .filter((q) => q.eq(q.field("viewerId"), user._id))
+          .first();
+        if (recentView) return; // Already counted
+
+        // ICP data from user profile fields
+        const userRole = user.icpRoles?.[0] ?? undefined;
+        const userProblem = (user as any).primaryProblem ?? undefined;
+        const userBudget = (user as any).budgetRange ?? undefined;
+
+        viewerRole = userRole;
+        viewerProblem = userProblem;
+        viewerBudget = userBudget;
+
+        if (story.icpRoles && story.icpRoles.length > 0) {
+          const roleMatch = userRole ? story.icpRoles.includes(userRole) : false;
+          const problemMatch =
+            userProblem && (story as any).icpProblem
+              ? (story as any).icpProblem === userProblem
+              : false;
+          isIcpMatch = roleMatch || problemMatch;
+        }
+      }
+    }
+
+    await ctx.db.insert("productViews", {
+      storyId: args.storyId,
+      viewerId,
+      viewerRole: viewerRole ?? null,
+      viewerProblem: viewerProblem ?? null,
+      viewerBudget: viewerBudget ?? null,
+      isIcpMatch,
+      viewedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Returns the percentage of votes that are from "established" accounts (not suspicious).
+ * Used for the vote quality indicator on StoryDetail.
+ */
+export const getSuspiciousVoteRatio = query({
+  args: { storyId: v.id("stories") },
+  handler: async (ctx, args) => {
+    const votes = await ctx.db
+      .query("votes")
+      .withIndex("by_story", (q) => q.eq("storyId", args.storyId))
+      .take(500);
+
+    if (votes.length === 0) return null;
+    const suspiciousCount = votes.filter((v) => v.isSuspicious).length;
+    const establishedPct = Math.round(
+      ((votes.length - suspiciousCount) / votes.length) * 100,
+    );
+    return { total: votes.length, suspiciousCount, establishedPct };
   },
 });
 
