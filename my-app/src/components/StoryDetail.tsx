@@ -20,6 +20,10 @@ import {
   HeartHandshake,
   BarChart2,
   ArrowLeftRight,
+  ArrowLeft,
+  ExternalLink,
+  Mail,
+  ChevronRight,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useQuery, useMutation } from "convex/react"; // Import Convex hooks
@@ -1142,6 +1146,899 @@ export function StoryDetail({ story }: StoryDetailProps) {
               </div>
             </div>
           </article>
+
+          {/* Moved Sections to restrict width */}
+          {/* Mobile Project Links & Tags Section - Show above video demo on mobile */}
+          {!isEditing &&
+            (story.url ||
+              story.videoUrl ||
+              story.githubUrl ||
+              enabledFormFields?.some(
+                (field: any) => (story as any)[field.storyPropertyName],
+              ) ||
+              story.tags?.length > 0) && (
+              <div className="mt-8 bg-card rounded-lg p-6 border border-border lg:hidden">
+                <h2 className="text-lg font-medium text-muted-foreground mb-4">
+                  Project Links & Tags
+                </h2>
+                <div className="space-y-3">
+                  {story.url && (
+                    <div className="flex items-center gap-2">
+                      <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <a
+                        href={story.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                        title={story.url}
+                      >
+                        {story.url}
+                      </a>
+                    </div>
+                  )}
+
+                  {story.videoUrl && story.videoUrl.trim() && (
+                    <div className="flex items-center gap-2">
+                      <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <a
+                        href={story.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                        title={story.videoUrl}
+                      >
+                        Video Demo
+                      </a>
+                    </div>
+                  )}
+
+                  {/* GitHub Link - Always shown if available */}
+                  {story.githubUrl && story.githubUrl.trim() && (
+                    <div className="flex items-center gap-2">
+                      <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <a
+                        href={story.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                        title={story.githubUrl}
+                      >
+                        GitHub Repository
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Dynamic Form Fields */}
+                  {enabledFormFields
+                    ?.filter((field: any) => field.key !== "githubUrl")
+                    .map((field: any) => {
+                      const fieldValue = (story as any)[field.storyPropertyName];
+                      if (!fieldValue) return null;
+
+                      // Get appropriate icon based on field key or type
+                      const getIcon = () => {
+                        if (field.key.toLowerCase().includes("github")) {
+                          return (
+                            <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          );
+                        } else if (field.key.toLowerCase().includes("linkedin")) {
+                          return (
+                            <Linkedin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          );
+                        } else if (
+                          field.key.toLowerCase().includes("twitter") ||
+                          field.key.toLowerCase().includes("x")
+                        ) {
+                          return (
+                            <Twitter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          );
+                        } else if (field.key.toLowerCase().includes("chef")) {
+                          return (
+                            <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                              ≡ƒì▓
+                            </span>
+                          );
+                        } else if (field.fieldType === "url") {
+                          return (
+                            <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          );
+                        } else if (field.fieldType === "email") {
+                          return (
+                            <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                              <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
+                              ≡ƒöù
+                            </span>
+                          );
+                        }
+                      };
+
+                      // Get display label
+                      const getDisplayLabel = () => {
+                        // Remove "(Optional)" and other common suffixes for cleaner display
+                        return field.label
+                          .replace(/\s*\(Optional\).*$/i, "")
+                          .trim();
+                      };
+
+                      return (
+                        <div key={field._id} className="flex items-center gap-2">
+                          {getIcon()}
+                          {field.fieldType === "url" ? (
+                            <a
+                              href={fieldValue}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                              title={fieldValue}
+                            >
+                              {getDisplayLabel()}
+                            </a>
+                          ) : field.fieldType === "email" ? (
+                            <a
+                              href={`mailto:${fieldValue}`}
+                              className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
+                              title={fieldValue}
+                            >
+                              {getDisplayLabel()}
+                            </a>
+                          ) : (
+                            <span
+                              className="text-sm text-muted-foreground truncate"
+                              title={fieldValue}
+                            >
+                              {getDisplayLabel()}: {fieldValue}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                  {/* Tags */}
+                  {story.tags && story.tags.length > 0 && (
+                    <div className="flex gap-1.5 flex-wrap pt-3 border-t border-[#E5E5E5] mt-4">
+                      {(story.tags || []).map(
+                        (tag: Doc<"tags">) =>
+                          !tag.isHidden &&
+                          tag.name !== "resendhackathon" &&
+                          tag.name !== "ychackathon" && (
+                            <Link
+                              key={tag._id}
+                              href={`/tag/${tag.slug}`}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-opacity hover:opacity-80"
+                              style={{
+                                backgroundColor: tag.backgroundColor || "hsl(var(--muted))",
+                                color: tag.textColor || "hsl(var(--foreground))",
+                                border: `1px solid ${tag.borderColor || (tag.backgroundColor ? "transparent" : "hsl(var(--border))")}`,
+                              }}
+                              title={`View all apps tagged with ${tag.name}`}
+                            >
+                              {tag.emoji && (
+                                <span className="mr-1">{tag.emoji}</span>
+                              )}
+                              {tag.iconUrl && !tag.emoji && (
+                                <img
+                                  src={tag.iconUrl}
+                                  alt=""
+                                  className="w-3 h-3 mr-1 rounded-sm object-cover"
+                                />
+                              )}
+                              {tag.name}
+                            </Link>
+                          ),
+                      )}
+                    </div>
+                  )}
+
+                  {/* Changelog Link */}
+                  <div className="pt-3 border-t border-[#E5E5E5] mt-4">
+                    <a
+                      href="#changelog"
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:underline"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      View Change Log
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          {/* Video demo start */}
+          {story.videoUrl && story.videoUrl.trim() && (
+            <div className="mt-8 bg-card rounded-lg p-6 border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <h3 className="text-lg font-medium text-muted-foreground">Video Demo</h3>
+                <a
+                  href={story.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline ml-auto"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+              <div className="w-full">
+                {(() => {
+                  const url = story.videoUrl.trim();
+
+                  // YouTube URL patterns (including Shorts)
+                  const youtubeMatch = url.match(
+                    /(?:youtube\.com\/(?:shorts\/|[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+                  );
+                  if (youtubeMatch) {
+                    const videoId = youtubeMatch[1];
+                    return (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        className="w-full aspect-video rounded-md"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Vimeo URL patterns
+                  const vimeoMatch = url.match(/(?:vimeo\.com\/)(?:.*\/)?(\d+)/);
+                  if (vimeoMatch) {
+                    const videoId = vimeoMatch[1];
+                    return (
+                      <iframe
+                        src={`https://player.vimeo.com/video/${videoId}`}
+                        className="w-full aspect-video rounded-md"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Loom URL patterns
+                  const loomMatch = url.match(/(?:loom\.com\/share\/)([a-f0-9-]+)/);
+                  if (loomMatch) {
+                    const videoId = loomMatch[1];
+                    return (
+                      <iframe
+                        src={`https://www.loom.com/embed/${videoId}`}
+                        className="w-full aspect-video rounded-md"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Google Drive URL patterns
+                  const driveMatch = url.match(
+                    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+                  );
+                  if (driveMatch) {
+                    const fileId = driveMatch[1];
+                    return (
+                      <iframe
+                        src={`https://drive.google.com/file/d/${fileId}/preview`}
+                        className="w-full aspect-video rounded-md"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Check if it's a direct video file
+                  const videoExtensions = /\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i;
+                  if (videoExtensions.test(url)) {
+                    return (
+                      <video
+                        src={url}
+                        className="w-full aspect-video rounded-md bg-black"
+                        controls
+                        preload="metadata"
+                        title="Video Demo"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    );
+                  }
+
+                  // Fallback for other URLs - show as link in a styled box
+                  return (
+                    <div className="w-full aspect-video rounded-md border-2 border-dashed border-border flex items-center justify-center bg-muted">
+                      <div className="text-center">
+                        <Play className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-muted-foreground mb-2">Video not embeddable</p>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground hover:text-muted-foreground underline"
+                        >
+                          Watch Video <ExternalLink className="w-3 h-3 inline-block ml-1" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+          {/* Video demo end */}
+
+          {/* Team Info Section */}
+          {!isEditing && story.teamName && (
+            <div className="mt-8 bg-card rounded-lg p-6 border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-lg font-medium text-muted-foreground">Team Info</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Team Name
+                  </h3>
+                  <p className="text-foreground">{story.teamName}</p>
+                </div>
+
+                {story.teamMemberCount && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      Team Size
+                    </h3>
+                    <p className="text-foreground">
+                      {story.teamMemberCount}{" "}
+                      {story.teamMemberCount === "1" ? "member" : "members"}
+                    </p>
+                  </div>
+                )}
+
+                {story.teamMembers && story.teamMembers.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Team Members
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {story.teamMembers.map(
+                        (
+                          member: { name: string; email: string },
+                          index: number,
+                        ) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md border border-border"
+                          >
+                            {member.name && (
+                              <p className="font-medium text-foreground text-sm">
+                                {member.name}
+                              </p>
+                            )}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Rating Section */}
+          {!isEditing && (
+            <div className="mt-8 bg-card rounded-lg p-6 border border-border">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                <h2 className="text-lg font-medium text-muted-foreground">
+                  {hasRated ? "Your Rating" : "Rate this app"}
+                </h2>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => handleRating(value)}
+                      onMouseEnter={() => !hasRated && setHoveredRating(value)} // Only hover if not rated
+                      onMouseLeave={() => setHoveredRating(0)}
+                      disabled={!isClerkLoaded || (isSignedIn && hasRated)} // Disable if not loaded, or if signed in AND already rated
+                      className={`p-1 transition-colors disabled:cursor-not-allowed ${
+                        !isSignedIn && isClerkLoaded ? "opacity-50 cursor-help" : ""
+                      } ${
+                        hasRated
+                          ? value <= (currentUserRating || 0)
+                            ? "text-yellow-500"
+                            : "text-muted"
+                          : value <= (hoveredRating || 0)
+                            ? "text-yellow-400"
+                            : "text-muted hover:text-yellow-400"
+                      }`}
+                      title={
+                        !isSignedIn && isClerkLoaded
+                          ? "Sign in to rate"
+                          : hasRated
+                            ? `You rated ${currentUserRating} star(s)`
+                            : `Rate ${value} stars`
+                      }
+                    >
+                      <Star className="w-5 h-5 fill-current" />
+                    </button>
+                  ))}
+                </div>
+                {story.ratingCount > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {averageRating.toFixed(1)} stars ({story.ratingCount}
+                    {story.ratingCount === 1 ? " rating" : " ratings"})
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your rating helps others discover great apps.
+              </p>
+            </div>
+          )}
+
+          {/* Changelog Section */}
+          {!isEditing && (
+            <div
+              id="changelog"
+              className="mt-8 bg-card rounded-lg p-6 border border-border scroll-mt-20"
+            >
+              <h2 className="text-lg font-medium text-muted-foreground mb-4">
+                Change Log
+              </h2>
+
+              {/* Original Submission Date */}
+              <div className="mb-6 pb-4 border-b border-border">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    Originally submitted:
+                  </span>
+                  <span>
+                    {new Date(story._creationTime).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}{" "}
+                    at{" "}
+                    {new Date(story._creationTime).toLocaleTimeString(undefined, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              {story.changeLog && story.changeLog.length > 0 ? (
+                <div className="space-y-3">
+                  {story.changeLog
+                    .slice()
+                    .reverse()
+                    .map(
+                      (
+                        entry: NonNullable<typeof story.changeLog>[number],
+                        index: number,
+                      ) => {
+                        const isExpanded = expandedChangelogIndices.has(index);
+                        const toggleExpanded = () => {
+                          const newSet = new Set(expandedChangelogIndices);
+                          if (isExpanded) {
+                            newSet.delete(index);
+                          } else {
+                            newSet.add(index);
+                          }
+                          setExpandedChangelogIndices(newSet);
+                        };
+
+                        const changeDate = new Date(entry.timestamp);
+                        const formattedDate = changeDate.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        );
+                        const formattedTime = changeDate.toLocaleTimeString(
+                          undefined,
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        );
+
+                        const hasChanges =
+                          (entry.textChanges && entry.textChanges.length > 0) ||
+                          (entry.linkChanges && entry.linkChanges.length > 0) ||
+                          entry.tagChanges ||
+                          entry.videoChanged ||
+                          entry.imagesChanged;
+
+                        if (!hasChanges) return null;
+
+                        return (
+                          <div
+                            key={index}
+                            className="border border-border rounded-md overflow-hidden"
+                          >
+                            <button
+                              onClick={toggleExpanded}
+                              className="w-full px-4 py-3 bg-muted hover:bg-muted/80 transition-colors flex items-center justify-between text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                <ChevronRight
+                                  className={`w-4 h-4 transform transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                                />
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {formattedDate} at {formattedTime}
+                                </span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {isExpanded ? "Hide changes" : "Show changes"}
+                              </span>
+                            </button>
+
+                            {isExpanded && (
+                              <div className="p-4 space-y-4">
+                                {/* Text Changes */}
+                                {entry.textChanges &&
+                                  entry.textChanges.length > 0 && (
+                                    <div>
+                                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                                        Text Changes
+                                      </h4>
+                                      <ul className="space-y-2">
+                                        {entry.textChanges.map(
+                                          (
+                                            change: {
+                                              field: string;
+                                              oldValue: string;
+                                              newValue: string;
+                                            },
+                                            idx: number,
+                                          ) => (
+                                            <li key={idx} className="text-sm">
+                                              <span className="font-medium text-foreground">
+                                                {change.field}:
+                                              </span>
+                                              <div className="ml-4 mt-1">
+                                                <div className="text-red-600 line-through">
+                                                  {change.oldValue || "(empty)"}
+                                                </div>
+                                                <div className="text-green-600">
+                                                  {change.newValue || "(empty)"}
+                                                </div>
+                                              </div>
+                                            </li>
+                                          ),
+                                        )}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                {/* Link Changes */}
+                                {entry.linkChanges &&
+                                  entry.linkChanges.length > 0 && (
+                                    <div>
+                                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                                        Link Changes
+                                      </h4>
+                                      <ul className="space-y-2">
+                                        {entry.linkChanges.map(
+                                          (
+                                            change: {
+                                              field: string;
+                                              oldValue?: string;
+                                              newValue?: string;
+                                            },
+                                            idx: number,
+                                          ) => (
+                                            <li key={idx} className="text-sm">
+                                              <span className="font-medium text-foreground">
+                                                {change.field}:
+                                              </span>
+                                              <div className="ml-4 mt-1 break-all">
+                                                {change.oldValue && (
+                                                  <div className="text-red-600 line-through">
+                                                    {change.oldValue}
+                                                  </div>
+                                                )}
+                                                {change.newValue && (
+                                                  <div className="text-green-600">
+                                                    {change.newValue}
+                                                  </div>
+                                                )}
+                                                {!change.oldValue &&
+                                                  !change.newValue && (
+                                                    <div className="text-[#787672]">
+                                                      (removed)
+                                                    </div>
+                                                  )}
+                                              </div>
+                                            </li>
+                                          ),
+                                        )}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                {/* Tag Changes */}
+                                {entry.tagChanges &&
+                                  (entry.tagChanges.added.length > 0 ||
+                                    entry.tagChanges.removed.length > 0) && (
+                                    <div>
+                                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                                        Tag Changes
+                                      </h4>
+                                      <div className="space-y-1">
+                                        {entry.tagChanges.added.length > 0 && (
+                                          <div className="text-sm">
+                                            <span className="text-green-600 font-medium">
+                                              Added:
+                                            </span>{" "}
+                                            {entry.tagChanges.added.join(", ")}
+                                          </div>
+                                        )}
+                                        {entry.tagChanges.removed.length > 0 && (
+                                          <div className="text-sm">
+                                            <span className="text-red-600 font-medium">
+                                              Removed:
+                                            </span>{" "}
+                                            {entry.tagChanges.removed.join(", ")}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Video Changed */}
+                                {entry.videoChanged && (
+                                  <div className="text-sm text-muted-foreground">
+                                    <span className="font-medium text-foreground">
+                                      Video:
+                                    </span>{" "}
+                                    Video demo was updated
+                                  </div>
+                                )}
+
+                                {/* Images Changed */}
+                                {entry.imagesChanged && (
+                                  <div className="text-sm text-muted-foreground">
+                                    <span className="font-medium text-foreground">
+                                      Images:
+                                    </span>{" "}
+                                    Screenshots or gallery images were updated
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">
+                    No changes have been made to this submission yet. All future
+                    edits will be tracked and displayed here.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Discussion / Updates / Requests Tabs */}
+          {!isEditing && (
+            <div id="comments" className="mt-8 scroll-mt-20">
+              {/* Tab bar */}
+              <div className="flex gap-1 mb-6 border-b border-border">
+                {([
+                  { key: "discussion", label: `Discussion (${comments?.length ?? 0})` },
+                  { key: "updates",    label: "Updates" },
+                  { key: "requests",   label: "Requests" },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`px-4 py-2 text-sm font-medium transition-all border-b-2 -mb-px ${
+                      activeTab === tab.key
+                        ? "border-primary text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Discussion tab */}
+              {activeTab === "discussion" && (
+                <>
+                  {/* Sort controls */}
+                  <div className="flex items-center gap-1 mb-4">
+                    <span className="text-xs text-muted-foreground mr-1">Sort:</span>
+                    {(["top", "recent", "quality"] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setCommentSort(s)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                          commentSort === s
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {s === "top" ? "🔥 Top" : s === "recent" ? "🕐 Recent" : "✦ Quality"}
+                      </button>
+                    ))}
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {comments?.length ?? 0} {(comments?.length ?? 0) === 1 ? "comment" : "comments"}
+                    </span>
+                  </div>
+
+                  <CommentForm onSubmit={handleCommentSubmit} />
+
+                  <div className="mt-8 space-y-4 border-t border-border pt-6">
+                    {comments === undefined && (
+                      <div className="space-y-4">
+                        {[1,2,3].map(i => (
+                          <div key={i} className="animate-pulse">
+                            <div className="flex gap-2 items-center mb-2">
+                              <div className="w-6 h-6 rounded-full bg-muted" />
+                              <div className="h-3 w-24 bg-muted rounded" />
+                            </div>
+                            <div className="h-3 w-3/4 bg-muted rounded ml-8 mb-1" />
+                            <div className="h-3 w-1/2 bg-muted rounded ml-8" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {comments && comments.length === 0 && (
+                      <div className="py-8 text-center text-muted-foreground text-sm">
+                        No comments yet — be the first to share your thoughts!
+                      </div>
+                    )}
+                    {comments && comments.length > 0 && (
+                      <>
+                        {[...comments]
+                          .filter((c: any) => !c.parentId)
+                          .sort((a: any, b: any) => {
+                            if (commentSort === "top") return (b.votes ?? 0) - (a.votes ?? 0);
+                            if (commentSort === "recent") return b._creationTime - a._creationTime;
+                            if (commentSort === "quality") return (b.qualityScore ?? 0) - (a.qualityScore ?? 0);
+                            return 0;
+                          })
+                          .map((commentData: any) => {
+                            const comment = commentData as CommentType;
+                            const replies = comments.filter((c: any) => c.parentId === comment._id);
+                            return (
+                              <React.Fragment key={comment._id}>
+                                <Comment
+                                  comment={comment}
+                                  onReply={(parentId) => setReplyToId(parentId)}
+                                  hasVoted={votedSet.has(comment._id)}
+                                  isOwn={!!currentUser && comment.userId === currentUser._id}
+                                  depth={0}
+                                />
+                                {/* Inline reply form */}
+                                {replyToId === comment._id && (
+                                  <div className="ml-10 pl-4 border-l-2 border-primary/30 mt-2">
+                                    <CommentForm
+                                      onSubmit={handleCommentSubmit}
+                                      parentId={comment._id}
+                                    />
+                                  </div>
+                                )}
+                                {/* Threaded replies */}
+                                {replies
+                                  .sort((a: any, b: any) => a._creationTime - b._creationTime)
+                                  .map((reply: any) => (
+                                    <Comment
+                                      key={reply._id}
+                                      comment={reply as CommentType}
+                                      onReply={(parentId) => setReplyToId(parentId)}
+                                      hasVoted={votedSet.has(reply._id)}
+                                      isOwn={!!currentUser && reply.userId === currentUser._id}
+                                      depth={1}
+                                    />
+                                  ))}
+                              </React.Fragment>
+                            );
+                          })}
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Updates (Changelog) tab */}
+              {activeTab === "updates" && (
+                <ChangelogTab storyId={story._id} isOwner={!!isOwner} />
+              )}
+
+              {/* Feature Requests tab */}
+              {activeTab === "requests" && (
+                <FeatureRequestsBoard storyId={story._id} isOwner={!!isOwner} />
+              )}
+            </div>
+          )}
+
+          {!isEditing &&
+            isClerkLoaded &&
+            isSignedIn &&
+            currentUser &&
+            story.userId === currentUser._id && (
+              <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/20 flex items-center justify-between text-sm text-primary">
+                <div className="flex items-center gap-3">
+                  <Edit3 className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="font-medium text-primary">
+                    Want to update your submission?
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-primary/20 text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    router.push(`?edit=true`);
+                  }}
+                >
+                  Edit Submission
+                </Button>
+              </div>
+            )}
+
+          {/* Flag/Report Section */}
+          {!isEditing && (
+            <div className="mt-8 p-4 bg-muted rounded-lg border border-border flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <Flag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium text-foreground">
+                  Seen something inappropriate?
+                </span>
+              </div>
+              {isClerkLoaded && isSignedIn ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={handleOpenReportModal}
+                >
+                  Report this Submission
+                </Button>
+              ) : isClerkLoaded && !isSignedIn ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => router.push("/sign-in")}
+                  title="Sign in to report content"
+                >
+                  Sign in to Report
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-xs" disabled>
+                  Loading...
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Project Links & Tags Sidebar */}
@@ -1241,7 +2138,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       } else if (field.fieldType === "email") {
                         return (
                           <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                            Γ£ë∩╕Å
+                            <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           </span>
                         );
                       } else {
@@ -1357,7 +2254,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
               href="/"
               className="text-muted-foreground hover:text-foreground inline-block mb-6 text-sm mt-[1.5625rem]"
             >
-              ΓåÉ Back to Apps List
+              <ArrowLeft className="w-4 h-4 mr-1 inline-block" /> Back to Apps List
             </Link>
           </div>
         )}
@@ -1766,11 +2663,9 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     onClick={() => setShowTeamInfo(!showTeamInfo)}
                     className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <span
-                      className={`transform transition-transform ${showTeamInfo ? "rotate-90" : ""}`}
-                    >
-                      Γû╢
-                    </span>
+                    <ChevronRight
+                      className={`w-4 h-4 transform transition-transform ${showTeamInfo ? "rotate-90" : ""}`}
+                    />
                     Team Info (Optional)
                   </button>
                 </div>
@@ -2205,838 +3100,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
         </div>
       )}
 
-      {/* Mobile Project Links & Tags Section - Show above video demo on mobile */}
-      {!isEditing &&
-        (story.url ||
-          story.videoUrl ||
-          story.githubUrl ||
-          enabledFormFields?.some(
-            (field: any) => (story as any)[field.storyPropertyName],
-          ) ||
-          story.tags?.length > 0) && (
-          <div className="mt-8 bg-card rounded-lg p-6 border border-border lg:hidden">
-            <h2 className="text-lg font-medium text-muted-foreground mb-4">
-              Project Links & Tags
-            </h2>
-            <div className="space-y-3">
-              {story.url && (
-                <div className="flex items-center gap-2">
-                  <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <a
-                    href={story.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                    title={story.url}
-                  >
-                    {story.url}
-                  </a>
-                </div>
-              )}
 
-              {story.videoUrl && story.videoUrl.trim() && (
-                <div className="flex items-center gap-2">
-                  <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <a
-                    href={story.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                    title={story.videoUrl}
-                  >
-                    Video Demo
-                  </a>
-                </div>
-              )}
-
-              {/* GitHub Link - Always shown if available */}
-              {story.githubUrl && story.githubUrl.trim() && (
-                <div className="flex items-center gap-2">
-                  <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <a
-                    href={story.githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                    title={story.githubUrl}
-                  >
-                    GitHub Repository
-                  </a>
-                </div>
-              )}
-
-              {/* Dynamic Form Fields */}
-              {enabledFormFields
-                ?.filter((field: any) => field.key !== "githubUrl")
-                .map((field: any) => {
-                  const fieldValue = (story as any)[field.storyPropertyName];
-                  if (!fieldValue) return null;
-
-                  // Get appropriate icon based on field key or type
-                  const getIcon = () => {
-                    if (field.key.toLowerCase().includes("github")) {
-                      return (
-                        <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      );
-                    } else if (field.key.toLowerCase().includes("linkedin")) {
-                      return (
-                        <Linkedin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      );
-                    } else if (
-                      field.key.toLowerCase().includes("twitter") ||
-                      field.key.toLowerCase().includes("x")
-                    ) {
-                      return (
-                        <Twitter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      );
-                    } else if (field.key.toLowerCase().includes("chef")) {
-                      return (
-                        <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                          ≡ƒì▓
-                        </span>
-                      );
-                    } else if (field.fieldType === "url") {
-                      return (
-                        <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      );
-                    } else if (field.fieldType === "email") {
-                      return (
-                        <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                          Γ£ë∩╕Å
-                        </span>
-                      );
-                    } else {
-                      return (
-                        <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                          ≡ƒöù
-                        </span>
-                      );
-                    }
-                  };
-
-                  // Get display label
-                  const getDisplayLabel = () => {
-                    // Remove "(Optional)" and other common suffixes for cleaner display
-                    return field.label
-                      .replace(/\s*\(Optional\).*$/i, "")
-                      .trim();
-                  };
-
-                  return (
-                    <div key={field._id} className="flex items-center gap-2">
-                      {getIcon()}
-                      {field.fieldType === "url" ? (
-                        <a
-                          href={fieldValue}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                          title={fieldValue}
-                        >
-                          {getDisplayLabel()}
-                        </a>
-                      ) : field.fieldType === "email" ? (
-                        <a
-                          href={`mailto:${fieldValue}`}
-                          className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                          title={fieldValue}
-                        >
-                          {getDisplayLabel()}
-                        </a>
-                      ) : (
-                        <span
-                          className="text-sm text-muted-foreground truncate"
-                          title={fieldValue}
-                        >
-                          {getDisplayLabel()}: {fieldValue}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-
-              {/* Tags */}
-              {story.tags && story.tags.length > 0 && (
-                <div className="flex gap-1.5 flex-wrap pt-3 border-t border-[#E5E5E5] mt-4">
-                  {(story.tags || []).map(
-                    (tag: Doc<"tags">) =>
-                      !tag.isHidden &&
-                      tag.name !== "resendhackathon" &&
-                      tag.name !== "ychackathon" && (
-                        <Link
-                          key={tag._id}
-                          href={`/tag/${tag.slug}`}
-                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-opacity hover:opacity-80"
-                          style={{
-                            backgroundColor: tag.backgroundColor || "hsl(var(--muted))",
-                            color: tag.textColor || "hsl(var(--foreground))",
-                            border: `1px solid ${tag.borderColor || (tag.backgroundColor ? "transparent" : "hsl(var(--border))")}`,
-                          }}
-                          title={`View all apps tagged with ${tag.name}`}
-                        >
-                          {tag.emoji && (
-                            <span className="mr-1">{tag.emoji}</span>
-                          )}
-                          {tag.iconUrl && !tag.emoji && (
-                            <img
-                              src={tag.iconUrl}
-                              alt=""
-                              className="w-3 h-3 mr-1 rounded-sm object-cover"
-                            />
-                          )}
-                          {tag.name}
-                        </Link>
-                      ),
-                  )}
-                </div>
-              )}
-
-              {/* Changelog Link */}
-              <div className="pt-3 border-t border-[#E5E5E5] mt-4">
-                <a
-                  href="#changelog"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  View Change Log
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
-      {/* Video demo start */}
-      {story.videoUrl && story.videoUrl.trim() && (
-        <div className="mt-8 bg-card rounded-lg p-6 border border-border">
-          <div className="flex items-center gap-2 mb-4">
-            <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <h3 className="text-lg font-medium text-muted-foreground">Video Demo</h3>
-            <a
-              href={story.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline ml-auto"
-              title="Open in new tab"
-            >
-              Γåù
-            </a>
-          </div>
-          <div className="w-full">
-            {(() => {
-              const url = story.videoUrl.trim();
-
-              // YouTube URL patterns (including Shorts)
-              const youtubeMatch = url.match(
-                /(?:youtube\.com\/(?:shorts\/|[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
-              );
-              if (youtubeMatch) {
-                const videoId = youtubeMatch[1];
-                return (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${videoId}`}
-                    className="w-full aspect-video rounded-md"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Vimeo URL patterns
-              const vimeoMatch = url.match(/(?:vimeo\.com\/)(?:.*\/)?(\d+)/);
-              if (vimeoMatch) {
-                const videoId = vimeoMatch[1];
-                return (
-                  <iframe
-                    src={`https://player.vimeo.com/video/${videoId}`}
-                    className="w-full aspect-video rounded-md"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Loom URL patterns
-              const loomMatch = url.match(/(?:loom\.com\/share\/)([a-f0-9-]+)/);
-              if (loomMatch) {
-                const videoId = loomMatch[1];
-                return (
-                  <iframe
-                    src={`https://www.loom.com/embed/${videoId}`}
-                    className="w-full aspect-video rounded-md"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Google Drive URL patterns
-              const driveMatch = url.match(
-                /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
-              );
-              if (driveMatch) {
-                const fileId = driveMatch[1];
-                return (
-                  <iframe
-                    src={`https://drive.google.com/file/d/${fileId}/preview`}
-                    className="w-full aspect-video rounded-md"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Check if it's a direct video file
-              const videoExtensions = /\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i;
-              if (videoExtensions.test(url)) {
-                return (
-                  <video
-                    src={url}
-                    className="w-full aspect-video rounded-md bg-black"
-                    controls
-                    preload="metadata"
-                    title="Video Demo"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                );
-              }
-
-              // Fallback for other URLs - show as link in a styled box
-              return (
-                <div className="w-full aspect-video rounded-md border-2 border-dashed border-border flex items-center justify-center bg-muted">
-                  <div className="text-center">
-                    <Play className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground mb-2">Video not embeddable</p>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-foreground hover:text-muted-foreground underline"
-                    >
-                      Watch Video Γåù
-                    </a>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-      {/* Video demo end */}
-
-      {/* Team Info Section */}
-      {!isEditing && story.teamName && (
-        <div className="mt-8 bg-card rounded-lg p-6 border border-border">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-lg font-medium text-muted-foreground">Team Info</h2>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">
-                Team Name
-              </h3>
-              <p className="text-foreground">{story.teamName}</p>
-            </div>
-
-            {story.teamMemberCount && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">
-                  Team Size
-                </h3>
-                <p className="text-foreground">
-                  {story.teamMemberCount}{" "}
-                  {story.teamMemberCount === "1" ? "member" : "members"}
-                </p>
-              </div>
-            )}
-
-            {story.teamMembers && story.teamMembers.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  Team Members
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {story.teamMembers.map(
-                    (
-                      member: { name: string; email: string },
-                      index: number,
-                    ) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-muted rounded-md border border-border"
-                      >
-                        {member.name && (
-                          <p className="font-medium text-foreground text-sm">
-                            {member.name}
-                          </p>
-                        )}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Rating Section */}
-      {!isEditing && (
-        <div className="mt-8 bg-card rounded-lg p-6 border border-border">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-            <h2 className="text-lg font-medium text-muted-foreground">
-              {hasRated ? "Your Rating" : "Rate this app"}
-            </h2>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => handleRating(value)}
-                  onMouseEnter={() => !hasRated && setHoveredRating(value)} // Only hover if not rated
-                  onMouseLeave={() => setHoveredRating(0)}
-                  disabled={!isClerkLoaded || (isSignedIn && hasRated)} // Disable if not loaded, or if signed in AND already rated
-                  className={`p-1 transition-colors disabled:cursor-not-allowed ${
-                    !isSignedIn && isClerkLoaded ? "opacity-50 cursor-help" : ""
-                  } ${
-                    hasRated
-                      ? value <= (currentUserRating || 0)
-                        ? "text-yellow-500"
-                        : "text-muted"
-                      : value <= (hoveredRating || 0)
-                        ? "text-yellow-400"
-                        : "text-muted hover:text-yellow-400"
-                  }`}
-                  title={
-                    !isSignedIn && isClerkLoaded
-                      ? "Sign in to rate"
-                      : hasRated
-                        ? `You rated ${currentUserRating} star(s)`
-                        : `Rate ${value} stars`
-                  }
-                >
-                  <Star className="w-5 h-5 fill-current" />
-                </button>
-              ))}
-            </div>
-            {story.ratingCount > 0 && (
-              <span className="text-sm text-muted-foreground">
-                {averageRating.toFixed(1)} stars ({story.ratingCount}
-                {story.ratingCount === 1 ? " rating" : " ratings"})
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Your rating helps others discover great apps.
-          </p>
-        </div>
-      )}
-
-      {/* Changelog Section */}
-      {!isEditing && (
-        <div
-          id="changelog"
-          className="mt-8 bg-card rounded-lg p-6 border border-border scroll-mt-20"
-        >
-          <h2 className="text-lg font-medium text-muted-foreground mb-4">
-            Change Log
-          </h2>
-
-          {/* Original Submission Date */}
-          <div className="mb-6 pb-4 border-b border-border">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">
-                Originally submitted:
-              </span>
-              <span>
-                {new Date(story._creationTime).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}{" "}
-                at{" "}
-                {new Date(story._creationTime).toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-          </div>
-
-          {story.changeLog && story.changeLog.length > 0 ? (
-            <div className="space-y-3">
-              {story.changeLog
-                .slice()
-                .reverse()
-                .map(
-                  (
-                    entry: NonNullable<typeof story.changeLog>[number],
-                    index: number,
-                  ) => {
-                    const isExpanded = expandedChangelogIndices.has(index);
-                    const toggleExpanded = () => {
-                      const newSet = new Set(expandedChangelogIndices);
-                      if (isExpanded) {
-                        newSet.delete(index);
-                      } else {
-                        newSet.add(index);
-                      }
-                      setExpandedChangelogIndices(newSet);
-                    };
-
-                    const changeDate = new Date(entry.timestamp);
-                    const formattedDate = changeDate.toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      },
-                    );
-                    const formattedTime = changeDate.toLocaleTimeString(
-                      undefined,
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      },
-                    );
-
-                    const hasChanges =
-                      (entry.textChanges && entry.textChanges.length > 0) ||
-                      (entry.linkChanges && entry.linkChanges.length > 0) ||
-                      entry.tagChanges ||
-                      entry.videoChanged ||
-                      entry.imagesChanged;
-
-                    if (!hasChanges) return null;
-
-                    return (
-                      <div
-                        key={index}
-                        className="border border-border rounded-md overflow-hidden"
-                      >
-                        <button
-                          onClick={toggleExpanded}
-                          className="w-full px-4 py-3 bg-muted hover:bg-muted/80 transition-colors flex items-center justify-between text-left"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`transform transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                            >
-                              Γû╢
-                            </span>
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {formattedDate} at {formattedTime}
-                            </span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {isExpanded ? "Hide changes" : "Show changes"}
-                          </span>
-                        </button>
-
-                        {isExpanded && (
-                          <div className="p-4 space-y-4">
-                            {/* Text Changes */}
-                            {entry.textChanges &&
-                              entry.textChanges.length > 0 && (
-                                <div>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Text Changes
-                                  </h4>
-                                  <ul className="space-y-2">
-                                    {entry.textChanges.map(
-                                      (
-                                        change: {
-                                          field: string;
-                                          oldValue: string;
-                                          newValue: string;
-                                        },
-                                        idx: number,
-                                      ) => (
-                                        <li key={idx} className="text-sm">
-                                          <span className="font-medium text-foreground">
-                                            {change.field}:
-                                          </span>
-                                          <div className="ml-4 mt-1">
-                                            <div className="text-red-600 line-through">
-                                              {change.oldValue || "(empty)"}
-                                            </div>
-                                            <div className="text-green-600">
-                                              {change.newValue || "(empty)"}
-                                            </div>
-                                          </div>
-                                        </li>
-                                      ),
-                                    )}
-                                  </ul>
-                                </div>
-                              )}
-
-                            {/* Link Changes */}
-                            {entry.linkChanges &&
-                              entry.linkChanges.length > 0 && (
-                                <div>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Link Changes
-                                  </h4>
-                                  <ul className="space-y-2">
-                                    {entry.linkChanges.map(
-                                      (
-                                        change: {
-                                          field: string;
-                                          oldValue?: string;
-                                          newValue?: string;
-                                        },
-                                        idx: number,
-                                      ) => (
-                                        <li key={idx} className="text-sm">
-                                          <span className="font-medium text-foreground">
-                                            {change.field}:
-                                          </span>
-                                          <div className="ml-4 mt-1 break-all">
-                                            {change.oldValue && (
-                                              <div className="text-red-600 line-through">
-                                                {change.oldValue}
-                                              </div>
-                                            )}
-                                            {change.newValue && (
-                                              <div className="text-green-600">
-                                                {change.newValue}
-                                              </div>
-                                            )}
-                                            {!change.oldValue &&
-                                              !change.newValue && (
-                                                <div className="text-[#787672]">
-                                                  (removed)
-                                                </div>
-                                              )}
-                                          </div>
-                                        </li>
-                                      ),
-                                    )}
-                                  </ul>
-                                </div>
-                              )}
-
-                            {/* Tag Changes */}
-                            {entry.tagChanges &&
-                              (entry.tagChanges.added.length > 0 ||
-                                entry.tagChanges.removed.length > 0) && (
-                                <div>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Tag Changes
-                                  </h4>
-                                  <div className="space-y-1">
-                                    {entry.tagChanges.added.length > 0 && (
-                                      <div className="text-sm">
-                                        <span className="text-green-600 font-medium">
-                                          Added:
-                                        </span>{" "}
-                                        {entry.tagChanges.added.join(", ")}
-                                      </div>
-                                    )}
-                                    {entry.tagChanges.removed.length > 0 && (
-                                      <div className="text-sm">
-                                        <span className="text-red-600 font-medium">
-                                          Removed:
-                                        </span>{" "}
-                                        {entry.tagChanges.removed.join(", ")}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                            {/* Video Changed */}
-                            {entry.videoChanged && (
-                              <div className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">
-                                  Video:
-                                </span>{" "}
-                                Video demo was updated
-                              </div>
-                            )}
-
-                            {/* Images Changed */}
-                            {entry.imagesChanged && (
-                              <div className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">
-                                  Images:
-                                </span>{" "}
-                                Screenshots or gallery images were updated
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  },
-                )}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">
-                No changes have been made to this submission yet. All future
-                edits will be tracked and displayed here.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Discussion / Updates / Requests Tabs */}
-      {!isEditing && (
-        <div id="comments" className="mt-8 scroll-mt-20">
-          {/* Tab bar */}
-          <div className="flex gap-1 mb-6 border-b border-border">
-            {([
-              { key: "discussion", label: `Discussion (${comments?.length ?? 0})` },
-              { key: "updates",    label: "Updates" },
-              { key: "requests",   label: "Requests" },
-            ] as const).map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 text-sm font-medium transition-all border-b-2 -mb-px ${
-                  activeTab === tab.key
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Discussion tab */}
-          {activeTab === "discussion" && (
-            <>
-              {/* Sort controls */}
-              <div className="flex items-center gap-1 mb-4">
-                <span className="text-xs text-muted-foreground mr-1">Sort:</span>
-                {(["top", "recent", "quality"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setCommentSort(s)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                      commentSort === s
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {s === "top" ? "🔥 Top" : s === "recent" ? "🕐 Recent" : "✦ Quality"}
-                  </button>
-                ))}
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {comments?.length ?? 0} {(comments?.length ?? 0) === 1 ? "comment" : "comments"}
-                </span>
-              </div>
-
-              <CommentForm onSubmit={handleCommentSubmit} />
-
-              <div className="mt-8 space-y-4 border-t border-border pt-6">
-                {comments === undefined && (
-                  <div className="space-y-4">
-                    {[1,2,3].map(i => (
-                      <div key={i} className="animate-pulse">
-                        <div className="flex gap-2 items-center mb-2">
-                          <div className="w-6 h-6 rounded-full bg-muted" />
-                          <div className="h-3 w-24 bg-muted rounded" />
-                        </div>
-                        <div className="h-3 w-3/4 bg-muted rounded ml-8 mb-1" />
-                        <div className="h-3 w-1/2 bg-muted rounded ml-8" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {comments && comments.length === 0 && (
-                  <div className="py-8 text-center text-muted-foreground text-sm">
-                    No comments yet — be the first to share your thoughts!
-                  </div>
-                )}
-                {comments && comments.length > 0 && (
-                  <>
-                    {[...comments]
-                      .filter((c: any) => !c.parentId)
-                      .sort((a: any, b: any) => {
-                        if (commentSort === "top") return (b.votes ?? 0) - (a.votes ?? 0);
-                        if (commentSort === "recent") return b._creationTime - a._creationTime;
-                        if (commentSort === "quality") return (b.qualityScore ?? 0) - (a.qualityScore ?? 0);
-                        return 0;
-                      })
-                      .map((commentData: any) => {
-                        const comment = commentData as CommentType;
-                        const replies = comments.filter((c: any) => c.parentId === comment._id);
-                        return (
-                          <React.Fragment key={comment._id}>
-                            <Comment
-                              comment={comment}
-                              onReply={(parentId) => setReplyToId(parentId)}
-                              hasVoted={votedSet.has(comment._id)}
-                              isOwn={!!currentUser && comment.userId === currentUser._id}
-                              depth={0}
-                            />
-                            {/* Inline reply form */}
-                            {replyToId === comment._id && (
-                              <div className="ml-10 pl-4 border-l-2 border-primary/30 mt-2">
-                                <CommentForm
-                                  onSubmit={handleCommentSubmit}
-                                  parentId={comment._id}
-                                />
-                              </div>
-                            )}
-                            {/* Threaded replies */}
-                            {replies
-                              .sort((a: any, b: any) => a._creationTime - b._creationTime)
-                              .map((reply: any) => (
-                                <Comment
-                                  key={reply._id}
-                                  comment={reply as CommentType}
-                                  onReply={(parentId) => setReplyToId(parentId)}
-                                  hasVoted={votedSet.has(reply._id)}
-                                  isOwn={!!currentUser && reply.userId === currentUser._id}
-                                  depth={1}
-                                />
-                              ))}
-                          </React.Fragment>
-                        );
-                      })}
-                  </>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Updates (Changelog) tab */}
-          {activeTab === "updates" && (
-            <ChangelogTab storyId={story._id} isOwner={!!isOwner} />
-          )}
-
-          {/* Feature Requests tab */}
-          {activeTab === "requests" && (
-            <FeatureRequestsBoard storyId={story._id} isOwner={!!isOwner} />
-          )}
-        </div>
-      )}
 
       {/* Related Apps Section */}
       {!isEditing && relatedStories && relatedStories.length > 0 && (
@@ -3094,67 +3158,6 @@ export function StoryDetail({ story }: StoryDetailProps) {
         </div>
       )}
 
-      {/* Edit Submission Section */}
-      {!isEditing &&
-        isClerkLoaded &&
-        isSignedIn &&
-        currentUser &&
-        story.userId === currentUser._id && (
-          <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/20 flex items-center justify-between text-sm text-primary">
-            <div className="flex items-center gap-3">
-              <Edit3 className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="font-medium text-primary">
-                Want to update your submission?
-              </span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs border-primary/20 text-primary hover:bg-primary/10"
-              onClick={() => {
-                router.push(`?edit=true`);
-              }}
-            >
-              Edit Submission
-            </Button>
-          </div>
-        )}
-
-      {/* Flag/Report Section */}
-      {!isEditing && (
-        <div className="mt-8 p-4 bg-muted rounded-lg border border-border flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <Flag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <span className="font-medium text-foreground">
-              Seen something inappropriate?
-            </span>
-          </div>
-          {isClerkLoaded && isSignedIn ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={handleOpenReportModal}
-            >
-              Report this Submission
-            </Button>
-          ) : isClerkLoaded && !isSignedIn ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={() => router.push("/sign-in")}
-              title="Sign in to report content"
-            >
-              Sign in to Report
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" className="text-xs" disabled>
-              Loading...
-            </Button>
-          )}
-        </div>
-      )}
 
       {/* Report Modal */}
       <Dialog

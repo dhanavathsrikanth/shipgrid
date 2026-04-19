@@ -62,6 +62,7 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
 
   const canSubmit = isClerkLoaded && isSignedIn;
   const isContentValid = content.trim().length >= 10;
+  const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <>
@@ -97,6 +98,11 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
         />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
+        {!error && wordCount > 0 && wordCount < 4 && (
+          <p className="text-sm text-amber-600">
+            Comments under 4 words might be collapsed. Feel free to elaborate!
+          </p>
+        )}
 
         <div className="flex items-center justify-between">
           {/* Character count hint */}

@@ -41,7 +41,7 @@ export function Comment({
   const [voted, setVoted] = React.useState(hasVoted);
   const [votes, setVotes] = React.useState(comment.votes ?? 0);
   const [collapsed, setCollapsed] = React.useState(
-    comment.flaggedAsLowQuality === true && !comment.isMakerResponse,
+    comment.flaggedAsLowQuality === true && !comment.isMakerResponse && !isOwn,
   );
   const [deleting, setDeleting] = React.useState(false);
 

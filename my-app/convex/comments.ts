@@ -336,7 +336,7 @@ export const add = mutation({
     if (wordCount >= 20) qualityScore += 10;
     qualityScore = Math.min(100, qualityScore);
 
-    const flaggedAsLowQuality = !isMakerResponse && wordCount < 8 && !isQuestion;
+    const flaggedAsLowQuality = !isMakerResponse && wordCount < 4 && !isQuestion;
 
     // Now perform writes
     const commentId = await ctx.db.insert("comments", {
