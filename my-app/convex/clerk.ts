@@ -77,12 +77,17 @@ export const handleClerkWebhook = internalAction({
 
         // Extract primary email
         const emails = (userData.email_addresses || []) as any[];
-        let primaryEmail = emails.find(
+        let primaryEmail: string | undefined = emails.find(
           (e: any) => e.id === userData.primary_email_address_id
         )?.email_address;
 
         if (!primaryEmail && emails.length > 0) {
           primaryEmail = emails[0].email_address;
+        }
+
+        // Sanitize: strip surrounding quotes if the value was accidentally double-serialized
+        if (typeof primaryEmail === "string") {
+          primaryEmail = primaryEmail.trim().replace(/^"|"$/g, "");
         }
 
         if (!primaryEmail) {

@@ -2251,6 +2251,10 @@ export const syncUserFromClerkWebhook = internalMutation({
   },
   handler: async (ctx, args) => {
     console.log(`syncUserFromClerkWebhook: Processing update for Clerk ID ${args.clerkId}`);
+    // Sanitize email: strip surrounding quotes if accidentally double-serialized
+    const email = typeof args.email === "string"
+      ? args.email.trim().replace(/^"|"$/g, "") || undefined
+      : args.email;
     // 1. Primary lookup by Clerk ID
     let existingUser = await ctx.db
       .query("users")
@@ -2258,14 +2262,14 @@ export const syncUserFromClerkWebhook = internalMutation({
       .first();
 
     // 2. Identity Recovery: If not found by Clerk ID, try Email to prevent duplicates
-    if (!existingUser && args.email) {
+    if (!existingUser && email) {
       existingUser = await ctx.db
         .query("users")
-        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .withIndex("by_email", (q) => q.eq("email", email))
         .first();
       
       if (existingUser) {
-        console.log(`syncUserFromClerkWebhook: Identity Recovered! Linked Clerk ID ${args.clerkId} to existing record ${existingUser._id} via email ${args.email}`);
+        console.log(`syncUserFromClerkWebhook: Identity Recovered! Linked Clerk ID ${args.clerkId} to existing record ${existingUser._id} via email ${email}`);
         // Link the existing record to the new Clerk ID
         await ctx.db.patch(existingUser._id, { clerkId: args.clerkId });
       }
@@ -2278,8 +2282,8 @@ export const syncUserFromClerkWebhook = internalMutation({
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
-      if (args.email && args.email !== existingUser.email) {
-        updates.email = args.email;
+      if (email && email !== existingUser.email) {
+        updates.email = email;
         changed = true;
       }
       if (args.username && args.username !== existingUser.username) {
@@ -2331,7 +2335,7 @@ export const syncUserFromClerkWebhook = internalMutation({
 
       const userId = await ctx.db.insert("users", {
         clerkId: args.clerkId,
-        email: args.email,
+        email: email,
         name: name,
         imageUrl: args.imageUrl || undefined,
         role: userRole || "user",
@@ -2350,7 +2354,7 @@ export const syncUserFromClerkWebhook = internalMutation({
 
       console.log(`Created new user ${args.clerkId} from Clerk webhook.`);
 
-      if (args.email) {
+      if (email) {
         await ctx.scheduler.runAfter(
           10000,
           internal.emails.welcome.sendWelcomeEmail,
