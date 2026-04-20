@@ -26,7 +26,7 @@ export const sendTestEmail = mutation({
 
     try {
       const result = await resend.sendEmail(ctx, {
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from: "ShipGrid Updates <alerts@goshipgrid.app>",
         to: args.to,
         subject: "ShipGrid Updates: Test email from admin",
         html: `
@@ -63,7 +63,7 @@ export const sendTestEmailInternal = internalMutation({
   handler: async (ctx, args) => {
     try {
       const result = await resend.sendEmail(ctx, {
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from: "ShipGrid Updates <alerts@goshipgrid.app>",
         to: args.to || "wayne@convex.dev", // Default to your email
         subject: "ShipGrid Updates: Test email from admin",
         html: `
@@ -102,7 +102,7 @@ export const sendEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       await resend.sendEmail(ctx, {
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from: "ShipGrid Updates <alerts@goshipgrid.app>",
         to: args.to,
         subject: withSubjectPrefix(args.subject),
         html: args.html,

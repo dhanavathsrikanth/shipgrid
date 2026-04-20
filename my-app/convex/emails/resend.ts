@@ -76,7 +76,7 @@ export const sendEmail = internalAction({
       // Send via Resend with enforced subject prefix and from address
       const emailData: any = {
         to: args.to,
-        from: "ShipGrid Updates <alerts@updates.goshipgrid.app>",
+        from: "ShipGrid Updates <alerts@goshipgrid.app>",
         subject: withSubjectPrefix(args.subject),
         html: args.html,
       };
