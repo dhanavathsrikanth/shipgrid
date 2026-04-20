@@ -184,6 +184,13 @@ export const ensureUser = mutation({
         internal.emails.welcome.sendWelcomeEmail,
         { userId },
       );
+    } else {
+      // No email in JWT — schedule a sync from Clerk API to backfill email + send welcome
+      await ctx.scheduler.runAfter(
+        3000,
+        internal.clerkSync.syncUserEmailByClerkId,
+        { clerkId: identity.subject },
+      );
     }
 
     return userId;

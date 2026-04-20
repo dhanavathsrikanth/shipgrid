@@ -44,6 +44,15 @@ async function _syncUserEmailByClerkId(ctx: ActionCtx, clerkId: string) {
         username: userData.username,
         publicMetadata: userData.public_metadata,
       });
+
+      // If we got an email, schedule the welcome email (syncUserFromClerkWebhook handles dedup)
+      if (primaryEmail) {
+        const user = await ctx.runQuery(internal.users.getUserByClerkIdInternal, { clerkId });
+        if (user) {
+          await ctx.scheduler.runAfter(2000, internal.emails.welcome.sendWelcomeEmail, { userId: user._id });
+        }
+      }
+
       return { synced: true };
     }
   } catch (error) {

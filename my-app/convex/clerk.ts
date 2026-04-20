@@ -75,23 +75,28 @@ export const handleClerkWebhook = internalAction({
         console.log(`Received Clerk webhook: ${event.type}`, event.data.id);
         const userData = event.data; // This is the Clerk User object
 
-        // Extract primary email
+        // Extract primary email - log raw data for debugging
         const emails = (userData.email_addresses || []) as any[];
+        console.log(`Email extraction debug - count: ${emails.length}, primary_id: ${userData.primary_email_address_id}, first_item_keys: ${emails[0] ? Object.keys(emails[0]).join(",") : "none"}, first_email_address: ${emails[0]?.email_address}`);
+
         let primaryEmail: string | undefined = emails.find(
           (e: any) => e.id === userData.primary_email_address_id
         )?.email_address;
 
         if (!primaryEmail && emails.length > 0) {
-          primaryEmail = emails[0].email_address;
+          // fallback: try first item
+          primaryEmail = emails[0]?.email_address;
         }
 
         // Sanitize: strip surrounding quotes if the value was accidentally double-serialized
         if (typeof primaryEmail === "string") {
-          primaryEmail = primaryEmail.trim().replace(/^"|"$/g, "");
+          primaryEmail = primaryEmail.trim().replace(/^"|"$/g, "") || undefined;
         }
 
+        console.log(`Final primaryEmail value: "${primaryEmail}" (type: ${typeof primaryEmail})`);
+
         if (!primaryEmail) {
-          console.error(`No email found for user ${userData.id}. email_addresses count: ${emails.length}, primary_email_address_id: ${userData.primary_email_address_id}`);
+          console.error(`No email found for user ${userData.id}. email_addresses count: ${emails.length}, primary_email_address_id: ${userData.primary_email_address_id}, raw emails: ${JSON.stringify(emails)}`);
         }
 
         console.log(`Syncing user ${userData.id} with email: ${primaryEmail}`);
