@@ -110,9 +110,12 @@ export const handleClerkWebhook = internalAction({
 
         // Use scheduler.runAfter(0, ...) to process the mutation in the background.
         // This ensures the HTTP request returns 200 OK immediately to Clerk.
+        // Only pass email if it looks valid
+        const validatedEmail = (primaryEmail && primaryEmail.includes("@") && primaryEmail !== "undefined") ? primaryEmail : undefined;
+
         await ctx.scheduler.runAfter(0, internal.users.syncUserFromClerkWebhook, {
           clerkId: userData.id,
-          email: primaryEmail,
+          email: validatedEmail,
           firstName: userData.first_name,
           lastName: userData.last_name,
           imageUrl: userData.image_url,

@@ -2247,6 +2247,16 @@ export const syncUserFromClerkWebhook = internalMutation({
     const username = args.username ?? undefined;
     const role = (args.publicMetadata?.role as string) ?? "user";
 
+    // SANITIZATION: Ensure email is a valid string and not literal "undefined" or "null"
+    const sanitizeEmail = (e: string | undefined): string | undefined => {
+      if (!e || typeof e !== "string") return undefined;
+      const clean = e.trim().toLowerCase();
+      if (clean === "undefined" || clean === "null" || !clean.includes("@")) return undefined;
+      return e.trim(); // Return original casing but trimmed
+    };
+
+    const email = sanitizeEmail(args.email);
+
     const name =
       firstName && lastName
         ? `${firstName} ${lastName}`
@@ -2258,7 +2268,7 @@ export const syncUserFromClerkWebhook = internalMutation({
 
       // Email Sync - Be robust in updating if missing or different
       const currentEmail = existingUser.email;
-      const newEmail = args.email;
+      const newEmail = email;
       
       if (newEmail && newEmail !== currentEmail) {
         updates.email = newEmail;
@@ -2306,8 +2316,8 @@ export const syncUserFromClerkWebhook = internalMutation({
       }
     } else {
       // 3. New user insertion
-      if (!args.email) {
-        console.warn(`[Webhook Sync] Skipping creation for ${args.clerkId}: No email found.`);
+      if (!email) {
+        console.warn(`[Webhook Sync] Skipping creation for ${args.clerkId}: No valid email found.`);
         return;
       }
 
@@ -2326,7 +2336,7 @@ export const syncUserFromClerkWebhook = internalMutation({
 
       const userId = await ctx.db.insert("users", {
         clerkId: args.clerkId,
-        email: args.email,
+        email: email,
         name: name || "Anonymous",
         imageUrl: imageUrl,
         role: role,
