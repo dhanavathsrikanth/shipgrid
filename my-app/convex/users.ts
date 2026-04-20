@@ -59,6 +59,12 @@ export const ensureUser = mutation({
       clerkEmail = (identity as any).primaryEmailAddress.emailAddress;
     }
 
+    // Sanitize: strip surrounding quotes and "undefined" string from JWT rendering artifacts
+    if (typeof clerkEmail === "string") {
+      clerkEmail = clerkEmail.trim().replace(/^"+|"+$/g, "") || undefined;
+      if (clerkEmail === "undefined" || clerkEmail === "") clerkEmail = undefined;
+    }
+
     // IDENTITY HEALING: If not found by Clerk ID, try to find a user by email
     if (!existingUser && clerkEmail) {
       console.log(`ensureUser: ID match failed. Attempting healing via email: ${clerkEmail}`);
@@ -2259,9 +2265,10 @@ export const syncUserFromClerkWebhook = internalMutation({
   handler: async (ctx, args) => {
     console.log(`syncUserFromClerkWebhook: Processing update for Clerk ID ${args.clerkId}`);
     // Sanitize email: strip surrounding quotes or "undefined" string
-    const email = typeof args.email === "string" && args.email !== "undefined"
-      ? args.email.trim().replace(/^"|"$/g, "") || undefined
+    const rawEmail = typeof args.email === "string"
+      ? args.email.trim().replace(/^"+|"+$/g, "")
       : undefined;
+    const email = rawEmail && rawEmail !== "undefined" ? rawEmail : undefined;
     // 1. Primary lookup by Clerk ID
     let existingUser = await ctx.db
       .query("users")

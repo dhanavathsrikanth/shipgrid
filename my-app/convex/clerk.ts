@@ -90,7 +90,7 @@ export const handleClerkWebhook = internalAction({
 
         // Sanitize: strip surrounding quotes or literal "undefined" string
         if (typeof primaryEmail === "string") {
-          primaryEmail = primaryEmail.trim().replace(/^"|"$/g, "") || undefined;
+          primaryEmail = primaryEmail.trim().replace(/^"+|"+$/g, "") || undefined;
           if (primaryEmail === "undefined") primaryEmail = undefined;
         }
 
