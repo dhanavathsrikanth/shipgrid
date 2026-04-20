@@ -34,11 +34,22 @@ import { UserIdentity } from "convex/server";
  * Handles different field mappings used by Clerk/Convex.
  */
 export function extractEmailFromIdentity(identity: UserIdentity): string | undefined {
-  if (typeof identity.email === "string") return identity.email;
-  if (typeof (identity as any).emailAddress === "string") return (identity as any).emailAddress;
-  if (typeof (identity as any).primaryEmailAddress?.emailAddress === "string") {
-    return (identity as any).primaryEmailAddress.emailAddress;
+  if (typeof identity.email === "string" && identity.email.includes("@")) return identity.email;
+  if (typeof (identity as any).emailAddress === "string" && (identity as any).emailAddress.includes("@")) return (identity as any).emailAddress;
+  
+  // Check for nested primary email address
+  const primaryEmail = (identity as any).primaryEmailAddress;
+  if (typeof primaryEmail?.emailAddress === "string" && primaryEmail.emailAddress.includes("@")) {
+    return primaryEmail.emailAddress;
   }
+  
+  // Check the email_addresses array if it exists in identity
+  const emails = (identity as any).email_addresses;
+  if (Array.isArray(emails) && emails.length > 0) {
+    const firstEmail = emails[0]?.email_address || emails[0]?.emailAddress;
+    if (typeof firstEmail === "string" && firstEmail.includes("@")) return firstEmail;
+  }
+
   return undefined;
 }
 
@@ -2245,10 +2256,14 @@ export const syncUserFromClerkWebhook = internalMutation({
       const updates: Partial<Doc<"users">> = {};
       let changed = false;
 
-      // Email Sync
-      if (args.email && args.email !== existingUser.email) {
-        updates.email = args.email;
+      // Email Sync - Be robust in updating if missing or different
+      const currentEmail = existingUser.email;
+      const newEmail = args.email;
+      
+      if (newEmail && newEmail !== currentEmail) {
+        updates.email = newEmail;
         changed = true;
+        console.log(`[Webhook Sync] Updating email for ${args.clerkId}: ${currentEmail} -> ${newEmail}`);
       }
       
       // Username Sync (Idempotent)

@@ -80,18 +80,33 @@ export const handleClerkWebhook = internalAction({
       case "user.updated":
         console.log(`Received Clerk webhook: ${event.type}`, event.data.id);
         const userData = event.data; // This is the Clerk User object
+        
+        // LOGGING: Useful for debugging missing emails
+        console.log(`[Clerk Webhook] ${event.type} for ${userData.id}`, {
+          hasEmailAddresses: !!userData.email_addresses,
+          count: userData.email_addresses?.length,
+          primaryEmailId: userData.primary_email_address_id,
+        });
 
-        // Extract primary email
+        // Extract primary email with robust fallbacks
         const emails = (userData.email_addresses || []) as any[];
+        const primaryId = userData.primary_email_address_id;
+        
         let primaryEmail = emails.find(
-          (e: any) => e.id === userData.primary_email_address_id
+          (e: any) => e.id === primaryId
         )?.email_address;
 
+        // Fallback 1: If no primary ID match, try finding any verified email
+        if (!primaryEmail && emails.length > 0) {
+          primaryEmail = emails.find((e: any) => e.verification?.status === "verified")?.email_address;
+        }
+
+        // Fallback 2: Just take the first one available
         if (!primaryEmail && emails.length > 0) {
           primaryEmail = emails[0].email_address;
         }
 
-        console.log(`Syncing user ${userData.id} with email: ${primaryEmail}`);
+        console.log(`[Clerk Webhook] Extracted email for ${userData.id}: ${primaryEmail}`);
 
         // Use scheduler.runAfter(0, ...) to process the mutation in the background.
         // This ensures the HTTP request returns 200 OK immediately to Clerk.
