@@ -70,7 +70,17 @@ export const ensureUser = mutation({
     }
 
     // 1. Extract email and basic info first
-    const clerkEmail = extractEmailFromIdentity(identity);
+    let clerkEmail = extractEmailFromIdentity(identity);
+    
+    // SANITIZE: Prevent literal "undefined" or "null" strings
+    if (clerkEmail) {
+      const clean = clerkEmail.trim().toLowerCase();
+      if (clean === "undefined" || clean === "null" || !clean.includes("@")) {
+        clerkEmail = undefined;
+      } else {
+        clerkEmail = clerkEmail.trim();
+      }
+    }
 
     let candidateUsername: string | null = null;
     const jwtUsername_any = (identity as any).username || identity.nickname || identity.preferredUsername;
@@ -121,10 +131,9 @@ export const ensureUser = mutation({
         updates.name = nameToStore;
         changed = true;
       }
-      if (clerkEmail !== existingUser.email) {
-        updates.email = clerkEmail;
-        changed = true;
-      }
+      
+      // Removed the redundant/unsafe email overwrite that was here earlier
+      
       if (clerkImageUrl && clerkImageUrl !== existingUser.imageUrl) {
         updates.imageUrl = clerkImageUrl;
         changed = true;
