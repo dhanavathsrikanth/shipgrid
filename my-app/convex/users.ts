@@ -51,11 +51,11 @@ export const ensureUser = mutation({
       .first();
 
     let clerkEmail: string | undefined = undefined;
-    if (typeof identity.email === "string") {
+    if (typeof identity.email === "string" && identity.email !== "undefined") {
       clerkEmail = identity.email;
-    } else if (typeof identity.emailAddress === "string") {
+    } else if (typeof identity.emailAddress === "string" && identity.emailAddress !== "undefined") {
       clerkEmail = identity.emailAddress;
-    } else if (typeof (identity as any).primaryEmailAddress?.emailAddress === "string") {
+    } else if (typeof (identity as any).primaryEmailAddress?.emailAddress === "string" && (identity as any).primaryEmailAddress?.emailAddress !== "undefined") {
       clerkEmail = (identity as any).primaryEmailAddress.emailAddress;
     }
 
@@ -2258,10 +2258,10 @@ export const syncUserFromClerkWebhook = internalMutation({
   },
   handler: async (ctx, args) => {
     console.log(`syncUserFromClerkWebhook: Processing update for Clerk ID ${args.clerkId}`);
-    // Sanitize email: strip surrounding quotes if accidentally double-serialized
-    const email = typeof args.email === "string"
+    // Sanitize email: strip surrounding quotes or "undefined" string
+    const email = typeof args.email === "string" && args.email !== "undefined"
       ? args.email.trim().replace(/^"|"$/g, "") || undefined
-      : args.email;
+      : undefined;
     // 1. Primary lookup by Clerk ID
     let existingUser = await ctx.db
       .query("users")

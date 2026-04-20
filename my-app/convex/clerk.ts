@@ -88,9 +88,10 @@ export const handleClerkWebhook = internalAction({
           primaryEmail = emails[0]?.email_address;
         }
 
-        // Sanitize: strip surrounding quotes if the value was accidentally double-serialized
+        // Sanitize: strip surrounding quotes or literal "undefined" string
         if (typeof primaryEmail === "string") {
           primaryEmail = primaryEmail.trim().replace(/^"|"$/g, "") || undefined;
+          if (primaryEmail === "undefined") primaryEmail = undefined;
         }
 
         console.log(`Final primaryEmail value: "${primaryEmail}" (type: ${typeof primaryEmail})`);
