@@ -132,6 +132,7 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_status", ["status"])
+    .index("by_stage", ["stage"])
     .index("by_user", ["userId"])
     .index("by_userId_isApproved", ["userId", "isApproved"])
     .index("by_votes", ["votes"])

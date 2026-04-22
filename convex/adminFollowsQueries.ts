@@ -1,10 +1,12 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { requireAdminRole } from "./users";
 
 export const getTopUsersByFollowers = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    await requireAdminRole(ctx);
     const limit = args.limit ?? 100;
     const allFollows = await ctx.db.query("follows").collect();
     const followerCounts: Map<Id<"users">, number> = new Map();
@@ -30,6 +32,7 @@ export const getTopUsersByFollowers = query({
 export const getTopUsersByFollowing = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    await requireAdminRole(ctx);
     const limit = args.limit ?? 100;
     const allFollows = await ctx.db.query("follows").collect();
     const followingCounts: Map<Id<"users">, number> = new Map();
@@ -55,6 +58,7 @@ export const getTopUsersByFollowing = query({
 export const getTotalFollowRelationships = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdminRole(ctx);
     const allFollows = await ctx.db.query("follows").collect();
     return allFollows.length;
   },

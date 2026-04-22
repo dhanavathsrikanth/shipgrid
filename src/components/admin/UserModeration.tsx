@@ -82,8 +82,8 @@ export function UserModeration() {
   const queryArgs = useMemo(() => {
     const args: any = {};
     if (debouncedSearchTerm) {
-      // Pass search query to backend for searching all users
-      args.searchQuery = debouncedSearchTerm;
+      // Pass search term to backend for searching all users
+      args.searchTerm = debouncedSearchTerm;
     }
     if (statusFilter === "banned") {
       args.filterBanned = true;
