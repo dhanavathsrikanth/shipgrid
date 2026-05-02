@@ -649,7 +649,8 @@ export const submit = mutation({
     icpProblem: v.optional(v.string()),
     icpBudget: v.optional(v.string()),
     notFor: v.optional(v.string()),
-    stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+    stage: v.optional(v.union(v.literal("idea"), v.literal("building"), v.literal("beta"), v.literal("live"))),
+    isOpenSource: v.optional(v.boolean()),
     faqs: v.optional(
       v.array(
         v.object({
@@ -752,8 +753,14 @@ export const submit = mutation({
       icpProblem: args.icpProblem,
       icpBudget: args.icpBudget,
       notFor: args.notFor,
-      stage: args.stage,
+      currentStage: args.stage,
       betaOpenedAt: args.stage === "beta" ? Date.now() : undefined,
+      isOpenSource: args.isOpenSource,
+      // Waitlist fields
+      waitlistEnabled: false,
+      waitlistCount: 0,
+      icpMatchedWaitlistCount: 0,
+      hasWaitlistPage: false,
       faqs: args.faqs,
     });
 
@@ -835,7 +842,8 @@ export const submitAnonymous = mutation({
     icpProblem: v.optional(v.string()),
     icpBudget: v.optional(v.string()),
     notFor: v.optional(v.string()),
-    stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+    stage: v.optional(v.union(v.literal("idea"), v.literal("building"), v.literal("beta"), v.literal("live"))),
+    isOpenSource: v.optional(v.boolean()),
     faqs: v.optional(
       v.array(
         v.object({
@@ -934,8 +942,14 @@ export const submitAnonymous = mutation({
       icpProblem: args.icpProblem,
       icpBudget: args.icpBudget,
       notFor: args.notFor,
-      stage: args.stage,
+      currentStage: args.stage,
       betaOpenedAt: args.stage === "beta" ? Date.now() : undefined,
+      isOpenSource: args.isOpenSource,
+      // Waitlist fields
+      waitlistEnabled: false,
+      waitlistCount: 0,
+      icpMatchedWaitlistCount: 0,
+      hasWaitlistPage: false,
       faqs: args.faqs,
     });
 
@@ -1477,6 +1491,7 @@ export const updateOwnStory = mutation({
     stage: v.optional(
       v.union(v.literal("building"), v.literal("beta"), v.literal("live")),
     ),
+    isOpenSource: v.optional(v.boolean()),
     faqs: v.optional(
       v.array(
         v.object({
@@ -1732,8 +1747,9 @@ export const updateOwnStory = mutation({
     if (args.icpProblem !== undefined) updateData.icpProblem = args.icpProblem;
     if (args.icpBudget !== undefined) updateData.icpBudget = args.icpBudget;
     if (args.notFor !== undefined) updateData.notFor = args.notFor;
+    if (args.isOpenSource !== undefined) updateData.isOpenSource = args.isOpenSource;
     if (args.stage !== undefined) {
-      updateData.stage = args.stage;
+      updateData.currentStage = args.stage;
       if (args.stage === "beta" && !story.betaOpenedAt) {
         updateData.betaOpenedAt = Date.now();
       }
@@ -1771,13 +1787,12 @@ export const updateOwnStory = mutation({
 
       const existingChangeLog = story.changeLog || [];
       updateData.changeLog = [...existingChangeLog, changeLogEntry];
-      updateData.updatedAt = Date.now(); // Signal score bump for changelog
     }
 
     await ctx.db.patch(args.storyId, updateData);
 
     // Schedule changelog notification
-    if (updateData.updatedAt && story.stage === "live") {
+    if (updateData.changeLog && story.currentStage === "live") {
       await ctx.scheduler.runAfter(0, internal.emails.lifecycle.notifyChangelogUpdate, {
         storyId: args.storyId,
       });
@@ -1832,6 +1847,7 @@ export const updateStoryAdmin = mutation({
     stage: v.optional(
       v.union(v.literal("building"), v.literal("beta"), v.literal("live")),
     ),
+    isOpenSource: v.optional(v.boolean()),
     faqs: v.optional(
       v.array(
         v.object({
@@ -1919,6 +1935,9 @@ export const updateStoryAdmin = mutation({
       updateData.chefShowUrl = args.chefShowUrl;
     if (args.chefAppUrl !== undefined) updateData.chefAppUrl = args.chefAppUrl;
     if (args.faqs !== undefined) updateData.faqs = args.faqs;
+
+    // Handle open source
+    if (args.isOpenSource !== undefined) updateData.isOpenSource = args.isOpenSource;
 
     // Handle team info
     if (args.teamName !== undefined) updateData.teamName = args.teamName;
@@ -2726,14 +2745,24 @@ export const listMatchedStories = query({
       .filter((q) => q.eq(q.field("status"), "approved"))
       .collect();
 
+    // Build subcategory → category map for role matching
+    const icpOptions = await ctx.db.query("icpOptions").collect();
+    const subToCategory = new Map<string, string>();
+    for (const opt of icpOptions) {
+      if (opt.category === "role" && opt.parentLabel) {
+        subToCategory.set(opt.label, opt.parentLabel);
+      }
+    }
+
     // Calculate score for each story
     const scoredStories = await Promise.all(
       stories.map(async (story) => {
         let score = 0;
 
         // 1. Role Match (35 pts)
-        const userRoles = user.icpRoles || (user.role ? [user.role] : []);
-        const hasRoleMatch = userRoles.some(role => story.icpRoles?.includes(role));
+        const userRoles = user.icpRoles || [];
+        const storyCategories = new Set(story.icpRoles?.map(r => subToCategory.get(r) || r) || []);
+        const hasRoleMatch = userRoles.some(role => storyCategories.has(role));
         if (hasRoleMatch) {
           score += 35;
         }
@@ -2749,8 +2778,8 @@ export const listMatchedStories = query({
         }
 
         // 4. Stage Bonus (10 pts)
-        if (story.stage === "live") score += 10;
-        else if (story.stage === "beta") score += 5;
+        if (story.currentStage === "live") score += 10;
+        else if (story.currentStage === "beta") score += 5;
 
         // 5. Vibe Bonus (5 pts)
         if (story.votes > 10) score += 5;
@@ -2788,10 +2817,19 @@ export const logView = mutation({
 
     if (!story) return;
 
+    // Build subcategory → category map for matching
+    const icpOptions = await ctx.db.query("icpOptions").collect();
+    const subToCategory = new Map<string, string>();
+    for (const opt of icpOptions) {
+      if (opt.category === "role" && opt.parentLabel) {
+        subToCategory.set(opt.label, opt.parentLabel);
+      }
+    }
+
     let isIcpMatch = false;
-    if (user && story.icpRoles && user.role) {
-      // Simple role match for now
-      isIcpMatch = story.icpRoles.includes(user.role);
+    if (user && story.icpRoles && user.icpRoles) {
+      const storyCategories = new Set(story.icpRoles.map(r => subToCategory.get(r) || r));
+      isIcpMatch = user.icpRoles.some(role => storyCategories.has(role));
     }
 
     await ctx.db.insert("productViews", {
@@ -2933,13 +2971,22 @@ export const moveToBeta = mutation({
     }
 
     await ctx.db.patch(args.storyId, {
-      stage: 'beta',
+      currentStage: 'beta',
       betaOpenedAt: Date.now()
     });
 
     await ctx.scheduler.runAfter(0, internal.emails.lifecycle.notifyBetaLaunch, {
       storyId: args.storyId
     });
+
+    // If product has waitlist signups, email them at beta launch
+    if (story.waitlistEnabled && (story.waitlistCount ?? 0) > 0) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emails.lifecycle.notifyWaitlistBetaLaunch,
+        { storyId: args.storyId }
+      );
+    }
   }
 });
 
@@ -2958,8 +3005,7 @@ export const moveToLive = mutation({
     }
 
     await ctx.db.patch(args.storyId, {
-      stage: 'live',
-      updatedAt: Date.now(),
+      currentStage: 'live',
     });
 
     try {
@@ -2987,7 +3033,7 @@ export const moveToBuilding = mutation({
     }
 
     await ctx.db.patch(args.storyId, {
-      stage: 'building'
+      currentStage: 'building'
     });
   }
 });

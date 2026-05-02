@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -28,11 +28,11 @@ import { Id, Doc } from "../../convex/_generated/dataModel"; // Import Id and Do
 import { useAuth, useUser } from "@clerk/nextjs"; // Added useAuth, useUser
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"; // Assuming you have a Dialog component
+  DialogContent,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button"; // For modal buttons
 import { toast } from "sonner";
@@ -43,6 +43,17 @@ import { Markdown } from "./Markdown";
 import { useDialog } from "../hooks/useDialog";
 import { StageBadge } from "./StageBadge";
 import { FollowButton } from "./FollowButton";
+import { BarChart2, ExternalLink } from "lucide-react";
+import { StoryAnalyticsDashboard } from "./StoryAnalyticsDashboard";
+import { WaitlistWidget } from "./WaitlistWidget";
+import { WaitlistDemandDisplay } from "./WaitlistDemandDisplay";
+import { BuildLogForm } from "./BuildLogForm";
+import { BuildLogDisplay } from "./BuildLogDisplay";
+import { BetaFeedbackForm } from "./BetaFeedbackForm";
+import { BetaFeedbackSummary } from "./BetaFeedbackSummary";
+import { WaitlistFounderAnalytics } from "./WaitlistFounderAnalytics";
+import { IdeaSignalButtons } from "./IdeaSignalButtons";
+import { StageControls } from "./StageControls";
 
 // Removed MOCK_COMMENTS
 
@@ -60,6 +71,10 @@ const BookmarkButton = ({ storyId }: { storyId: Id<"stories"> }) => {
   const addOrRemoveBookmarkMutation = useMutation(
     api.bookmarks.addOrRemoveBookmark,
   );
+  const trackEvent = useMutation(
+    // @ts-ignore
+    api.analytics.trackEvent
+  );
 
   const handleBookmarkClick = async () => {
     if (!isClerkLoaded) return;
@@ -71,8 +86,7 @@ const BookmarkButton = ({ storyId }: { storyId: Id<"stories"> }) => {
     }
     try {
       await addOrRemoveBookmarkMutation({ storyId });
-      // Optionally, show a success toast
-      // toast.success(isBookmarked ? "Bookmark removed" : "Story bookmarked!");
+      trackEvent({ storyId, type: "conversion" }).catch(console.error);
     } catch (error) {
       console.error("Failed to update bookmark:", error);
       toast.error("Failed to update bookmark. Please try again.");
@@ -127,6 +141,27 @@ export function StoryDetail({ story }: StoryDetailProps) {
   const { user } = useUser();
   const { showMessage, DialogComponents } = useDialog();
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+  const trackEvent = useMutation(
+    // @ts-ignore
+    api.analytics.trackEvent
+  );
+
+  const injectUtm = (url: string) => {
+    try {
+      const u = new URL(url);
+      u.searchParams.set("utm_source", "shipgrid");
+      u.searchParams.set("utm_medium", "referral");
+      u.searchParams.set("ref", "shipgrid");
+      return u.toString();
+    } catch (e) {
+      return url;
+    }
+  };
+
+  const handleOutboundClick = (type: "click" | "conversion") => {
+    trackEvent({ storyId: story._id, type }).catch(console.error);
+  };
 
   // Immediately update meta tags on component load (before useEffect)
   useEffect(() => {
@@ -149,7 +184,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
     setMeta("twitter:title", story.title, false);
     setMeta("twitter:description", story.description, false);
     setMeta("twitter:image", imageUrl, false);
-  }, [story.title, story.description, story.screenshotUrl]);
+
+    // Track Page Impression
+    trackEvent({ storyId: story._id, type: "impression" }).catch(console.error);
+  }, [story._id, story.title, story.description, story.screenshotUrl, trackEvent]);
 
   // Edit mode state
   const isEditMode = searchParams.get("edit") === "true";
@@ -251,6 +289,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
   // Auth required dialog state
   const [showAuthDialog, setShowAuthDialog] = React.useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = React.useState(false);
   const [authDialogAction, setAuthDialogAction] = React.useState("");
 
   // Changelog expand state (all closed by default)
@@ -374,7 +413,9 @@ export function StoryDetail({ story }: StoryDetailProps) {
     }
     voteStory({ storyId: story._id })
       .then((result) => {
-        // Optionally, update UI based on result.action and result.newVoteCount
+        if (result && (result as any).action === "voted") {
+          trackEvent({ storyId: story._id, type: "conversion" }).catch(console.error);
+        }
       })
       .catch((error) => {
         console.error("Error voting:", error);
@@ -397,8 +438,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
     }
     rateStory({ storyId: story._id, rating: value })
       .then((result) => {
-        // Optimistically update UI or refetch currentUserRating might be needed here
-        // For now, a simple alert.
+        trackEvent({ storyId: story._id, type: "conversion" }).catch(console.error);
       })
       .catch((error) => {
         console.error("Error rating:", error);
@@ -883,6 +923,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
     <>
       <script
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
@@ -890,7 +931,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
             "name": story.title,
             "description": story.description,
             "image": story.screenshotUrl || "/shipgrid-og-image.png",
-            "url": typeof window !== "undefined" ? window.location.href : "",
+            "url": `https://goshipgrid.app/s/${story.slug}`,
             "brand": {
               "@type": "Brand",
               "name": "Shipgrid"
@@ -949,8 +990,56 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       {story.title}
                     </a>
                   </h1>
-                  {story.stage && (
-                    <StageBadge stage={story.stage} betaOpenedAt={story.betaOpenedAt} />
+                  {story.isOpenSource && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                      Open Source
+                    </span>
+                  )}
+                  {story.currentStage && (
+                    <div className="flex items-center gap-2">
+                      <StageBadge stage={story.currentStage} betaOpenedAt={story.betaOpenedAt} />
+                      {currentUser && story.userId === currentUser._id && (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-7 gap-1.5 px-3 py-1 text-xs border-muted-foreground/30 hover:border-muted-foreground/60 transition-colors"
+                            onClick={() => setIsAnalyticsOpen(true)}
+                          >
+                            <BarChart2 className="w-3.5 h-3.5" />
+                            Analytics
+                          </Button>
+                          <Dialog open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
+                            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-none bg-background rounded-2xl">
+                              <div className="p-6">
+                                <DialogHeader className="mb-6">
+                                  <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                                    <BarChart2 className="w-6 h-6 text-primary" />
+                                    Product Performance: {story.title}
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <StoryAnalyticsDashboard storyId={story._id} />
+                                
+                                {/* Waitlist Analytics Section */}
+                                <div className="mt-8 pt-6 border-t border-border">
+                                  <h3 className="text-lg font-semibold mb-4">Waitlist Analytics</h3>
+                                  <WaitlistFounderAnalytics
+                                    storyId={story._id}
+                                    waitlistEnabled={story.waitlistEnabled ?? false}
+                                  />
+                                </div>
+                              </div>
+                              <DialogFooter className="p-4 bg-muted/30 border-t border-border mt-2">
+                                <p className="text-xs text-muted-foreground text-center w-full">
+                                  Data is updated daily. Verified conversions track high-intent user engagement.
+                                </p>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
                 {story.customMessage && (
@@ -961,6 +1050,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
                 <p className="text-foreground mb-4 prose prose-base max-w-none">
                   {story.description}
                 </p>
+
+                {/* Beta Feedback Summary */}
+                <BetaFeedbackSummary storyId={story._id} />
+
                 <ImageGallery
                   mainImageUrl={story.screenshotUrl}
                   additionalImageUrls={story.additionalImageUrls || []}
@@ -971,6 +1064,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     <Markdown>{story.longDescription}</Markdown>
                   </div>
                 )}
+
+                {/* Build Log Display - moved to Updates tab */}
+                {/* Beta Feedback Form - moved to Reviews tab */}
+                {/* Idea Signal Buttons - moved to Overview tab */}
 
                 {/* FAQ Section for SEO and GEO */}
                 {story.faqs && story.faqs.length > 0 && (
@@ -992,6 +1089,112 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     </div>
                   </div>
                 )}
+
+                {/* Tab Navigation */}
+                <div className="mt-8 border-t border-border pt-6">
+                  <div className="flex gap-4 border-b border-border mb-6">
+                    <button
+                      onClick={() => setActiveTab("overview")}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === "overview"
+                          ? "border-gray-900 dark:border-white text-gray-900 dark:text-white"
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      Overview
+                    </button>
+                    {story.waitlistEnabled && (
+                      <button
+                        onClick={() => setActiveTab("waitlist")}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                          activeTab === "waitlist"
+                            ? "border-gray-900 dark:border-white text-gray-900 dark:text-white"
+                            : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        }`}
+                      >
+                        Waitlist
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setActiveTab("updates")}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === "updates"
+                          ? "border-gray-900 dark:border-white text-gray-900 dark:text-white"
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      Updates
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("reviews")}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === "reviews"
+                          ? "border-gray-900 dark:border-white text-gray-900 dark:text-white"
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      Reviews
+                    </button>
+                  </div>
+
+                  {/* Tab Content */}
+                  {activeTab === "overview" && (
+                    <div className="space-y-6">
+                      {/* Beta Feedback Summary */}
+                      <BetaFeedbackSummary storyId={story._id} />
+                      
+                      {/* Idea Signal Buttons - Non-owners on building/idea products */}
+                      {story.userId && (
+                        <IdeaSignalButtons
+                          storyId={story._id}
+                          storyUserId={story.userId!}
+                          currentStage={story.currentStage}
+                          currentUserId={currentUser?._id}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "waitlist" && story.waitlistEnabled && (
+                    <div className="space-y-4">
+                      <WaitlistDemandDisplay storyId={story._id} />
+                      <WaitlistWidget
+                        storyId={story._id}
+                        productName={story.title}
+                        icpRoles={story.icpRoles}
+                        icpProblem={story.icpProblem}
+                        icpBudget={story.icpBudget}
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === "waitlist" && !story.waitlistEnabled && currentUser && story.userId === currentUser._id && (
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Enable your waitlist to collect ICP-declared signups.
+                    </div>
+                  )}
+
+                  {activeTab === "updates" && (
+                    <div>
+                      <BuildLogDisplay storyId={story._id} />
+                    </div>
+                  )}
+
+                  {activeTab === "reviews" && (
+                    <div className="space-y-6">
+                      <BetaFeedbackSummary storyId={story._id} />
+                      {/* Beta Feedback Form - Non-owners on beta/live products */}
+                      {story.userId && (
+                        <BetaFeedbackForm
+                          storyId={story._id}
+                          storyUserId={story.userId!}
+                          currentStage={story.currentStage}
+                          currentUserId={currentUser?._id}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap mb-3">
                   {story.authorUsername ? (
                     <ProfileHoverCard username={story.authorUsername}>
@@ -1013,7 +1216,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                         "Anonymous User"}
                     </span>
                   )}
-                  <span>{formatDistanceToNow(story._creationTime)} ago</span>
+                  <span suppressHydrationWarning>{formatDistanceToNow(story._creationTime)} ago</span>
                   <Link
                     href="#comments"
                     className="flex items-center gap-1 hover:text-foreground"
@@ -1027,6 +1230,22 @@ export function StoryDetail({ story }: StoryDetailProps) {
               </div>
             </div>
           </article>
+
+
+          {/* Stage Controls - Owner Only */}
+          {currentUser && story.userId === currentUser._id && (
+            <div className="mt-6">
+              <StageControls
+                storyId={story._id}
+                storyUserId={story.userId}
+                currentStage={story.currentStage}
+                betaOpenedAt={story.betaOpenedAt}
+                waitlistEnabled={story.waitlistEnabled}
+                storySlug={story.slug}
+                currentUserId={currentUser?._id}
+              />
+            </div>
+          )}
         </div>
 
         {/* Project Links & Tags Sidebar */}
@@ -1047,9 +1266,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
                   <div className="flex items-center gap-2">
                     <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <a
-                      href={story.url}
+                      href={injectUtm(story.url)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => handleOutboundClick("click")}
                       className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
                       title={story.url}
                     >
@@ -2554,14 +2774,14 @@ export function StoryDetail({ story }: StoryDetailProps) {
               <span className="font-medium text-foreground">
                 Originally submitted:
               </span>
-              <span>
-                {new Date(story._creationTime).toLocaleDateString(undefined, {
+              <span suppressHydrationWarning>
+                {new Date(story._creationTime).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
                 })}{" "}
                 at{" "}
-                {new Date(story._creationTime).toLocaleTimeString(undefined, {
+                {new Date(story._creationTime).toLocaleTimeString("en-US", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -2592,7 +2812,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
                     const changeDate = new Date(entry.timestamp);
                     const formattedDate = changeDate.toLocaleDateString(
-                      undefined,
+                      "en-US",
                       {
                         year: "numeric",
                         month: "short",
@@ -2600,7 +2820,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       },
                     );
                     const formattedTime = changeDate.toLocaleTimeString(
-                      undefined,
+                      "en-US",
                       {
                         hour: "2-digit",
                         minute: "2-digit",

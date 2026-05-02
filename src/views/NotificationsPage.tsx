@@ -161,7 +161,7 @@ function NotificationItem({ alert }: NotificationItemProps) {
               <span>Someone {getNotificationText()}</span>
             )}
           </div>
-          <div className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(alert._creationTime, { addSuffix: true })}</div>
+          <div className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>{formatDistanceToNow(alert._creationTime, { addSuffix: true })}</div>
         </div>
         {!alert.isRead && (
           <div className="flex-shrink-0"><div className="w-2 h-2 bg-blue-500 rounded-full"></div></div>

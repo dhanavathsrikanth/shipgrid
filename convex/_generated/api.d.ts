@@ -18,9 +18,12 @@ import type * as admin_management from "../admin/management.js";
 import type * as admin_queries from "../admin/queries.js";
 import type * as admin_settings from "../admin/settings.js";
 import type * as alerts from "../alerts.js";
+import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as backfill from "../backfill.js";
 import type * as bookmarks from "../bookmarks.js";
+import type * as buildlog from "../buildlog.js";
+import type * as changelog from "../changelog.js";
 import type * as cleanDb from "../cleanDb.js";
 import type * as clerk from "../clerk.js";
 import type * as clerkSync from "../clerkSync.js";
@@ -46,11 +49,13 @@ import type * as emails_unsubscribe from "../emails/unsubscribe.js";
 import type * as emails_weekly from "../emails/weekly.js";
 import type * as emails_welcome from "../emails/welcome.js";
 import type * as embeddings from "../embeddings.js";
+import type * as feedback from "../feedback.js";
 import type * as follows from "../follows.js";
 import type * as forms from "../forms.js";
 import type * as http from "../http.js";
 import type * as icp from "../icp.js";
 import type * as icpMatch from "../icpMatch.js";
+import type * as ideaSignals from "../ideaSignals.js";
 import type * as judgeScores from "../judgeScores.js";
 import type * as judges from "../judges.js";
 import type * as judgingCriteria from "../judgingCriteria.js";
@@ -76,6 +81,8 @@ import type * as testWelcomeEmail from "../testWelcomeEmail.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
 import type * as validators from "../validators.js";
+import type * as verdictLoop from "../verdictLoop.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
@@ -94,9 +101,12 @@ declare const fullApi: ApiFromModules<{
   "admin/queries": typeof admin_queries;
   "admin/settings": typeof admin_settings;
   alerts: typeof alerts;
+  analytics: typeof analytics;
   auth: typeof auth;
   backfill: typeof backfill;
   bookmarks: typeof bookmarks;
+  buildlog: typeof buildlog;
+  changelog: typeof changelog;
   cleanDb: typeof cleanDb;
   clerk: typeof clerk;
   clerkSync: typeof clerkSync;
@@ -122,11 +132,13 @@ declare const fullApi: ApiFromModules<{
   "emails/weekly": typeof emails_weekly;
   "emails/welcome": typeof emails_welcome;
   embeddings: typeof embeddings;
+  feedback: typeof feedback;
   follows: typeof follows;
   forms: typeof forms;
   http: typeof http;
   icp: typeof icp;
   icpMatch: typeof icpMatch;
+  ideaSignals: typeof ideaSignals;
   judgeScores: typeof judgeScores;
   judges: typeof judges;
   judgingCriteria: typeof judgingCriteria;
@@ -152,6 +164,8 @@ declare const fullApi: ApiFromModules<{
   users: typeof users;
   utils: typeof utils;
   validators: typeof validators;
+  verdictLoop: typeof verdictLoop;
+  waitlist: typeof waitlist;
 }>;
 
 /**

@@ -1,10 +1,12 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// Syncing schema at 2026-04-23
 export default defineSchema({
   users: defineTable({
     name: v.string(), // User's name
     clerkId: v.string(), // Clerk User ID for linking
+    externalId: v.optional(v.string()), // Legacy ID
     email: v.optional(v.string()), // Added user's email
     username: v.optional(v.string()), // Added username, make it unique
     role: v.optional(v.string()), // User's role, e.g., "admin"
@@ -25,6 +27,17 @@ export default defineSchema({
     region: v.optional(v.string()),
     icpComplete: v.optional(v.boolean()),
     icpRoles: v.optional(v.array(v.string())),
+    totalFollows: v.optional(v.number()),
+    storiesCount: v.optional(v.number()),
+    followingCount: v.optional(v.number()),
+    followersCount: v.optional(v.number()),
+    points: v.optional(v.number()),
+    reputation: v.optional(v.number()),
+    isFounder: v.optional(v.boolean()),
+    isExpert: v.optional(v.boolean()),
+    isChef: v.optional(v.boolean()),
+    isInfluencer: v.optional(v.boolean()),
+    isStaff: v.optional(v.boolean()),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_username", ["username"]) // Index for fetching by username
@@ -118,9 +131,15 @@ export default defineSchema({
     icpProblem: v.optional(v.string()),
     icpBudget: v.optional(v.string()),
     notFor: v.optional(v.string()),
-    stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+    currentStage: v.optional(v.union(v.literal("idea"), v.literal("building"), v.literal("beta"), v.literal("live"))),
     betaOpenedAt: v.optional(v.number()),
-    updatedAt: v.optional(v.number()),
+    isOpenSource: v.optional(v.boolean()),
+    trendingScore: v.optional(v.number()),
+    // Waitlist fields
+    waitlistEnabled: v.optional(v.boolean()),
+    waitlistCount: v.optional(v.number()),
+    icpMatchedWaitlistCount: v.optional(v.number()),
+    hasWaitlistPage: v.optional(v.boolean()),
     faqs: v.optional(
       v.array(
         v.object({
@@ -132,7 +151,7 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_status", ["status"])
-    .index("by_stage", ["stage"])
+    .index("by_stage", ["currentStage"])
     .index("by_user", ["userId"])
     .index("by_userId_isApproved", ["userId", "isApproved"])
     .index("by_votes", ["votes"])
@@ -602,6 +621,7 @@ export default defineSchema({
       v.literal("admin_user_report_notification"),
       v.literal("beta_launch"),
       v.literal("changelog_update"),
+      v.literal("waitlist_beta_launch"),
     ),
     recipientEmail: v.string(),
     sentAt: v.number(),
@@ -641,6 +661,18 @@ export default defineSchema({
     ),
   })
     .index("by_user_date", ["userId", "date"])
+    .index("by_date", ["date"]),
+
+  // Daily platform metrics snapshot
+  storyMetrics: defineTable({
+    storyId: v.id("stories"),
+    date: v.string(), // "YYYY-MM-DD"
+    impressions: v.number(),
+    clicks: v.number(),
+    conversions: v.number(), // Tracked via verified snippet or high-intent actions
+  })
+    .index("by_story_date", ["storyId", "date"])
+    .index("by_story", ["storyId"])
     .index("by_date", ["date"]),
 
   // Daily platform metrics snapshot
@@ -803,9 +835,9 @@ export default defineSchema({
   productViews: defineTable({
     storyId: v.id("stories"),
     viewerId: v.optional(v.id("users")),
-    viewerRole: v.optional(v.string()),
-    viewerProblem: v.optional(v.string()),
-    viewerBudget: v.optional(v.string()),
+    viewerRole: v.optional(v.union(v.string(), v.null())),
+    viewerProblem: v.optional(v.union(v.string(), v.null())),
+    viewerBudget: v.optional(v.union(v.string(), v.null())),
     isIcpMatch: v.boolean(),
     viewedAt: v.number(),
   })
@@ -813,9 +845,10 @@ export default defineSchema({
     .index("by_story_icp", ["storyId", "isIcpMatch"]),
 
   icpOptions: defineTable({
-    category: v.union(v.literal("role"), v.literal("challenge"), v.literal("budget")),
+    category: v.union(v.literal("role"), v.literal("roleCategory"), v.literal("challenge"), v.literal("budget")),
     label: v.string(),
     order: v.number(),
+    parentLabel: v.optional(v.string()),
   }).index("by_category_order", ["category", "order"]),
 
   userEmbeddings: defineTable({
@@ -861,4 +894,79 @@ export default defineSchema({
     ),
     scannedAt: v.number(),
   }).index("by_storyId", ["storyId"]),
+
+  // 4-Stage Lifecycle System Tables
+
+  // TABLE 1 — Idea stage (Stage 0 / pre-build products)
+  idea_signals: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    signal: v.string(), // "interested" | "would_pay" | "not_for_me"
+    signalledAt: v.number(),
+  })
+    .index("by_story", ["storyId"])
+    .index("by_user", ["userId"])
+    .index("by_story_signal", ["storyId", "signal"]),
+
+  // TABLE 2 — Waitlist (ICP-declared signups per product)
+  waitlist_signups: defineTable({
+    storyId: v.id("stories"),
+    email: v.string(),
+    role: v.optional(v.string()), // declared ICP role
+    problem: v.optional(v.string()), // declared problem
+    budgetRange: v.optional(v.string()), // declared budget
+    icpMatchScore: v.optional(v.number()), // calculated on insert
+    referralCode: v.string(), // unique code for this signup
+    referredBy: v.optional(v.string()), // referral code of referrer
+    referralCount: v.number(), // how many they referred
+    queuePosition: v.number(), // calculated position
+    joinedAt: v.number(),
+    notifiedAt: v.optional(v.number()), // when beta email sent
+    isIcpMatch: v.boolean(), // shorthand for dashboard
+  })
+    .index("by_story", ["storyId"])
+    .index("by_email_story", ["email", "storyId"])
+    .index("by_referral_code", ["referralCode"])
+    .index("by_story_position", ["storyId", "queuePosition"]),
+
+  // TABLE 3 — Build log (Stage 2 public updates)
+  build_logs: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    buildingNow: v.string(), // max 200 chars
+    shippedLast: v.string(), // max 200 chars
+    notWorking: v.optional(v.string()), // max 200 chars — optional, shown if filled
+    learnedThis: v.optional(v.string()),
+    needHelpWith: v.optional(v.string()),
+    publishedAt: v.number(),
+  })
+    .index("by_story", ["storyId"])
+    .index("by_story_recent", ["storyId", "publishedAt"]),
+
+  // TABLE 4 — Beta structured feedback
+  beta_feedback: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    problemSolved: v.string(), // "What problem did it solve for you?"
+    doesntDo: v.string(), // "What does it NOT do that you expected?"
+    notForWho: v.string(), // "Who should NOT use this?"
+    verdict: v.string(), // "using" | "dropped" | "never_tried"
+    submittedAt: v.number(),
+  })
+    .index("by_story", ["storyId"])
+    .index("by_user_story", ["userId", "storyId"])
+    .index("by_story_verdict", ["storyId", "verdict"]),
+
+  // TABLE 5 — 7-day verdict loop
+  verdict_requests: defineTable({
+    storyId: v.id("stories"),
+    userId: v.id("users"),
+    bookmarkedAt: v.number(),
+    emailSentAt: v.optional(v.number()),
+    responseAt: v.optional(v.number()),
+    verdict: v.optional(v.string()), // "still_using" | "dropped" | "never_activated"
+  })
+    .index("by_user_story", ["userId", "storyId"])
+    .index("by_send_window", ["emailSentAt"]) // for scheduler to find pending
+    .index("by_story", ["storyId"]),
 });

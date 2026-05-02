@@ -53,6 +53,10 @@ const BookmarkButton = ({
   const addOrRemoveBookmarkMutation = useMutation(
     api.bookmarks.addOrRemoveBookmark,
   );
+  const trackEvent = useMutation(
+    // @ts-ignore
+    api.analytics.trackEvent
+  );
 
   const handleBookmarkClick = async () => {
     if (!isSignedIn) {
@@ -61,6 +65,7 @@ const BookmarkButton = ({
     }
     try {
       await addOrRemoveBookmarkMutation({ storyId });
+      trackEvent({ storyId, type: "conversion" }).catch(console.error);
     } catch (error) {
       console.error("Failed to update bookmark:", error);
       showMessage(
@@ -97,6 +102,49 @@ const BookmarkButton = ({
   );
 };
 
+const StoryCardWrapper = ({ storyId, story, children }: { storyId: Id<"stories">; story: Story; children: React.ReactNode }) => {
+  const signalSummary = useQuery(api.ideaSignals.getIdeaSignalSummary, { storyId });
+  const trackEvent = useMutation(
+    // @ts-ignore
+    api.analytics.trackEvent
+  );
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            trackEvent({ storyId, type: "impression" }).catch(() => {});
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, [storyId, trackEvent]);
+
+  const interestedCount = signalSummary?.counts?.interested || 0;
+  const showSignalCount = interestedCount > 5 && (story.currentStage === "building" || story.currentStage === "idea");
+
+  return (
+    <div ref={ref} className="h-full">
+      {children}
+      {showSignalCount && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          {interestedCount} interested
+        </div>
+      )}
+    </div>
+  );
+};
+
 export function StoryList({
   stories,
   viewMode,
@@ -111,6 +159,10 @@ export function StoryList({
   // Auth required dialog state
   const [showAuthDialog, setShowAuthDialog] = React.useState(false);
   const [authDialogAction, setAuthDialogAction] = React.useState("");
+  const trackEvent = useMutation(
+    // @ts-ignore
+    api.analytics.trackEvent
+  );
 
   const handleVote = (storyId: Id<"stories">) => {
     if (!isClerkLoaded) return;
@@ -121,7 +173,11 @@ export function StoryList({
       return;
     }
 
-    voteStory({ storyId });
+    voteStory({ storyId }).then((result) => {
+      if (result && (result as any).action === "voted") {
+        trackEvent({ storyId, type: "conversion" }).catch(console.error);
+      }
+    });
   };
 
   const containerClass =
@@ -174,8 +230,8 @@ export function StoryList({
           <div className="space-y-8">
             <div className={containerClass}>
               {stories.map((story) => (
+                <StoryCardWrapper key={story._id} storyId={story._id} story={story}>
                 <article
-                  key={story._id}
                   className={`flex ${viewMode === "grid" ? "flex-col bg-card rounded-lg p-4 border border-border" : viewMode === "vibe" ? "flex-col md:flex-row items-start" : "flex-row bg-card rounded-lg p-[4px] border border-border"} gap-4`}
                 >
                   {viewMode !== "grid" && (
@@ -295,9 +351,15 @@ export function StoryList({
                           >
                             {story.title}
                           </Link>
-                          {story.stage && (
+                          {story.isOpenSource && (
+                            <span className="flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                              Open Source
+                            </span>
+                          )}
+                          {story.currentStage && (
                             <div className="flex-shrink-0">
-                                <StageBadge stage={story.stage} betaOpenedAt={story.betaOpenedAt} />
+                                <StageBadge stage={story.currentStage} betaOpenedAt={story.betaOpenedAt} />
                             </div>
                           )}
                         </h2>
@@ -329,6 +391,16 @@ export function StoryList({
                         <p className="text-foreground text-[14px] leading-[20px] mb-2 line-clamp-3">
                           {story.description}
                         </p>
+                      )}
+
+                      {/* Waitlist CTA for building stage products */}
+                      {story.waitlistEnabled && (story.currentStage === "building" || !story.currentStage) && (
+                        <Link
+                          href={`/s/${story.slug}?tab=waitlist`}
+                          className="inline-block text-xs text-blue-600 dark:text-blue-400 hover:underline mb-2"
+                        >
+                          Join waitlist →
+                        </Link>
                       )}
 
                       {/* Tags */}
@@ -395,7 +467,7 @@ export function StoryList({
                               "Anonymous User"}
                           </span>
                         )}
-                        <span>{formatDate(story._creationTime)}</span>
+                        <span suppressHydrationWarning>{formatDate(story._creationTime)}</span>
 
                         {/* Comment count with quality dot */}
                         <Link
@@ -446,6 +518,7 @@ export function StoryList({
                     </div>
                   </div>
                 </article>
+                </StoryCardWrapper>
               ))}
             </div>
 

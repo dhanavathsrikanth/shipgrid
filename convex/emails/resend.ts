@@ -25,6 +25,7 @@ export const sendEmail = internalAction({
       v.literal("admin_user_report_notification"),
       v.literal("beta_launch"),
       v.literal("changelog_update"),
+      v.literal("waitlist_beta_launch"),
     ),
     userId: v.optional(v.id("users")),
     metadata: v.optional(v.any()),

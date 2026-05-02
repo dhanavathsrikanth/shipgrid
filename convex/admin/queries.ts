@@ -30,10 +30,11 @@ export const getAdminOverview = query({
     // Breakdown stories by stage
     const stories = await ctx.db.query("stories").collect();
     const stageBreakdown = {
-      building: stories.filter(s => s.stage === "building").length,
-      beta: stories.filter(s => s.stage === "beta").length,
-      live: stories.filter(s => s.stage === "live").length,
-      undefined: stories.filter(s => !s.stage).length,
+      idea: stories.filter(s => s.currentStage === "idea").length,
+      building: stories.filter(s => s.currentStage === "building").length,
+      beta: stories.filter(s => s.currentStage === "beta").length,
+      live: stories.filter(s => s.currentStage === "live").length,
+      undefined: stories.filter(s => !s.currentStage).length,
     };
 
     return {

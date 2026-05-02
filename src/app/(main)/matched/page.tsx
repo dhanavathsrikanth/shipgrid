@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 export default function MatchedPage() {
   const [matchedStories, setMatchedStories] = React.useState<any[] | undefined>(undefined);
-  const getMatches = useAction(api.icpMatch.getMatchedStoriesAction);
+  const getMatches = useAction(api.icpMatch.getMatchedStories);
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.getMyUserDocument, isAuthenticated ? {} : "skip");
 

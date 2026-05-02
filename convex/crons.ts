@@ -63,4 +63,12 @@ crons.cron(
   {},
 );
 
+// Check for 7-day verdict emails every 6 hours
+crons.interval(
+  "process-verdict-requests",
+  { hours: 6 },
+  internal.verdictLoop.processVerdictRequests,
+  {},
+);
+
 export default crons;

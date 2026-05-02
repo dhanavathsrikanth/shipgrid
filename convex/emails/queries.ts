@@ -105,6 +105,7 @@ export const insertEmailLog = internalMutation({
       v.literal("admin_user_report_notification"),
       v.literal("beta_launch"),
       v.literal("changelog_update"),
+      v.literal("waitlist_beta_launch"),
     ),
     recipientEmail: v.string(),
     status: v.union(

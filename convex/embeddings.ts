@@ -72,7 +72,7 @@ export const generateProductEmbedding = internalAction({
 
     const roles = story.icpRoles?.join(", ") || "Founders and Developers";
     const problem = story.icpProblem || story.description;
-    const stage = story.stage || "beta";
+    const stage = story.currentStage || "beta";
     const notFor = story.notFor ? ` It is explicitly NOT for ${story.notFor}.` : "";
     
     // Create a rich semantic description of the product and its Target Audience (ICP)

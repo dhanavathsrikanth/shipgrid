@@ -85,7 +85,7 @@ export function Comment({ comment, onReply, storyOwnerId }: CommentProps) {
         ) : null}
 
         <span>•</span>
-        <span>{formatDistanceToNow(comment._creationTime)} ago</span>
+        <span suppressHydrationWarning>{formatDistanceToNow(comment._creationTime)} ago</span>
       </div>
 
       {/* Comment content */}

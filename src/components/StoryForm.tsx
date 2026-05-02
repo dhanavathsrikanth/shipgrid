@@ -47,8 +47,13 @@ export function StoryForm() {
     icpProblem: "",
     icpBudget: "",
     notFor: "",
-    stage: "live" as "building" | "beta" | "live",
+    stage: "live" as "idea" | "building" | "beta" | "live",
+    isOpenSource: false,
   });
+
+  // Cascading ICP category/subcategory selection state
+  const [selectedIcpCategory, setSelectedIcpCategory] = React.useState<string>("");
+  const [selectedSubcategories, setSelectedSubcategories] = React.useState<string[]>([]);
 
   // Additional images state
   const [additionalImages, setAdditionalImages] = React.useState<File[]>([]);
@@ -155,7 +160,7 @@ export function StoryForm() {
 
     // ICP mandatory field validation
     if (formData.icpRoles.length === 0) {
-      setSubmitError("Please select at least one Target Role in the ICP section.");
+      setSubmitError("Please select at least one Target Subcategory in the ICP section.");
       return;
     }
     if (!formData.icpProblem) {
@@ -245,6 +250,7 @@ export function StoryForm() {
         icpBudget: formData.icpBudget || undefined,
         notFor: formData.notFor || undefined,
         stage: formData.stage,
+        isOpenSource: formData.isOpenSource,
         faqs:
           faqs.length > 0
             ? faqs.filter((f) => f.question.trim() && f.answer.trim())
@@ -929,12 +935,13 @@ export function StoryForm() {
               </label>
               <Select
                 value={formData.stage}
-                onValueChange={(v) => setFormData(prev => ({ ...prev, stage: v as "building" | "beta" | "live" }))}
+                onValueChange={(v) => setFormData(prev => ({ ...prev, stage: v as "idea" | "building" | "beta" | "live" }))}
               >
                 <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
                   <SelectValue placeholder="Select your project stage..." />
                 </SelectTrigger>
                 <SelectContent className="border shadow-md">
+                  <SelectItem value="idea" className="text-sm py-2">💡 Idea (Pre-build / Validation)</SelectItem>
                   <SelectItem value="building" className="text-sm py-2">🏗️ Just Building (Ideation / Dev)</SelectItem>
                   <SelectItem value="beta" className="text-sm py-2">🧪 Beta (Waitlist / Early Access)</SelectItem>
                   <SelectItem value="live" className="text-sm py-2">🚀 Live (Publicly Available)</SelectItem>
@@ -942,20 +949,77 @@ export function StoryForm() {
               </Select>
             </div>
 
-            {/* Target Roles — multi-select with checkboxes */}
-            <div className="space-y-1.5">
+            {/* Target Category & Subcategories — cascading selection */}
+            <div className="space-y-3">
               <label className="block text-sm font-medium text-foreground">
-                Target Roles <span className="text-destructive">*</span>
-                <span className="ml-1.5 text-xs font-normal text-muted-foreground">(Select all that apply)</span>
+                Product Category <span className="text-destructive">*</span>
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground">(Select a category, then subcategories)</span>
               </label>
-              <MultiSelect
-                options={icpOptions?.roles ?? []}
-                selected={formData.icpRoles}
-                onChange={(roles) => setFormData(prev => ({ ...prev, icpRoles: roles }))}
-                placeholder={icpOptions === undefined ? "Loading roles..." : "Select roles your product is built for..."}
-              />
+
+              {/* Category dropdown */}
+              <Select
+                value={selectedIcpCategory}
+                onValueChange={(v) => {
+                  setSelectedIcpCategory(v);
+                  setSelectedSubcategories([]);
+                }}
+              >
+                <SelectTrigger className="w-full h-10 px-3 text-sm border border-border bg-white rounded-md focus:ring-1 focus:ring-foreground">
+                  <SelectValue placeholder={icpOptions === undefined ? "Loading categories..." : "Select a product category..."} />
+                </SelectTrigger>
+                <SelectContent className="border shadow-md max-h-60 overflow-y-auto">
+                  {(icpOptions?.roleCategories ?? []).map(c => (
+                    <SelectItem key={c} value={c} className="text-sm py-2">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Subcategory multi-select */}
+              {selectedIcpCategory && (
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-muted-foreground">Subcategories</label>
+                  <MultiSelect
+                    options={icpOptions?.roleSubcategories[selectedIcpCategory] ?? []}
+                    selected={selectedSubcategories}
+                    onChange={setSelectedSubcategories}
+                    placeholder="Select subcategories..."
+                  />
+                  {selectedSubcategories.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newRoles = [...formData.icpRoles, ...selectedSubcategories];
+                        setFormData(prev => ({ ...prev, icpRoles: [...new Set(newRoles)] }));
+                        setSelectedSubcategories([]);
+                      }}
+                      className="mt-1 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                    >
+                      Add {selectedSubcategories.length} subcategory{selectedSubcategories.length === 1 ? "" : "s"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Selected subcategories chips */}
+              {formData.icpRoles.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {formData.icpRoles.map(role => (
+                    <span key={role} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-secondary text-secondary-foreground border border-border">
+                      {role}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, icpRoles: prev.icpRoles.filter(r => r !== role) }))}
+                        className="hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {formData.icpRoles.length === 0 && icpOptions !== undefined && (
-                <p className="text-xs text-destructive">Please select at least one role.</p>
+                <p className="text-xs text-destructive">Please select at least one subcategory.</p>
               )}
             </div>
 
@@ -1356,6 +1420,20 @@ export function StoryForm() {
             )}
             </div>
           </div>
+          {/* Open Source Toggle */}
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="isOpenSource"
+              checked={formData.isOpenSource}
+              onChange={(e) => setFormData(prev => ({ ...prev, isOpenSource: e.target.checked }))}
+              className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+            />
+            <label htmlFor="isOpenSource" className="text-sm text-foreground cursor-pointer select-none">
+              This is an open source project
+            </label>
+          </div>
+
           <div className="flex gap-4 items-center pt-4 border-t border-border">
             <button
               type="submit"

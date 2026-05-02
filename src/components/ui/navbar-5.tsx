@@ -487,7 +487,7 @@ function DropdownNotificationItem({ alert, onClose }: { alert: any; onClose: () 
               <span>Someone {getNotificationText()}</span>
             )}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
             {formatDistanceToNow(alert._creationTime, { addSuffix: true })}
           </p>
         </div>

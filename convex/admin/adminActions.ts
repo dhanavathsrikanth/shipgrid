@@ -101,7 +101,7 @@ export const adminUpdateStory = mutation({
       isArchived: v.optional(v.boolean()),
       customMessage: v.optional(v.string()),
       stage: v.optional(
-        v.union(v.literal("building"), v.literal("beta"), v.literal("live"))
+        v.union(v.literal("idea"), v.literal("building"), v.literal("beta"), v.literal("live"))
       ),
       rejectionReason: v.optional(v.string()),
     }),
@@ -113,7 +113,6 @@ export const adminUpdateStory = mutation({
 
     await ctx.db.patch(args.storyId, {
       ...args.updates,
-      updatedAt: Date.now(),
     });
     console.log(`[Admin] story ${args.storyId} was UPDATED by admin`);
   },
@@ -138,7 +137,6 @@ export const adminSetStoryStatus = mutation({
       status: args.status,
       isApproved: args.status === "approved",
       rejectionReason: args.rejectionReason,
-      updatedAt: Date.now(),
     });
   },
 });

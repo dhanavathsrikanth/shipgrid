@@ -167,17 +167,19 @@ export const getAdminOverview = query({
     ]);
 
     // Breakdown stories by stage using the new index
-    const [building, beta, live] = await Promise.all([
-      ctx.db.query("stories").withIndex("by_stage", q => q.eq("stage", "building")).collect().then(docs => docs.length),
-      ctx.db.query("stories").withIndex("by_stage", q => q.eq("stage", "beta")).collect().then(docs => docs.length),
-      ctx.db.query("stories").withIndex("by_stage", q => q.eq("stage", "live")).collect().then(docs => docs.length),
+    const [idea, building, beta, live] = await Promise.all([
+      ctx.db.query("stories").withIndex("by_stage", q => q.eq("currentStage", "idea")).collect().then(docs => docs.length),
+      ctx.db.query("stories").withIndex("by_stage", q => q.eq("currentStage", "building")).collect().then(docs => docs.length),
+      ctx.db.query("stories").withIndex("by_stage", q => q.eq("currentStage", "beta")).collect().then(docs => docs.length),
+      ctx.db.query("stories").withIndex("by_stage", q => q.eq("currentStage", "live")).collect().then(docs => docs.length),
     ]);
 
     const stageBreakdown = {
+      idea,
       building,
       beta,
       live,
-      undefined: totalStories - (building + beta + live),
+      undefined: totalStories - (idea + building + beta + live),
     };
 
     return {

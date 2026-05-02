@@ -92,14 +92,14 @@ export default function PersonalizeView() {
             </div>
 
             <div className="space-y-6">
-              {/* Multi-Role Selection */}
+              {/* Category Selection */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Professional Roles</Label>
+                <Label className="text-sm font-medium text-foreground">Interested Categories</Label>
                 <MultiSelect 
-                  options={options.roles}
+                  options={options.roleCategories}
                   selected={selectedRoles}
                   onChange={setSelectedRoles}
-                  placeholder="Identify your builder profile..."
+                  placeholder="Select categories you're interested in..."
                 />
               </div>
 

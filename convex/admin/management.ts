@@ -49,7 +49,7 @@ export const adminUpdateStory = mutation({
       isPinned: v.optional(v.boolean()),
       isArchived: v.optional(v.boolean()),
       customMessage: v.optional(v.string()),
-      stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+      stage: v.optional(v.union(v.literal("idea"), v.literal("building"), v.literal("beta"), v.literal("live"))),
       rejectionReason: v.optional(v.string()),
     }),
   },
@@ -60,7 +60,6 @@ export const adminUpdateStory = mutation({
     
     await ctx.db.patch(args.storyId, {
       ...args.updates,
-      updatedAt: Date.now(),
     });
     console.log(`[Admin] story ${args.storyId} was UPDATED by admin`);
   },
@@ -74,11 +73,10 @@ export const adminSetStoryStatus = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdminRole(ctx);
-    await ctx.db.patch(args.storyId, { 
+    await ctx.db.patch(args.storyId, {
       status: args.status,
       isApproved: args.status === "approved",
       rejectionReason: args.rejectionReason,
-      updatedAt: Date.now(),
     });
   },
 });

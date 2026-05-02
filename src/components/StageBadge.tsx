@@ -18,6 +18,10 @@ export function StageBadge({ stage, betaOpenedAt }: {
     return () => clearInterval(interval)
   }, [betaOpenedAt])
 
+  if (stage === 'idea') {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">💡 Idea</span>
+  }
+
   if (stage === 'building') {
     return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">🏗 Building</span>
   }
@@ -25,7 +29,7 @@ export function StageBadge({ stage, betaOpenedAt }: {
   if (stage === 'beta') {
     if (hoursLeft !== null && hoursLeft > 0) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200 shadow-[0_0_8px_rgba(168,85,247,0.4)] animate-pulse">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200 shadow-[0_0_8px_rgba(168,85,247,0.4)] animate-pulse" suppressHydrationWarning>
           ⚡ Beta · {Math.floor(hoursLeft)}h left
         </span>
       )

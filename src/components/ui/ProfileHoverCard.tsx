@@ -33,7 +33,7 @@ export function ProfileHoverCard({
   const [cardPosition, setCardPosition] = useState<"left" | "right">("left");
   const timeoutRef = useRef<NodeJS.Timeout>();
   const cardRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
 
   // Query user data for hover card - only run when hovering
   const userData = useQuery(
@@ -100,7 +100,7 @@ export function ProfileHoverCard({
   }
 
   return (
-    <div
+    <span
       ref={containerRef}
       className="relative inline-block"
       onMouseEnter={handleMouseEnter}
@@ -151,7 +151,7 @@ export function ProfileHoverCard({
               )}
               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                 <Calendar className="w-3 h-3" />
-                <span>
+                <span suppressHydrationWarning>
                   Joined{" "}
                   {formatDistanceToNow(userData._creationTime, {
                     addSuffix: true,
@@ -238,7 +238,7 @@ export function ProfileHoverCard({
           </div>
         </div>
       )}
-    </div>
+    </span>
   );
 }
 

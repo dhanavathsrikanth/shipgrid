@@ -52,6 +52,11 @@ export const baseStoryValidator = {
   customMessage: v.optional(v.string()),
   isApproved: v.optional(v.boolean()),
   email: v.optional(v.string()),
+  isOpenSource: v.optional(v.boolean()),
+  faqs: v.optional(v.array(v.object({
+    question: v.string(),
+    answer: v.string(),
+  }))),
   // Hackathon team info
   teamName: v.optional(v.string()),
   teamMemberCount: v.optional(v.number()),
@@ -69,7 +74,13 @@ export const baseStoryValidator = {
   icpBudget: v.optional(v.string()),
   notFor: v.optional(v.string()),
   stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+  currentStage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"), v.literal("idea"))),
   betaOpenedAt: v.optional(v.number()),
+  // Waitlist fields
+  waitlistEnabled: v.optional(v.boolean()),
+  waitlistCount: v.optional(v.number()),
+  icpMatchedWaitlistCount: v.optional(v.number()),
+  hasWaitlistPage: v.optional(v.boolean()),
   // Changelog tracking for user edits
   changeLog: v.optional(
     v.array(

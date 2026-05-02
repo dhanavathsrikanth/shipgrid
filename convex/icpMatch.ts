@@ -69,7 +69,7 @@ export const getMatchedStories = action({
         let precision = Math.min(Math.round(score * 100), 100);
         
         // Beta window bonus — only during the 72h window
-        if (story.stage === 'beta' && story.betaOpenedAt) {
+        if (story.currentStage === 'beta' && story.betaOpenedAt) {
           const hoursInBeta = (Date.now() - story.betaOpenedAt) / 3600000;
           if (hoursInBeta < 72) {
             precision += 15;
@@ -78,8 +78,10 @@ export const getMatchedStories = action({
 
         // Changelog recency bonus — only for Live products that posted recently
         // Do NOT apply this to Beta products — they already get the beta bonus
-        if (story.stage === 'live' && story.updatedAt) {
-          const hoursSinceUpdate = (Date.now() - story.updatedAt) / 3600000;
+        // Note: updatedAt field removed from schema, using changeLog presence instead
+        if (story.currentStage === 'live' && story.changeLog && story.changeLog.length > 0) {
+          const lastUpdate = story.changeLog[story.changeLog.length - 1].timestamp;
+          const hoursSinceUpdate = (Date.now() - lastUpdate) / 3600000;
           if (hoursSinceUpdate < 168) {      // within 7 days
             precision += 10;
           } else if (hoursSinceUpdate < 720) { // within 30 days

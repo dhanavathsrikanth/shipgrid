@@ -49,6 +49,27 @@ export const addOrRemoveBookmark = mutation({
         });
       }
 
+      // Create a verdict_request for 7-day follow-up
+      // Only for live and beta products — not building stage
+      if (story && (story.currentStage === "live" || story.currentStage === "beta")) {
+        // Check not already requested
+        const existingVerdict = await ctx.db
+          .query("verdict_requests")
+          .withIndex("by_user_story", (q) =>
+            q.eq("userId", user._id).eq("storyId", args.storyId)
+          )
+          .first();
+
+        if (!existingVerdict) {
+          await ctx.db.insert("verdict_requests", {
+            storyId: args.storyId,
+            userId: user._id,
+            bookmarkedAt: Date.now(),
+            // emailSentAt, responseAt, verdict are initially null
+          });
+        }
+      }
+
       return { success: true, action: "added" };
     }
   },

@@ -595,6 +595,11 @@ export const submitFormData = mutation({
       teamName: args.formData.teamName,
       teamMemberCount: args.formData.teamMemberCount,
       teamMembers: args.formData.teamMembers,
+      // Waitlist fields
+      waitlistEnabled: false,
+      waitlistCount: 0,
+      icpMatchedWaitlistCount: 0,
+      hasWaitlistPage: false,
     });
 
     // Log the submission

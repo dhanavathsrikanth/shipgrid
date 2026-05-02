@@ -283,3 +283,16 @@ export const isFollowingProduct = query({
     return !!existingFollow;
   }
 });
+
+export const getProductFollowers = query({
+  args: { storyId: v.id("stories") },
+  returns: v.array(v.id("users")),
+  handler: async (ctx, args) => {
+    const follows = await ctx.db
+      .query("product_follows")
+      .withIndex("by_story", (q) => q.eq("storyId", args.storyId))
+      .collect();
+
+    return follows.map((f) => f.userId);
+  }
+});
