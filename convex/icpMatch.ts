@@ -2,6 +2,46 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
+// Find products similar to a given story using its embedding
+export const getSimilarStories = action({
+  args: {
+    storyId: v.id("stories"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<any[]> => {
+    const limit = args.limit ?? 3;
+
+    // 1. Get this story's embedding
+    const storyEmbedding = await ctx.runQuery(
+      internal.embeddings.getProductEmbeddingByStory,
+      { storyId: args.storyId },
+    );
+    if (!storyEmbedding) return [];
+
+    // 2. Vector search — request more than we need since we'll filter out the source
+    const results = await ctx.vectorSearch("productEmbeddings", "by_embedding", {
+      vector: storyEmbedding.embedding,
+      limit: limit + 5,
+    });
+    if (results.length === 0) return [];
+
+    // 3. Resolve to story IDs (excluding the source story)
+    const storyIds = await ctx.runQuery(
+      internal.embeddings.resolveProductStoryIds,
+      { ids: results.map((r) => r._id) },
+    );
+    const otherStoryIds = storyIds.filter((id) => id !== args.storyId);
+
+    // 4. Fetch full story details
+    const stories = await ctx.runQuery(
+      internal.stories.getStoriesByIdsInternal,
+      { storyIds: otherStoryIds.slice(0, limit) },
+    );
+
+    return stories;
+  },
+});
+
 export const getMatchedStories = action({
   args: {},
   handler: async (ctx, args): Promise<any[]> => {

@@ -170,6 +170,7 @@ export default defineSchema({
     votes: v.number(),
     status: v.string(),
     isHidden: v.optional(v.boolean()),
+    isDeleted: v.optional(v.boolean()), // Soft delete by user
     // Quality signals — computed on insert, power Maker badge + comment ranking
     isMakerResponse: v.optional(v.boolean()),   // true when commenter is story owner
     wordCount: v.optional(v.number()),           // word depth signal
@@ -185,6 +186,15 @@ export default defineSchema({
       searchField: "content",
       filterFields: ["status", "isHidden"],
     }),
+
+  commentVotes: defineTable({
+    userId: v.id("users"),
+    commentId: v.id("comments"),
+    votedAt: v.optional(v.number()),
+  })
+    .index("by_user_comment", ["userId", "commentId"])
+    .index("by_comment", ["commentId"])
+    .index("by_user", ["userId"]),
 
   votes: defineTable({
     userId: v.id("users"),

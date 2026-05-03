@@ -30,7 +30,7 @@ export default function BrowsePage() {
 
   const followingStoriesQuery = usePaginatedQuery(
     api.stories.listFollowing,
-    {},
+    isSignedIn ? {} : "skip",
     { initialNumItems: (settings?.itemsPerPage || 20) }
   );
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
-import { StoryDetail } from "@/components/StoryDetail";
 import type { Story } from "@/types";
+import StoryDetailWrapper from "./StoryDetailWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -204,4 +204,3 @@ export default async function StoryPage({ params }: Props) {
 }
 
 // ─── Thin client wrapper — keeps the interactive parts hydrating correctly ───
-import StoryDetailWrapper from "./StoryDetailWrapper";

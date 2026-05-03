@@ -94,9 +94,9 @@ export function ImageGallery({
         <img
           src={currentImage}
           alt={altText}
+          loading="lazy"
           className="w-full h-auto max-h-[500px] object-contain rounded-lg border border-border cursor-pointer hover:opacity-90 transition-opacity"
           onClick={handleMainImageClick}
-          loading="lazy"
         />
       </div>
 
@@ -117,8 +117,8 @@ export function ImageGallery({
               <img
                 src={imageUrl}
                 alt={`${altText} thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
                 loading="lazy"
+                className="w-full h-full object-cover"
               />
             </button>
           ))}

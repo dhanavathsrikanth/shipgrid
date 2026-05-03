@@ -40,6 +40,36 @@ export const publishBuildLog = mutation({
       publishedAt: Date.now(),
     });
 
+    // Append a synthetic changelog entry so ICP match resurface bonus triggers
+    // and the story is treated as recently updated.
+    const changelogEntry = {
+      timestamp: Date.now(),
+      textChanges: [
+        {
+          field: "buildLog",
+          oldValue: "",
+          newValue: args.buildingNow.slice(0, 200),
+        },
+      ],
+    };
+    const existingChangeLog = (story as any).changeLog || [];
+    await ctx.db.patch(args.storyId, {
+      changeLog: [...existingChangeLog, changelogEntry],
+    });
+
+    // Notify followers / waitlist subscribers if the product is Live
+    if (story.currentStage === "live") {
+      try {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.emails.lifecycle.notifyChangelogUpdate,
+          { storyId: args.storyId }
+        );
+      } catch {
+        // Email module may not be wired in dev — non-fatal
+      }
+    }
+
     return logId;
   },
 });

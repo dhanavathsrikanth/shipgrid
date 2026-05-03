@@ -267,7 +267,11 @@ export const listApproved = query({
         builder = builder.eq("status", "approved").eq("isHidden", false);
         return builder;
       });
-      const stories = await query.collect();
+      const allStories = await query.collect();
+      // Hide idea/building products from public feed (only beta/live or legacy undefined)
+      const stories = allStories.filter(
+        (s) => !s.currentStage || s.currentStage === "beta" || s.currentStage === "live"
+      );
       const storiesWithDetails = await fetchTagsAndCountsForStories(
         ctx,
         stories,
@@ -286,7 +290,7 @@ export const listApproved = query({
       // For vote-based sorting with tagId, we need to collect all matching stories first
       if (args.tagId) {
         // Collect all stories matching the criteria
-        const allStories = await ctx.db
+        const allStoriesRaw = await ctx.db
           .query("stories")
           .withIndex("by_votes")
           .order("desc")
@@ -298,6 +302,10 @@ export const listApproved = query({
             ),
           )
           .collect();
+        // Hide idea/building products (only beta/live or legacy undefined)
+        const allStories = allStoriesRaw.filter(
+          (s) => !s.currentStage || s.currentStage === "beta" || s.currentStage === "live"
+        );
 
         // Filter by tagId before pagination
         const tagFilteredStories = allStories.filter((story) =>
@@ -334,6 +342,11 @@ export const listApproved = query({
               q.eq(q.field("status"), "approved"),
               q.neq(q.field("isHidden"), true),
               q.gte(q.field("_creationTime"), startTime),
+              q.or(
+                q.eq(q.field("currentStage"), undefined),
+                q.eq(q.field("currentStage"), "beta"),
+                q.eq(q.field("currentStage"), "live"),
+              ),
             ),
           )
           .paginate(args.paginationOpts);
@@ -358,6 +371,11 @@ export const listApproved = query({
             q.eq(q.field("status"), "approved"),
             q.neq(q.field("isHidden"), true),
             q.gte(q.field("_creationTime"), startTime),
+            q.or(
+              q.eq(q.field("currentStage"), undefined),
+              q.eq(q.field("currentStage"), "beta"),
+              q.eq(q.field("currentStage"), "live"),
+            ),
           ),
         );
       initialFilteredStories = await baseQuery.collect();
@@ -2546,6 +2564,56 @@ export const getRelatedStoriesByTags = query({
   },
 });
 
+// Query to list other approved products by a given user (for right-rail founder widget)
+export const listApprovedByUser = query({
+  args: {
+    userId: v.id("users"),
+    excludeStoryId: v.optional(v.id("stories")),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 4;
+    const stories = await ctx.db
+      .query("stories")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "approved"),
+          q.neq(q.field("isHidden"), true),
+          q.or(
+            q.eq(q.field("currentStage"), undefined),
+            q.eq(q.field("currentStage"), "beta"),
+            q.eq(q.field("currentStage"), "live"),
+          ),
+        ),
+      )
+      .collect();
+
+    const filtered = args.excludeStoryId
+      ? stories.filter((s) => s._id !== args.excludeStoryId)
+      : stories;
+
+    // Sort by creation time desc, take top N
+    filtered.sort((a, b) => b._creationTime - a._creationTime);
+    const topStories = filtered.slice(0, limit);
+
+    // Resolve screenshot URLs
+    return await Promise.all(
+      topStories.map(async (s) => ({
+        _id: s._id,
+        title: s.title,
+        slug: s.slug,
+        description: s.description,
+        votes: s.votes,
+        currentStage: s.currentStage,
+        screenshotUrl: s.screenshotId
+          ? await ctx.storage.getUrl(s.screenshotId)
+          : null,
+      })),
+    );
+  },
+});
+
 // Query to get count of approved stories for a specific tag
 export const getApprovedCountByTag = query({
   args: {
@@ -2950,7 +3018,7 @@ export const getAllApprovedInternal = internalQuery({
 
 
 
-// =========== Lufecycle Management ===========
+// =========== Lifecycle Management ===========
 export const moveToBeta = mutation({
   args: { storyId: v.id("stories") },
   handler: async (ctx, args) => {
@@ -2968,6 +3036,15 @@ export const moveToBeta = mutation({
     // 2. Prevent re-opening the beta window
     if (story.betaOpenedAt) {
       throw new Error("Beta window already used. You cannot re-open the beta window.");
+    }
+
+    // 3. Validate transition: must come from building (or idea, or legacy undefined)
+    const cur = story.currentStage;
+    if (cur === "live") {
+      throw new Error("Cannot move from Live back to Beta.");
+    }
+    if (cur === "beta") {
+      throw new Error("Story is already in Beta.");
     }
 
     await ctx.db.patch(args.storyId, {
@@ -3004,6 +3081,14 @@ export const moveToLive = mutation({
       throw new Error("User not authorized to edit this story. Only the owner can edit.");
     }
 
+    // 2. Validate transition: only beta or building can go to live
+    if (story.currentStage === "live") {
+      throw new Error("Story is already Live.");
+    }
+    if (story.currentStage === "idea") {
+      throw new Error("Cannot move directly from Idea to Live. Move to Building first, then Beta.");
+    }
+
     await ctx.db.patch(args.storyId, {
       currentStage: 'live',
     });
@@ -3030,6 +3115,16 @@ export const moveToBuilding = mutation({
     // 1. Verify the requesting user owns this story
     if (story.userId !== user._id) {
       throw new Error("User not authorized to edit this story. Only the owner can edit.");
+    }
+
+    // 2. Validate transition: only idea (or legacy undefined) can move to building
+    if (story.currentStage === "beta" || story.currentStage === "live") {
+      throw new Error(
+        "Cannot move backward from Beta/Live to Building. Stage transitions are forward-only."
+      );
+    }
+    if (story.currentStage === "building") {
+      throw new Error("Story is already in Building.");
     }
 
     await ctx.db.patch(args.storyId, {

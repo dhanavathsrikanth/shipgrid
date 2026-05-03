@@ -32,6 +32,7 @@ const commentWithAuthorValidator = v.object({
   votes: v.number(),
   status: v.string(),
   isHidden: v.optional(v.boolean()),
+  isDeleted: v.optional(v.boolean()),
   // Quality signals
   isMakerResponse: v.optional(v.boolean()),
   wordCount: v.optional(v.number()),
@@ -43,7 +44,10 @@ const commentWithAuthorValidator = v.object({
   authorUsername: v.union(v.string(), v.null()),
   authorRole: v.optional(v.union(v.string(), v.null())),
   authorBio: v.optional(v.union(v.string(), v.null())),
+  authorImageUrl: v.optional(v.union(v.string(), v.null())),
   authorIsVerified: v.optional(v.boolean()),
+  // Viewer-specific
+  hasVoted: v.boolean(),
 });
 
 // Query to list APPROVED comments for a specific story, now with author details
@@ -63,6 +67,37 @@ export const listApprovedByStory = query({
       .order("asc")
       .collect();
 
+    // Determine viewer to fetch their votes
+    let viewerId: Id<"users"> | null = null;
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (identity) {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+          .unique();
+        viewerId = user?._id ?? null;
+      }
+    } catch {
+      // anonymous viewer
+    }
+
+    const votedSet = new Set<string>();
+    if (viewerId) {
+      // Fetch user's votes for these comments
+      const myVotes = await Promise.all(
+        comments.map((c) =>
+          ctx.db
+            .query("commentVotes")
+            .withIndex("by_user_comment", (q) =>
+              q.eq("userId", viewerId!).eq("commentId", c._id),
+            )
+            .unique(),
+        ),
+      );
+      myVotes.forEach((v) => v && votedSet.add(v.commentId));
+    }
+
     const commentsWithAuthors = await Promise.all(
       comments.map(async (comment) => {
         const author = comment.userId ? await ctx.db.get(comment.userId) : null;
@@ -72,11 +107,68 @@ export const listApprovedByStory = query({
           authorUsername: (author?.username ?? null) as string | null,
           authorRole: (author?.role ?? null) as string | null | undefined,
           authorBio: (author?.bio ?? null) as string | null | undefined,
+          authorImageUrl: (author?.imageUrl ?? null) as string | null | undefined,
           authorIsVerified: author?.isVerified ?? undefined,
+          hasVoted: votedSet.has(comment._id),
         };
       }),
     );
     return commentsWithAuthors;
+  },
+});
+
+// Toggle upvote on a comment
+export const voteOnComment = mutation({
+  args: { commentId: v.id("comments") },
+  returns: v.object({
+    voted: v.boolean(),
+    votes: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    await ensureUserNotBanned(ctx);
+    const userId = await getAuthenticatedUserId(ctx);
+
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+
+    const existing = await ctx.db
+      .query("commentVotes")
+      .withIndex("by_user_comment", (q) =>
+        q.eq("userId", userId).eq("commentId", args.commentId),
+      )
+      .unique();
+
+    if (existing) {
+      // Remove vote
+      await ctx.db.delete(existing._id);
+      const newVotes = Math.max(0, (comment.votes ?? 0) - 1);
+      await ctx.db.patch(args.commentId, { votes: newVotes });
+      return { voted: false, votes: newVotes };
+    } else {
+      // Add vote
+      await ctx.db.insert("commentVotes", {
+        userId,
+        commentId: args.commentId,
+        votedAt: Date.now(),
+      });
+      const newVotes = (comment.votes ?? 0) + 1;
+      await ctx.db.patch(args.commentId, { votes: newVotes });
+
+      // Notify comment author (non-blocking, skip self-vote)
+      if (comment.userId && comment.userId !== userId) {
+        await ctx.scheduler.runAfter(0, internal.alerts.createAlert, {
+          recipientUserId: comment.userId,
+          actorUserId: userId,
+          type: "vote",
+          storyId: comment.storyId,
+          commentId: args.commentId,
+        });
+      }
+
+      return { voted: true, votes: newVotes };
+    }
   },
 });
 
@@ -490,7 +582,9 @@ export const deleteComment = mutation({
   },
 });
 
-// Mutation for a user to delete their own comment - Fixed: Reduced read operations
+// Mutation for a user to delete their own comment.
+// Uses soft-delete (sets isDeleted=true) so reply threads remain coherent.
+// If the comment has no replies, it is hard-deleted entirely.
 export const deleteOwnComment = mutation({
   args: { commentId: v.id("comments") },
   handler: async (ctx, args) => {
@@ -507,23 +601,25 @@ export const deleteOwnComment = mutation({
       );
     }
 
-    // Check for replies before deletion
+    // Check for replies
     const replies = await ctx.db
       .query("comments")
       .filter((q) => q.eq(q.field("parentId"), args.commentId))
       .collect();
-    
+
+    const story = await ctx.db.get(comment.storyId);
+
     if (replies.length > 0) {
-      // For now, allow deletion and replies will be orphaned
-      // Alternative: throw new Error("Cannot delete comment with replies");
+      // Soft-delete: preserve thread structure
+      await ctx.db.patch(args.commentId, {
+        isDeleted: true,
+        content: "",
+      });
+    } else {
+      // Hard-delete: no replies depend on this
+      await ctx.db.delete(args.commentId);
     }
 
-    // Get story for comment count update
-    const story = await ctx.db.get(comment.storyId);
-    
-    // Perform deletes
-    await ctx.db.delete(args.commentId);
-    
     // Update story comment count if story exists and comment was approved
     if (story && comment.status === "approved") {
       await ctx.db.patch(story._id, {

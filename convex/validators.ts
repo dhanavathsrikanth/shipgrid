@@ -73,7 +73,7 @@ export const baseStoryValidator = {
   icpProblem: v.optional(v.string()),
   icpBudget: v.optional(v.string()),
   notFor: v.optional(v.string()),
-  stage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"))),
+  stage: v.optional(v.union(v.literal("idea"), v.literal("building"), v.literal("beta"), v.literal("live"))),
   currentStage: v.optional(v.union(v.literal("building"), v.literal("beta"), v.literal("live"), v.literal("idea"))),
   betaOpenedAt: v.optional(v.number()),
   // Waitlist fields

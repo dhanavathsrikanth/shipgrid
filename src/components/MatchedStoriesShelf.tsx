@@ -4,6 +4,7 @@ import React from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
+import Image from "next/image";
 import { Sparkles, ChevronRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -90,9 +91,12 @@ export function MatchedStoriesShelf() {
                 {/* Image Background */}
                 <div className="absolute inset-0 z-0">
                   {story.screenshotUrl ? (
-                    <img 
-                      src={story.screenshotUrl} 
+                    <Image
+                      src={story.screenshotUrl}
                       alt={story.title}
+                      width={280}
+                      height={200}
+                      sizes="280px"
                       className="w-full h-full object-cover opacity-40 group-hover/card:scale-105 transition-transform duration-500"
                     />
                   ) : (

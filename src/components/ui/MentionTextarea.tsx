@@ -162,7 +162,7 @@ export function MentionTextarea({
         rows={rows}
         disabled={disabled}
         required={required}
-        className={`w-full px-3 py-2 bg-white rounded-md text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground border border-border disabled:opacity-50 disabled:bg-gray-100 ${className}`}
+        className={`w-full px-3 py-2 bg-background rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring border border-border disabled:opacity-50 disabled:bg-muted ${className}`}
       />
 
       {/* Suggestions dropdown */}

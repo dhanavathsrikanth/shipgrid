@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { Id } from "../../convex/_generated/dataModel"
+import { copyToClipboard } from "@/lib/clipboard"
 
 interface WaitlistWidgetProps {
   storyId: Id<"stories">
@@ -100,11 +101,13 @@ export function WaitlistWidget({
     }
   }
 
-  const copyReferral = () => {
+  const copyReferral = async () => {
     const url = `${window.location.origin}/products/${storyId}?ref=${referralCode}`
-    navigator.clipboard.writeText(url)
-    setCopyDone(true)
-    setTimeout(() => setCopyDone(false), 2000)
+    const ok = await copyToClipboard(url)
+    if (ok) {
+      setCopyDone(true)
+      setTimeout(() => setCopyDone(false), 2000)
+    }
   }
 
   const MILESTONE_LABELS = ["1 referral — skip 20 spots", "3 referrals — skip 60 spots", "5 referrals — early access", "10 referrals — 3 months free"]

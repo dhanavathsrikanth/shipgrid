@@ -9,6 +9,7 @@ import { BuildLogForm } from "./BuildLogForm"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { Users, TrendingUp, ExternalLink, AlertCircle, Copy, Check } from "lucide-react"
+import { copyToClipboard } from "@/lib/clipboard"
 
 interface StageControlsProps {
   storyId: Id<"stories">
@@ -37,8 +38,10 @@ export function StageControls({
 
   const moveToBeta = useMutation(api.stories.moveToBeta)
   const moveToLive = useMutation(api.stories.moveToLive)
+  const moveToBuilding = useMutation(api.stories.moveToBuilding)
   const enableWaitlist = useMutation(api.waitlist.enableWaitlist)
   const [enablingWaitlist, setEnablingWaitlist] = useState(false)
+  const [movingToBuilding, setMovingToBuilding] = useState(false)
 
   // Fetch followers count
   const followers = useQuery(api.follows.getProductFollowers, { storyId })
@@ -50,17 +53,15 @@ export function StageControls({
   const betaWindowClosed = betaOpenedAt && betaWindowHoursLeft <= 0
 
   const handleLaunchBeta = async () => {
-    if (!waitlistEnabled) {
-      if (!confirm("Tip: Enable your waitlist to collect ICP-declared signups before beta. You can still launch without it. Continue?")) {
-        return
-      }
-    }
     setLaunching(true)
     try {
       await moveToBeta({ storyId })
       toast.success("Beta launched! Your 72h window is now open.")
+      if (!waitlistEnabled) {
+        toast.warning("Tip: Enable your waitlist to collect ICP-declared signups.")
+      }
     } catch (e: any) {
-      alert(e.message ?? "Failed to launch beta")
+      toast.error(e.message ?? "Failed to launch beta")
     } finally {
       setLaunching(false)
     }
@@ -72,9 +73,21 @@ export function StageControls({
       await moveToLive({ storyId })
       toast.success("Product is now live! It will be permanently indexed.")
     } catch (e: any) {
-      alert(e.message ?? "Failed to move to live")
+      toast.error(e.message ?? "Failed to move to live")
     } finally {
       setMovingToLive(false)
+    }
+  }
+
+  const handleMoveToBuilding = async () => {
+    setMovingToBuilding(true)
+    try {
+      await moveToBuilding({ storyId })
+      toast.success("Moved to Building. Start posting build logs!")
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to move to Building")
+    } finally {
+      setMovingToBuilding(false)
     }
   }
 
@@ -85,18 +98,22 @@ export function StageControls({
       toast.success("Waitlist enabled! Share your waitlist URL to collect signups.")
     } catch (e: any) {
       console.error("[EnableWaitlist] Error:", e)
-      alert(e.message ?? "Failed to enable waitlist")
+      toast.error(e.message ?? "Failed to enable waitlist")
     } finally {
       setEnablingWaitlist(false)
     }
   }
 
-  const handleCopyWaitlistUrl = () => {
+  const handleCopyWaitlistUrl = async () => {
     if (typeof window !== "undefined" && storySlug) {
       const url = `${window.location.origin}/s/${storySlug}?tab=waitlist`
-      navigator.clipboard.writeText(url)
-      setCopiedUrl(true)
-      setTimeout(() => setCopiedUrl(false), 2000)
+      const ok = await copyToClipboard(url)
+      if (ok) {
+        setCopiedUrl(true)
+        setTimeout(() => setCopiedUrl(false), 2000)
+      } else {
+        toast.error("Could not copy to clipboard")
+      }
     }
   }
 
@@ -161,6 +178,13 @@ export function StageControls({
                 {enablingWaitlist ? "Enabling..." : "Enable Waitlist"}
               </button>
             )}
+            <button
+              onClick={handleMoveToBuilding}
+              disabled={movingToBuilding}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 transition-colors"
+            >
+              {movingToBuilding ? "Moving..." : "Start Building"}
+            </button>
           </div>
 
           {/* Warning */}
@@ -241,9 +265,23 @@ export function StageControls({
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <TrendingUp className="w-4 h-4" />
-              <span>ICP-matched views: Coming soon</span>
+              <span>
+                {betaWindowClosed
+                  ? "Beta window has closed — move to Live to keep visibility"
+                  : `Beta window: ~${Math.ceil(betaWindowHoursLeft)}h remaining`}
+              </span>
             </div>
           </div>
+
+          {/* Closed-window warning */}
+          {betaWindowClosed && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-red-800 dark:text-red-300">
+                Your 72h beta window has expired. The ICP boost has stopped — move to Live now to be permanently indexed.
+              </p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
@@ -253,15 +291,17 @@ export function StageControls({
             >
               {showBuildForm ? "Hide Changelog Form" : "Post Changelog"}
             </button>
-            {!betaWindowClosed && (
-              <button
-                onClick={handleMoveToLive}
-                disabled={movingToLive}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 transition-colors"
-              >
-                {movingToLive ? "Moving..." : "Mark as Live"}
-              </button>
-            )}
+            <button
+              onClick={handleMoveToLive}
+              disabled={movingToLive}
+              className={`px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors ${
+                betaWindowClosed
+                  ? "bg-red-500 hover:bg-red-600 animate-pulse"
+                  : "bg-green-500 hover:bg-green-600"
+              }`}
+            >
+              {movingToLive ? "Moving..." : "Mark as Live"}
+            </button>
           </div>
 
           {/* Inline Build Form */}

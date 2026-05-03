@@ -103,7 +103,7 @@ export function CommentForm({ onSubmit, parentId }: CommentFormProps) {
         <button
           type="submit"
           disabled={!canSubmit || !content.trim() || !isContentValid}
-          className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-muted"
+          className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title={
             !canSubmit
               ? "Sign in to comment"

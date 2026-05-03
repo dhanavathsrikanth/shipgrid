@@ -1,28 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"); 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-400-normal.woff2') format('woff2');
-  font-weight: 400;
-}
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-500-normal.woff2') format('woff2');
-  font-weight: 500;
-}
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-700-normal.woff2') format('woff2');
-  font-weight: 700;
-}
+/* Geist is now self-hosted via the `geist` npm package + next/font (see app/layout.tsx).
+   It exposes its font-family through the --font-geist-sans CSS variable. */
 
 @layer base {
   html {
-    font-family: "Geist", "Suisse", system-ui, sans-serif;
+    font-family: var(--font-geist-sans), "Suisse", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -64,8 +49,8 @@
     --radius: 6px;
   }
 
-  h1 { @apply tracking-tight; font-size: 64px; font-family: "Geist", "Suisse", system-ui; }
-  h2 { font-size: 13px; font-family: "Geist", "Suisse", system-ui; }
+  h1 { @apply tracking-tight; font-size: 64px; font-family: var(--font-geist-sans), "Suisse", system-ui; }
+  h2 { font-size: 13px; font-family: var(--font-geist-sans), "Suisse", system-ui; }
 }
 
 .cl-cardBox,
@@ -76,7 +61,7 @@
 }
 
 .title-font {
-  font-family: "Geist", "Suisse", system-ui, sans-serif;
+  font-family: var(--font-geist-sans), "Suisse", system-ui, sans-serif;
   font-weight: 500;
 }
 

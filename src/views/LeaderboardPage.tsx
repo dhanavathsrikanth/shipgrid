@@ -21,6 +21,7 @@ export function LeaderboardPage() {
 
   const topStories = useQuery(api.stories.listApproved, {
     sortPeriod: `votes_${activeTab}` as any,
+    paginationOpts: { numItems: 25, cursor: null },
   });
 
   const stories = topStories?.page?.slice(0, 25) ?? [];

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, Alfa_Slab_One } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import ClientToaster from "@/components/ClientToaster";
 import "@/index.css";
 
 const inter = Inter({
@@ -114,13 +116,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://stijndv.com" />
-        <link
-          rel="stylesheet"
-          href="https://stijndv.com/fonts/Eudoxus-Sans.css"
-        />
+        <link rel="dns-prefetch" href="https://app.rybbit.io" />
       </head>
-      <body className={`${inter.variable} ${alfaSlabOne.variable}`}>
+      <body
+        className={`${GeistSans.variable} ${inter.variable} ${alfaSlabOne.variable}`}
+        suppressHydrationWarning
+      >
         {/* Global Structured Data for Google Knowledge Graph + AI Engines */}
         <script
           type="application/ld+json"
@@ -140,10 +141,12 @@ export default function RootLayout({
             {children}
           </ConvexClientProvider>
         </ClerkProvider>
+        <ClientToaster />
         <Script
           src="https://app.rybbit.io/api/script.js"
           data-site-id="656"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
+          defer
         />
       </body>
     </html>

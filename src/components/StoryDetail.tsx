@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronUp,
-  MessageSquare,
   Star,
   Linkedin,
   Twitter,
@@ -17,6 +16,23 @@ import {
   Play,
   Edit3,
   Users,
+  ArrowLeft,
+  X,
+  Globe,
+  ExternalLink,
+  Tag,
+  Mail,
+  MessageCircle,
+  MessageSquare,
+  History,
+  Rocket,
+  ChevronRight,
+  RefreshCw,
+  FileText,
+  ImageIcon,
+  Plus,
+  Minus,
+  Layers,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useQuery, useMutation } from "convex/react"; // Import Convex hooks
@@ -43,7 +59,7 @@ import { Markdown } from "./Markdown";
 import { useDialog } from "../hooks/useDialog";
 import { StageBadge } from "./StageBadge";
 import { FollowButton } from "./FollowButton";
-import { BarChart2, ExternalLink } from "lucide-react";
+import { BarChart2 } from "lucide-react";
 import { StoryAnalyticsDashboard } from "./StoryAnalyticsDashboard";
 import { WaitlistWidget } from "./WaitlistWidget";
 import { WaitlistDemandDisplay } from "./WaitlistDemandDisplay";
@@ -54,6 +70,7 @@ import { BetaFeedbackSummary } from "./BetaFeedbackSummary";
 import { WaitlistFounderAnalytics } from "./WaitlistFounderAnalytics";
 import { IdeaSignalButtons } from "./IdeaSignalButtons";
 import { StageControls } from "./StageControls";
+import { StoryRightRail } from "./StoryRightRail";
 
 // Removed MOCK_COMMENTS
 
@@ -446,7 +463,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
       });
   };
 
-  const handleCommentSubmit = (content: string) => {
+  const handleCommentSubmit = (
+    content: string,
+    parentIdOverride?: Id<"comments">,
+  ) => {
     if (!isClerkLoaded) return;
     if (!isSignedIn) {
       setAuthDialogAction("comment");
@@ -456,7 +476,7 @@ export function StoryDetail({ story }: StoryDetailProps) {
     addComment({
       storyId: story._id,
       content,
-      parentId: replyToId || undefined,
+      parentId: parentIdOverride ?? replyToId ?? undefined,
     });
     setReplyToId(null);
   };
@@ -980,15 +1000,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h1 className="text-xl lg:text-1xl font-bold text-transform: capitalize text-foreground">
-                    <a
-                      href={story.url}
-                      className="hover:text-muted-foreground break-words"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {story.title}
-                    </a>
+                  <h1 className="text-xl lg:text-2xl font-bold capitalize text-foreground break-words">
+                    {story.title}
                   </h1>
                   {story.isOpenSource && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
@@ -1246,6 +1259,243 @@ export function StoryDetail({ story }: StoryDetailProps) {
               />
             </div>
           )}
+
+          {/* Video demo start */}
+          {story.videoUrl && story.videoUrl.trim() && (
+            <div className="mt-8 bg-card rounded-lg p-6 border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <h3 className="text-lg font-medium text-muted-foreground">Video Demo</h3>
+                <a
+                  href={story.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline ml-auto"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+              <div className="w-full">
+                {(() => {
+                  const url = story.videoUrl.trim();
+
+                  // YouTube URL patterns (including Shorts)
+                  const youtubeMatch = url.match(
+                    /(?:youtube\.com\/(?:shorts\/|[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+                  );
+                  if (youtubeMatch) {
+                    const videoId = youtubeMatch[1];
+                    return (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        className="w-full aspect-video rounded-md"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Vimeo URL patterns
+                  const vimeoMatch = url.match(/(?:vimeo\.com\/)(?:.*\/)?(\d+)/);
+                  if (vimeoMatch) {
+                    const videoId = vimeoMatch[1];
+                    return (
+                      <iframe
+                        src={`https://player.vimeo.com/video/${videoId}`}
+                        className="w-full aspect-video rounded-md"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Loom URL patterns
+                  const loomMatch = url.match(/(?:loom\.com\/share\/)([a-f0-9-]+)/);
+                  if (loomMatch) {
+                    const videoId = loomMatch[1];
+                    return (
+                      <iframe
+                        src={`https://www.loom.com/embed/${videoId}`}
+                        className="w-full aspect-video rounded-md"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Google Drive URL patterns
+                  const driveMatch = url.match(
+                    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+                  );
+                  if (driveMatch) {
+                    const fileId = driveMatch[1];
+                    return (
+                      <iframe
+                        src={`https://drive.google.com/file/d/${fileId}/preview`}
+                        className="w-full aspect-video rounded-md"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        title="Video Demo"
+                      />
+                    );
+                  }
+
+                  // Check if it's a direct video file
+                  const videoExtensions = /\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i;
+                  if (videoExtensions.test(url)) {
+                    return (
+                      <video
+                        src={url}
+                        className="w-full aspect-video rounded-md bg-black"
+                        controls
+                        preload="metadata"
+                        title="Video Demo"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    );
+                  }
+
+                  // Fallback for other URLs - show as link in a styled box
+                  return (
+                    <div className="w-full aspect-video rounded-md border-2 border-dashed border-border flex items-center justify-center bg-muted">
+                      <div className="text-center">
+                        <Play className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-muted-foreground mb-2">Video not embeddable</p>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground hover:text-muted-foreground underline"
+                        >
+                          Watch Video <ExternalLink className="w-3 h-3 inline" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+          {/* Video demo end */}
+
+          {/* Team Info Section */}
+          {!isEditing && story.teamName && (
+            <div className="mt-8 bg-card rounded-lg p-6 border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-lg font-medium text-muted-foreground">Team Info</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Team Name
+                  </h3>
+                  <p className="text-foreground">{story.teamName}</p>
+                </div>
+
+                {story.teamMemberCount && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      Team Size
+                    </h3>
+                    <p className="text-foreground">
+                      {story.teamMemberCount}{" "}
+                      {story.teamMemberCount === 1 ? "member" : "members"}
+                    </p>
+                  </div>
+                )}
+
+                {story.teamMembers && story.teamMembers.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Team Members
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {story.teamMembers.map(
+                        (
+                          member: { name: string; email: string },
+                          index: number,
+                        ) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md border border-border"
+                          >
+                            {member.name && (
+                              <p className="font-medium text-foreground text-sm">
+                                {member.name}
+                              </p>
+                            )}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Rating Section */}
+          {!isEditing && (
+            <div className="mt-8 bg-card rounded-lg p-6 border border-border">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                <h2 className="text-lg font-medium text-muted-foreground">
+                  {hasRated ? "Your Rating" : "Rate this app"}
+                </h2>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => handleRating(value)}
+                      onMouseEnter={() => !hasRated && setHoveredRating(value)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      disabled={!isClerkLoaded || (isSignedIn && hasRated)}
+                      className={`p-1 transition-colors disabled:cursor-not-allowed ${
+                        !isSignedIn && isClerkLoaded ? "opacity-50 cursor-help" : ""
+                      } ${
+                        hasRated
+                          ? value <= (currentUserRating || 0)
+                            ? "text-yellow-500"
+                            : "text-muted"
+                          : value <= (hoveredRating || 0)
+                            ? "text-yellow-400"
+                            : "text-muted hover:text-yellow-400"
+                      }`}
+                      title={
+                        !isSignedIn && isClerkLoaded
+                          ? "Sign in to rate"
+                          : hasRated
+                            ? `You rated ${currentUserRating} star(s)`
+                            : `Rate ${value} stars`
+                      }
+                    >
+                      <Star className="w-5 h-5 fill-current" />
+                    </button>
+                  ))}
+                </div>
+                {story.ratingCount > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {averageRating.toFixed(1)} stars ({story.ratingCount}
+                    {story.ratingCount === 1 ? " rating" : " ratings"})
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your rating helps others discover great apps.
+              </p>
+            </div>
+          )}
+
         </div>
 
         {/* Project Links & Tags Sidebar */}
@@ -1257,56 +1507,87 @@ export function StoryDetail({ story }: StoryDetailProps) {
           ) ||
           story.tags?.length > 0) && (
           <div className="w-80 flex-shrink-0 hidden lg:block self-start">
-            <div className="bg-muted rounded-lg p-4 border border-border sticky top-8">
-              <h2 className="text-base font-medium text-muted-foreground mb-3">
-                Project Links & Tags
-              </h2>
-              <div className="space-y-2">
+            <div className="bg-card rounded-xl p-5 border border-border shadow-sm sticky top-8">
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                  <Link2 className="w-4 h-4 text-primary" />
+                </div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Links & Resources
+                </h2>
+              </div>
+
+              {/* Links Section */}
+              <div className="space-y-1">
                 {story.url && (
-                  <div className="flex items-center gap-2">
-                    <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <a
-                      href={injectUtm(story.url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => handleOutboundClick("click")}
-                      className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                      title={story.url}
-                    >
-                      {story.url}
-                    </a>
-                  </div>
+                  <a
+                    href={injectUtm(story.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => handleOutboundClick("click")}
+                    className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
+                    title={story.url}
+                  >
+                    <div className="p-1.5 bg-blue-500/10 rounded-md group-hover:bg-blue-500/20 transition-colors">
+                      <Globe className="w-3.5 h-3.5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-foreground block truncate">
+                        Website
+                      </span>
+                      <span className="text-xs text-muted-foreground block truncate">
+                        {new URL(story.url).hostname.replace(/^www\./, '')}
+                      </span>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
                 )}
 
                 {story.videoUrl && story.videoUrl.trim() && (
-                  <div className="flex items-center gap-2">
-                    <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <a
-                      href={story.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                      title={story.videoUrl}
-                    >
-                      Video Demo
-                    </a>
-                  </div>
+                  <a
+                    href={story.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
+                    title={story.videoUrl}
+                  >
+                    <div className="p-1.5 bg-red-500/10 rounded-md group-hover:bg-red-500/20 transition-colors">
+                      <Play className="w-3.5 h-3.5 text-red-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-foreground block truncate">
+                        Video Demo
+                      </span>
+                      <span className="text-xs text-muted-foreground block truncate">
+                        Watch preview
+                      </span>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
                 )}
 
-                {/* GitHub Link - Always shown if available */}
                 {story.githubUrl && story.githubUrl.trim() && (
-                  <div className="flex items-center gap-2">
-                    <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <a
-                      href={story.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                      title={story.githubUrl}
-                    >
-                      GitHub Repository
-                    </a>
-                  </div>
+                  <a
+                    href={story.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
+                    title={story.githubUrl}
+                  >
+                    <div className="p-1.5 bg-purple-500/10 rounded-md group-hover:bg-purple-500/20 transition-colors">
+                      <Github className="w-3.5 h-3.5 text-purple-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-foreground block truncate">
+                        Source Code
+                      </span>
+                      <span className="text-xs text-muted-foreground block truncate">
+                        GitHub Repository
+                      </span>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
                 )}
 
                 {/* Dynamic Form Fields */}
@@ -1316,92 +1597,92 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     const fieldValue = (story as any)[field.storyPropertyName];
                     if (!fieldValue) return null;
 
-                    // Get appropriate icon based on field key or type
-                    const getIcon = () => {
-                      if (field.key.toLowerCase().includes("github")) {
-                        return (
-                          <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        );
-                      } else if (field.key.toLowerCase().includes("linkedin")) {
-                        return (
-                          <Linkedin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        );
-                      } else if (
-                        field.key.toLowerCase().includes("twitter") ||
-                        field.key.toLowerCase().includes("x")
-                      ) {
-                        return (
-                          <Twitter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        );
-                      } else if (field.key.toLowerCase().includes("chef")) {
-                        return (
-                          <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                            ≡ƒì▓
-                          </span>
-                        );
-                      } else if (field.fieldType === "url") {
-                        return (
-                          <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        );
+                    const getIconAndColor = () => {
+                      const key = field.key.toLowerCase();
+                      if (key.includes("github")) {
+                        return { icon: Github, color: "purple", label: "GitHub" };
+                      } else if (key.includes("linkedin")) {
+                        return { icon: Linkedin, color: "blue", label: "LinkedIn" };
+                      } else if (key.includes("twitter") || key.includes("x")) {
+                        return { icon: Twitter, color: "sky", label: "Twitter" };
+                      } else if (key.includes("discord")) {
+                        return { icon: MessageCircle, color: "indigo", label: "Discord" };
+                      } else if (key.includes("slack")) {
+                        return { icon: MessageSquare, color: "orange", label: "Slack" };
                       } else if (field.fieldType === "email") {
-                        return (
-                          <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                            Γ£ë∩╕Å
-                          </span>
-                        );
+                        return { icon: Mail, color: "green", label: "Email" };
+                      } else if (field.fieldType === "url") {
+                        return { icon: Link2, color: "blue", label: "Link" };
                       } else {
-                        return (
-                          <span className="w-4 h-4 text-muted-foreground flex-shrink-0">
-                            ≡ƒöù
-                          </span>
-                        );
+                        return { icon: Link2, color: "gray", label: "Link" };
                       }
                     };
 
-                    // Get display label
-                    const getDisplayLabel = () => {
-                      // Remove "(Optional)" and other common suffixes for cleaner display
-                      return field.label
-                        .replace(/\s*\(Optional\).*$/i, "")
-                        .trim();
+                    const { icon: Icon, color, label } = getIconAndColor();
+                    const colorClasses: Record<string, string> = {
+                      blue: "bg-blue-500/10 text-blue-500 group-hover:bg-blue-500/20",
+                      purple: "bg-purple-500/10 text-purple-500 group-hover:bg-purple-500/20",
+                      sky: "bg-sky-500/10 text-sky-500 group-hover:bg-sky-500/20",
+                      indigo: "bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-500/20",
+                      orange: "bg-orange-500/10 text-orange-500 group-hover:bg-orange-500/20",
+                      green: "bg-green-500/10 text-green-500 group-hover:bg-green-500/20",
+                      gray: "bg-gray-500/10 text-gray-500 group-hover:bg-gray-500/20",
                     };
 
-                    return (
-                      <div key={field._id} className="flex items-center gap-2">
-                        {getIcon()}
-                        {field.fieldType === "url" ? (
-                          <a
-                            href={fieldValue}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                            title={fieldValue}
-                          >
-                            {getDisplayLabel()}
-                          </a>
-                        ) : field.fieldType === "email" ? (
-                          <a
-                            href={`mailto:${fieldValue}`}
-                            className="text-sm text-muted-foreground hover:text-foreground hover:underline truncate"
-                            title={fieldValue}
-                          >
-                            {getDisplayLabel()}
-                          </a>
-                        ) : (
-                          <span
-                            className="text-sm text-muted-foreground truncate"
-                            title={fieldValue}
-                          >
-                            {getDisplayLabel()}: {fieldValue}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
+                    const displayLabel = field.label
+                      .replace(/\s*\(Optional\).*$/i, "")
+                      .trim();
 
-                {/* Tags */}
-                {story.tags && story.tags.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap pt-2 border-t border-[#E5E5E5] mt-3">
+                    return field.fieldType === "url" ? (
+                      <a
+                        key={field._id}
+                        href={fieldValue}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
+                        title={fieldValue}
+                      >
+                        <div className={`p-1.5 rounded-md transition-colors ${colorClasses[color]}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-foreground block truncate">
+                            {displayLabel}
+                          </span>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                    ) : field.fieldType === "email" ? (
+                      <a
+                        key={field._id}
+                        href={`mailto:${fieldValue}`}
+                        className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
+                        title={fieldValue}
+                      >
+                        <div className={`p-1.5 rounded-md transition-colors ${colorClasses[color]}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-foreground block truncate">
+                            {displayLabel}
+                          </span>
+                        </div>
+                      </a>
+                    ) : null;
+                  })}
+              </div>
+
+              {/* Tags Section */}
+              {story.tags && story.tags.length > 0 && (
+                <>
+                  <div className="my-4 border-t border-border" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1.5 bg-primary/10 rounded-lg">
+                      <Tag className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">Tags</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
                     {(story.tags || []).map(
                       (tag: Doc<"tags">) =>
                         !tag.isHidden &&
@@ -1410,22 +1691,20 @@ export function StoryDetail({ story }: StoryDetailProps) {
                           <Link
                             key={tag._id}
                             href={`/tag/${tag.slug}`}
-                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-opacity hover:opacity-80"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:scale-105"
                             style={{
                               backgroundColor: tag.backgroundColor || "hsl(var(--muted))",
                               color: tag.textColor || "hsl(var(--muted-foreground))",
-                              border: `1px solid ${tag.borderColor || (tag.backgroundColor ? "transparent" : "hsl(var(--border))")}`,
+                              border: `1px solid ${tag.borderColor || "transparent"}`,
                             }}
                             title={`View all apps tagged with ${tag.name}`}
                           >
-                            {tag.emoji && (
-                              <span className="mr-1">{tag.emoji}</span>
-                            )}
+                            {tag.emoji && <span>{tag.emoji}</span>}
                             {tag.iconUrl && !tag.emoji && (
                               <img
                                 src={tag.iconUrl}
                                 alt=""
-                                className="w-3 h-3 mr-1 rounded-sm object-cover"
+                                className="w-3 h-3 rounded-sm object-cover"
                               />
                             )}
                             {tag.name}
@@ -1433,8 +1712,8 @@ export function StoryDetail({ story }: StoryDetailProps) {
                         ),
                     )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
             {/* Changelog Link */}
             <div className="mt-4 pt-3 border-t border-border">
@@ -1462,8 +1741,22 @@ export function StoryDetail({ story }: StoryDetailProps) {
               href="/"
               className="text-muted-foreground hover:text-foreground inline-block mb-6 text-sm mt-[1.5625rem]"
             >
-              ΓåÉ Back to Apps List
+              <ArrowLeft className="inline w-4 h-4 mr-1" /> Back to Apps List
             </Link>
+
+            {/* Additional right-rail widgets (scroll with main content) */}
+            {story.userId && (
+              <div className="mt-6">
+                <StoryRightRail
+                  storyId={story._id}
+                  storyUserId={story.userId}
+                  votes={story.votes}
+                  waitlistCount={story.waitlistCount}
+                  waitlistEnabled={story.waitlistEnabled}
+                  productName={story.title}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1531,10 +1824,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                         type="button"
                         onClick={() => removeExistingAdditionalImage(index)}
                         disabled={isSubmitting}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 disabled:opacity-50"
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 disabled:opacity-50 shadow-md"
                         title="Remove image"
+                        aria-label="Remove image"
                       >
-                        ├ù
+                        <X className="w-3.5 h-3.5" strokeWidth={3} />
                       </button>
                     </div>
                   ),
@@ -1550,10 +1844,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       type="button"
                       onClick={() => removeNewAdditionalImage(index)}
                       disabled={isSubmitting}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 disabled:opacity-50"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 disabled:opacity-50 shadow-md"
                       title="Remove image"
+                      aria-label="Remove image"
                     >
-                      ├ù
+                      <X className="w-3.5 h-3.5" strokeWidth={3} />
                     </button>
                   </div>
                 ))}
@@ -1709,10 +2004,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       type="button"
                       onClick={handleRemoveScreenshot}
                       disabled={isSubmitting}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 disabled:opacity-50"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 disabled:opacity-50 shadow-md"
                       title="Remove screenshot"
+                      aria-label="Remove screenshot"
                     >
-                      ├ù
+                      <X className="w-3.5 h-3.5" strokeWidth={3} />
                     </button>
                   </div>
                 </div>
@@ -1734,10 +2030,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                       type="button"
                       onClick={handleKeepCurrentScreenshot}
                       disabled={isSubmitting}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 disabled:opacity-50"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 disabled:opacity-50 shadow-md"
                       title="Cancel new screenshot"
+                      aria-label="Cancel new screenshot"
                     >
-                      ├ù
+                      <X className="w-3.5 h-3.5" strokeWidth={3} />
                     </button>
                   </div>
                 </div>
@@ -2257,10 +2554,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                               type="button"
                               onClick={() => toggleTag(tag._id)}
                               disabled={isSubmitting}
-                              className="ml-1 text-current hover:opacity-70 transition-opacity"
+                              className="ml-1 text-current hover:opacity-70 transition-opacity inline-flex items-center"
                               title="Remove tag"
+                              aria-label="Remove tag"
                             >
-                              <span className="text-lg leading-none">├ù</span>
+                              <X className="w-3 h-3" strokeWidth={3} />
                             </button>
                           </span>
                         );
@@ -2278,10 +2576,11 @@ export function StoryDetail({ story }: StoryDetailProps) {
                           type="button"
                           onClick={() => handleRemoveNewTag(tagName)}
                           disabled={isSubmitting}
-                          className="ml-1 text-primary hover:text-primary/70 transition-colors"
+                          className="ml-1 text-primary hover:text-primary/70 transition-colors inline-flex items-center"
                           title="Remove tag"
+                          aria-label="Remove tag"
                         >
-                          <span className="text-lg leading-none">├ù</span>
+                          <X className="w-3 h-3" strokeWidth={3} />
                         </button>
                       </span>
                     ))}
@@ -2522,275 +2821,65 @@ export function StoryDetail({ story }: StoryDetailProps) {
           </div>
         )}
 
-      {/* Video demo start */}
-      {story.videoUrl && story.videoUrl.trim() && (
-        <div className="mt-8 bg-card rounded-lg p-6 border border-border">
-          <div className="flex items-center gap-2 mb-4">
-            <Play className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <h3 className="text-lg font-medium text-muted-foreground">Video Demo</h3>
-            <a
-              href={story.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline ml-auto"
-              title="Open in new tab"
-            >
-              Γåù
-            </a>
-          </div>
-          <div className="w-full">
-            {(() => {
-              const url = story.videoUrl.trim();
-
-              // YouTube URL patterns (including Shorts)
-              const youtubeMatch = url.match(
-                /(?:youtube\.com\/(?:shorts\/|[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
-              );
-              if (youtubeMatch) {
-                const videoId = youtubeMatch[1];
-                return (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${videoId}`}
-                    className="w-full aspect-video rounded-md"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Vimeo URL patterns
-              const vimeoMatch = url.match(/(?:vimeo\.com\/)(?:.*\/)?(\d+)/);
-              if (vimeoMatch) {
-                const videoId = vimeoMatch[1];
-                return (
-                  <iframe
-                    src={`https://player.vimeo.com/video/${videoId}`}
-                    className="w-full aspect-video rounded-md"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Loom URL patterns
-              const loomMatch = url.match(/(?:loom\.com\/share\/)([a-f0-9-]+)/);
-              if (loomMatch) {
-                const videoId = loomMatch[1];
-                return (
-                  <iframe
-                    src={`https://www.loom.com/embed/${videoId}`}
-                    className="w-full aspect-video rounded-md"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Google Drive URL patterns
-              const driveMatch = url.match(
-                /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
-              );
-              if (driveMatch) {
-                const fileId = driveMatch[1];
-                return (
-                  <iframe
-                    src={`https://drive.google.com/file/d/${fileId}/preview`}
-                    className="w-full aspect-video rounded-md"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                    title="Video Demo"
-                  />
-                );
-              }
-
-              // Check if it's a direct video file
-              const videoExtensions = /\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i;
-              if (videoExtensions.test(url)) {
-                return (
-                  <video
-                    src={url}
-                    className="w-full aspect-video rounded-md bg-black"
-                    controls
-                    preload="metadata"
-                    title="Video Demo"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                );
-              }
-
-              // Fallback for other URLs - show as link in a styled box
-              return (
-                <div className="w-full aspect-video rounded-md border-2 border-dashed border-border flex items-center justify-center bg-muted">
-                  <div className="text-center">
-                    <Play className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground mb-2">Video not embeddable</p>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-foreground hover:text-muted-foreground underline"
-                    >
-                      Watch Video Γåù
-                    </a>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-      {/* Video demo end */}
-
-      {/* Team Info Section */}
-      {!isEditing && story.teamName && (
-        <div className="mt-8 bg-card rounded-lg p-6 border border-border">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-lg font-medium text-muted-foreground">Team Info</h2>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">
-                Team Name
-              </h3>
-              <p className="text-foreground">{story.teamName}</p>
-            </div>
-
-            {story.teamMemberCount && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">
-                  Team Size
-                </h3>
-                <p className="text-foreground">
-                  {story.teamMemberCount}{" "}
-                  {story.teamMemberCount === 1 ? "member" : "members"}
-                </p>
-              </div>
-            )}
-
-            {story.teamMembers && story.teamMembers.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  Team Members
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {story.teamMembers.map(
-                    (
-                      member: { name: string; email: string },
-                      index: number,
-                    ) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-muted rounded-md border border-border"
-                      >
-                        {member.name && (
-                          <p className="font-medium text-foreground text-sm">
-                            {member.name}
-                          </p>
-                        )}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Rating Section */}
-      {!isEditing && (
-        <div className="mt-8 bg-card rounded-lg p-6 border border-border">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-            <h2 className="text-lg font-medium text-muted-foreground">
-              {hasRated ? "Your Rating" : "Rate this app"}
-            </h2>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => handleRating(value)}
-                  onMouseEnter={() => !hasRated && setHoveredRating(value)} // Only hover if not rated
-                  onMouseLeave={() => setHoveredRating(0)}
-                  disabled={!isClerkLoaded || (isSignedIn && hasRated)} // Disable if not loaded, or if signed in AND already rated
-                  className={`p-1 transition-colors disabled:cursor-not-allowed ${
-                    !isSignedIn && isClerkLoaded ? "opacity-50 cursor-help" : ""
-                  } ${
-                    hasRated
-                      ? value <= (currentUserRating || 0)
-                        ? "text-yellow-500"
-                        : "text-muted"
-                      : value <= (hoveredRating || 0)
-                        ? "text-yellow-400"
-                        : "text-muted hover:text-yellow-400"
-                  }`}
-                  title={
-                    !isSignedIn && isClerkLoaded
-                      ? "Sign in to rate"
-                      : hasRated
-                        ? `You rated ${currentUserRating} star(s)`
-                        : `Rate ${value} stars`
-                  }
-                >
-                  <Star className="w-5 h-5 fill-current" />
-                </button>
-              ))}
-            </div>
-            {story.ratingCount > 0 && (
-              <span className="text-sm text-muted-foreground">
-                {averageRating.toFixed(1)} stars ({story.ratingCount}
-                {story.ratingCount === 1 ? " rating" : " ratings"})
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Your rating helps others discover great apps.
-          </p>
-        </div>
-      )}
-
+      {/* Below-content sections - constrained to main content width */}
+      <div className="flex gap-8">
+        <div className="flex-1 min-w-0">
       {/* Changelog Section */}
       {!isEditing && (
         <div
           id="changelog"
-          className="mt-8 bg-card rounded-lg p-6 border border-border scroll-mt-20"
+          className="mt-10 scroll-mt-20"
         >
-          <h2 className="text-lg font-medium text-muted-foreground mb-4">
-            Change Log
-          </h2>
-
-          {/* Original Submission Date */}
-          <div className="mb-6 pb-4 border-b border-border">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">
-                Originally submitted:
-              </span>
-              <span suppressHydrationWarning>
-                {new Date(story._creationTime).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}{" "}
-                at{" "}
-                {new Date(story._creationTime).toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+          {/* Section Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <History className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Change Log
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Track updates and improvements
+              </p>
             </div>
           </div>
 
-          {story.changeLog && story.changeLog.length > 0 ? (
-            <div className="space-y-3">
+          {/* Timeline Container */}
+          <div className="relative">
+            {/* Timeline Line */}
+            <div className="absolute left-[19px] top-8 bottom-8 w-0.5 bg-gradient-to-b from-primary/30 via-primary/20 to-transparent" />
+
+            {/* Original Submission - Timeline Item */}
+            <div className="relative flex gap-4 mb-6">
+              <div className="relative z-10">
+                <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
+                  <Rocket className="w-4 h-4 text-primary" />
+                </div>
+              </div>
+              <div className="flex-1 pt-1.5">
+                <div className="bg-card rounded-xl p-4 border border-border shadow-sm">
+                  <span className="text-sm font-medium text-foreground">
+                    Originally Submitted
+                  </span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(story._creationTime).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}{" "}
+                    at{" "}
+                    {new Date(story._creationTime).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {story.changeLog && story.changeLog.length > 0 ? (
+              <div className="space-y-4">
               {story.changeLog
                 .slice()
                 .reverse()
@@ -2837,213 +2926,298 @@ export function StoryDetail({ story }: StoryDetailProps) {
                     if (!hasChanges) return null;
 
                     return (
-                      <div
-                        key={index}
-                        className="border border-border rounded-md overflow-hidden"
-                      >
-                        <button
-                          onClick={toggleExpanded}
-                          className="w-full px-4 py-3 bg-muted hover:bg-muted/80 transition-colors flex items-center justify-between text-left"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`transform transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                            >
-                              Γû╢
-                            </span>
-                            <span className="text-sm font-medium text-muted-foreground">
-                              {formattedDate} at {formattedTime}
-                            </span>
+                      <div key={index} className="relative flex gap-4">
+                        {/* Timeline Dot */}
+                        <div className="relative z-10">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                            isExpanded
+                              ? "bg-primary/20 border-primary/50"
+                              : "bg-muted border-border"
+                          }`}>
+                            <RefreshCw className={`w-4 h-4 transition-colors ${
+                              isExpanded ? "text-primary" : "text-muted-foreground"
+                            }`} />
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {isExpanded ? "Hide changes" : "Show changes"}
-                          </span>
-                        </button>
+                        </div>
 
-                        {isExpanded && (
-                          <div className="p-4 space-y-4">
-                            {/* Text Changes */}
-                            {entry.textChanges &&
-                              entry.textChanges.length > 0 && (
+                        {/* Timeline Content */}
+                        <div className="flex-1 pb-4">
+                          <button
+                            onClick={toggleExpanded}
+                            className="w-full text-left group"
+                          >
+                            <div className="bg-card rounded-xl p-4 border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all">
+                              <div className="flex items-center justify-between">
                                 <div>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Text Changes
-                                  </h4>
-                                  <ul className="space-y-2">
-                                    {entry.textChanges.map(
-                                      (
-                                        change: {
-                                          field: string;
-                                          oldValue: string;
-                                          newValue: string;
-                                        },
-                                        idx: number,
-                                      ) => (
-                                        <li key={idx} className="text-sm">
-                                          <span className="font-medium text-foreground">
-                                            {change.field}:
-                                          </span>
-                                          <div className="ml-4 mt-1">
-                                            <div className="text-red-600 line-through">
-                                              {change.oldValue || "(empty)"}
-                                            </div>
-                                            <div className="text-green-600">
-                                              {change.newValue || "(empty)"}
-                                            </div>
-                                          </div>
-                                        </li>
-                                      ),
-                                    )}
-                                  </ul>
+                                  <span className="text-sm font-medium text-foreground">
+                                    Update
+                                  </span>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {formattedDate} at {formattedTime}
+                                  </p>
+                                </div>
+                                <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${
+                                  isExpanded ? "rotate-90" : "group-hover:translate-x-1"
+                                }`} />
+                              </div>
+
+                              {/* Preview of changes */}
+                              {!isExpanded && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {entry.textChanges && entry.textChanges.length > 0 && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-500/10 text-blue-600">
+                                      <FileText className="w-3 h-3" />
+                                      {entry.textChanges.length} text
+                                    </span>
+                                  )}
+                                  {entry.linkChanges && entry.linkChanges.length > 0 && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-500/10 text-purple-600">
+                                      <Link2 className="w-3 h-3" />
+                                      {entry.linkChanges.length} link
+                                    </span>
+                                  )}
+                                  {entry.tagChanges && (entry.tagChanges.added.length > 0 || entry.tagChanges.removed.length > 0) && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-500/10 text-green-600">
+                                      <Tag className="w-3 h-3" />
+                                      Tags
+                                    </span>
+                                  )}
+                                  {entry.videoChanged && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-600">
+                                      <Play className="w-3 h-3" />
+                                      Video
+                                    </span>
+                                  )}
+                                  {entry.imagesChanged && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-orange-500/10 text-orange-600">
+                                      <ImageIcon className="w-3 h-3" />
+                                      Images
+                                    </span>
+                                  )}
                                 </div>
                               )}
 
-                            {/* Link Changes */}
-                            {entry.linkChanges &&
-                              entry.linkChanges.length > 0 && (
-                                <div>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Link Changes
-                                  </h4>
-                                  <ul className="space-y-2">
-                                    {entry.linkChanges.map(
-                                      (
-                                        change: {
-                                          field: string;
-                                          oldValue?: string;
-                                          newValue?: string;
-                                        },
-                                        idx: number,
-                                      ) => (
-                                        <li key={idx} className="text-sm">
-                                          <span className="font-medium text-foreground">
-                                            {change.field}:
-                                          </span>
-                                          <div className="ml-4 mt-1 break-all">
-                                            {change.oldValue && (
-                                              <div className="text-red-600 line-through">
-                                                {change.oldValue}
+                              {/* Expanded Content */}
+                              {isExpanded && (
+                                <div className="mt-4 pt-4 border-t border-border space-y-4">
+                                  {/* Text Changes */}
+                                  {entry.textChanges && entry.textChanges.length > 0 && (
+                                    <div>
+                                      <h4 className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
+                                        <FileText className="w-4 h-4 text-blue-500" />
+                                        Text Changes
+                                      </h4>
+                                      <ul className="space-y-3">
+                                          {entry.textChanges.map((change, idx) => (
+                                            <li key={idx} className="text-sm bg-muted/50 rounded-lg p-3">
+                                              <span className="font-medium text-foreground">{change.field}</span>
+                                              <div className="mt-2 space-y-1.5">
+                                                <div className="flex items-start gap-2">
+                                                  <span className="text-red-500 mt-0.5">−</span>
+                                                  <span className="text-red-600 line-through opacity-70">
+                                                    {change.oldValue || "(empty)"}
+                                                  </span>
+                                                </div>
+                                                <div className="flex items-start gap-2">
+                                                  <span className="text-green-500 mt-0.5">+</span>
+                                                  <span className="text-green-600">
+                                                    {change.newValue || "(empty)"}
+                                                  </span>
+                                                </div>
                                               </div>
-                                            )}
-                                            {change.newValue && (
-                                              <div className="text-green-600">
-                                                {change.newValue}
-                                              </div>
-                                            )}
-                                            {!change.oldValue &&
-                                              !change.newValue && (
-                                                <div className="text-[#787672]">
-                                                  (removed)
+                                            </li>
+                                          ))}
+                                        </ul>
+                                    </div>
+                                  )}
+
+                                  {/* Link Changes */}
+                                  {entry.linkChanges && entry.linkChanges.length > 0 && (
+                                    <div>
+                                      <h4 className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
+                                        <Link2 className="w-4 h-4 text-purple-500" />
+                                        Link Changes
+                                      </h4>
+                                      <ul className="space-y-3">
+                                        {entry.linkChanges.map((change, idx) => (
+                                          <li key={idx} className="text-sm bg-muted/50 rounded-lg p-3">
+                                            <span className="font-medium text-foreground">{change.field}</span>
+                                            <div className="mt-2 space-y-1.5">
+                                              {change.oldValue && (
+                                                <div className="flex items-start gap-2">
+                                                  <span className="text-red-500 mt-0.5">−</span>
+                                                  <span className="text-red-600 line-through opacity-70 break-all">
+                                                    {change.oldValue}
+                                                  </span>
                                                 </div>
                                               )}
+                                              {change.newValue && (
+                                                <div className="flex items-start gap-2">
+                                                  <span className="text-green-500 mt-0.5">+</span>
+                                                  <span className="text-green-600 break-all">
+                                                    {change.newValue}
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {/* Tag Changes */}
+                                  {entry.tagChanges && (entry.tagChanges.added.length > 0 || entry.tagChanges.removed.length > 0) && (
+                                    <div>
+                                      <h4 className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
+                                        <Tag className="w-4 h-4 text-green-500" />
+                                        Tag Changes
+                                      </h4>
+                                      <div className="flex flex-wrap gap-2">
+                                        {entry.tagChanges.added.map((tag) => (
+                                          <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-500/10 text-green-600">
+                                            <Plus className="w-3 h-3" />
+                                            {tag}
+                                          </span>
+                                        ))}
+                                        {entry.tagChanges.removed.map((tag) => (
+                                          <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-red-500/10 text-red-600">
+                                            <Minus className="w-3 h-3" />
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Media Changes */}
+                                  {(entry.videoChanged || entry.imagesChanged) && (
+                                    <div>
+                                      <h4 className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
+                                        <ImageIcon className="w-4 h-4 text-orange-500" />
+                                        Media Updates
+                                      </h4>
+                                      <div className="space-y-2">
+                                        {entry.videoChanged && (
+                                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <Play className="w-4 h-4 text-red-500" />
+                                            Video demo was updated
                                           </div>
-                                        </li>
-                                      ),
-                                    )}
-                                  </ul>
+                                        )}
+                                        {entry.imagesChanged && (
+                                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <ImageIcon className="w-4 h-4 text-orange-500" />
+                                            Screenshots or gallery images were updated
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
-
-                            {/* Tag Changes */}
-                            {entry.tagChanges &&
-                              (entry.tagChanges.added.length > 0 ||
-                                entry.tagChanges.removed.length > 0) && (
-                                <div>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                    Tag Changes
-                                  </h4>
-                                  <div className="space-y-1">
-                                    {entry.tagChanges.added.length > 0 && (
-                                      <div className="text-sm">
-                                        <span className="text-green-600 font-medium">
-                                          Added:
-                                        </span>{" "}
-                                        {entry.tagChanges.added.join(", ")}
-                                      </div>
-                                    )}
-                                    {entry.tagChanges.removed.length > 0 && (
-                                      <div className="text-sm">
-                                        <span className="text-red-600 font-medium">
-                                          Removed:
-                                        </span>{" "}
-                                        {entry.tagChanges.removed.join(", ")}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                            {/* Video Changed */}
-                            {entry.videoChanged && (
-                              <div className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">
-                                  Video:
-                                </span>{" "}
-                                Video demo was updated
-                              </div>
-                            )}
-
-                            {/* Images Changed */}
-                            {entry.imagesChanged && (
-                              <div className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">
-                                  Images:
-                                </span>{" "}
-                                Screenshots or gallery images were updated
-                              </div>
-                            )}
-                          </div>
-                        )}
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     );
                   },
                 )}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">
-                No changes have been made to this submission yet. All future
-                edits will be tracked and displayed here.
-              </p>
+            <div className="relative flex gap-4">
+              <div className="relative z-10">
+                <div className="w-10 h-10 rounded-full bg-muted border-2 border-border flex items-center justify-center">
+                  <History className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+              <div className="flex-1 pt-1.5">
+                <div className="bg-muted/50 rounded-xl p-6 border border-dashed border-border text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No changes have been made yet. All future edits will be tracked here.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
+          </div>
         </div>
       )}
 
       {/* Comments Section */}
       {!isEditing && (
-        <div id="comments" className="mt-8 scroll-mt-20">
-          <h2 className="text-xl font-medium text-muted-foreground mb-4">
-            {comments?.length ?? 0}{" "}
-            {(comments?.length ?? 0) === 1 ? "Comment" : "Comments"}
-          </h2>
-          <CommentForm onSubmit={handleCommentSubmit} />
-          <div className="mt-8 space-y-6 border-t border-border pt-6">
-            {comments === undefined && <div>Loading comments...</div>}
-            {comments?.map((commentData: any) => {
-              // Rename variable to avoid conflict
-              // Ensure commentData conforms to CommentType, though validation should happen in backend
-              const comment = commentData as CommentType;
-              return (
-                <React.Fragment key={comment._id}>
-                  <Comment
-                    comment={comment}
-                    onReply={(parentId) => setReplyToId(parentId)}
-                  />
-                  {replyToId === comment._id && (
-                    <div className="pl-8 pt-4">
-                      <CommentForm
-                        onSubmit={handleCommentSubmit}
-                        parentId={comment._id}
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
+        <div id="comments" className="mt-10 scroll-mt-20">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-xl">
+                <MessageSquare className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Discussion
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {comments?.length ?? 0}{" "}
+                  {(comments?.length ?? 0) === 1 ? "comment" : "comments"} so far
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Comment Form Card */}
+          <div className="bg-card rounded-xl p-5 border border-border shadow-sm mb-8">
+            <CommentForm onSubmit={handleCommentSubmit} />
+          </div>
+
+          {/* Comments List */}
+          <div className="space-y-1">
+            {comments === undefined && (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                Loading comments...
+              </div>
+            )}
+            {(() => {
+              if (!comments) return null;
+              // Build nested tree: collect children per parent
+              const byParent: Record<string, CommentType[]> = {};
+              const roots: CommentType[] = [];
+              for (const c of comments as CommentType[]) {
+                if (c.parentId) {
+                  const key = String(c.parentId);
+                  if (!byParent[key]) byParent[key] = [];
+                  byParent[key].push(c);
+                } else {
+                  roots.push(c);
+                }
+              }
+              const renderNode = (c: CommentType): React.ReactElement => (
+                <Comment
+                  key={c._id}
+                  comment={c as any}
+                  onReply={(parentId: Id<"comments">) => setReplyToId(parentId)}
+                  storyOwnerId={story.userId ?? null}
+                  currentUserId={currentUser?._id ?? null}
+                  replyingToId={replyToId}
+                  onSubmitReply={async (
+                    content: string,
+                    parentId?: Id<"comments">,
+                  ) => {
+                    await handleCommentSubmit(content, parentId);
+                    setReplyToId(null);
+                  }}
+                  onCancelReply={() => setReplyToId(null)}
+                  childComments={byParent[String(c._id)] || []}
+                />
               );
-            })}
+              return roots.map(renderNode);
+            })()}
             {comments && comments.length === 0 && (
-              <div className="text-muted-foreground">
-                No comments yet. Be the first!
+              <div className="text-center py-8 bg-muted/30 rounded-xl border border-dashed border-border">
+                <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                <p className="text-sm text-muted-foreground">
+                  No comments yet. Start the conversation!
+                </p>
               </div>
             )}
           </div>
@@ -3052,55 +3226,59 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
       {/* Related Apps Section */}
       {!isEditing && relatedStories && relatedStories.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-xl font-medium text-muted-foreground mb-6">
-            Related Apps
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-10">
+          {/* Section Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <Layers className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Related Apps
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                More products you might like
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {relatedStories.map((relatedStory: any) => (
-              <div
+              <Link
                 key={relatedStory._id}
-                className="bg-card rounded-lg p-4 border border-border flex flex-col group"
+                href={`/s/${relatedStory.slug}`}
+                className="group bg-card rounded-xl p-4 border border-border hover:border-primary/20 hover:shadow-lg transition-all duration-300 flex gap-4"
               >
                 {relatedStory.screenshotUrl && (
-                  <Link
-                    href={`/s/${relatedStory.slug}`}
-                    className="mb-3 block overflow-hidden rounded-md aspect-video"
-                  >
+                  <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                     <img
                       src={relatedStory.screenshotUrl}
                       alt={`${relatedStory.title} screenshot`}
-                      className="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-300 ease-in-out"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       loading="lazy"
                     />
-                  </Link>
+                  </div>
                 )}
-                <h3 className="text-lg font-semibold text-foreground mb-1 truncate">
-                  <Link
-                    href={`/s/${relatedStory.slug}`}
-                    className="hover:text-muted-foreground hover:underline"
-                  >
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <h3 className="text-base font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
                     {relatedStory.title}
-                  </Link>
-                </h3>
-                {relatedStory.description && (
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2 flex-grow">
-                    {relatedStory.description}
-                  </p>
-                )}
-                <p
-                  className={`text-xs text-muted-foreground mb-2 ${relatedStory.description ? "" : "flex-grow"}`}
-                >
-                  By{" "}
-                  {relatedStory.authorName ||
-                    relatedStory.authorUsername ||
-                    "Anonymous"}
-                </p>
-                <div className="flex items-center text-xs text-muted-foreground gap-3 mt-auto pt-2 border-t border-border">
-                  <span>{relatedStory.votes} vibes</span>
-                  {/* <span>{relatedStory.commentCount ?? 0} comments</span> */}
+                  </h3>
+                  {relatedStory.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 flex-grow">
+                      {relatedStory.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <ChevronUp className="w-3 h-3" />
+                      {relatedStory.votes} vibes
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      by {relatedStory.authorName || relatedStory.authorUsername || "Anonymous"}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -3112,17 +3290,24 @@ export function StoryDetail({ story }: StoryDetailProps) {
         isSignedIn &&
         currentUser &&
         story.userId === currentUser._id && (
-          <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/20 flex items-center justify-between text-sm text-primary">
+          <div className="mt-8 p-5 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Edit3 className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="font-medium text-primary">
-                Want to update your submission?
-              </span>
+              <div className="p-2 bg-primary/20 rounded-lg">
+                <Edit3 className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <span className="text-sm font-medium text-foreground block">
+                  Manage your submission
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Update details, add screenshots, or modify links
+                </span>
+              </div>
             </div>
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              className="text-xs border-primary/20 text-primary hover:bg-primary/10"
+              className="text-xs bg-primary hover:bg-primary/90"
               onClick={() => {
                 router.push(`?edit=true`);
               }}
@@ -3134,21 +3319,28 @@ export function StoryDetail({ story }: StoryDetailProps) {
 
       {/* Flag/Report Section */}
       {!isEditing && (
-        <div className="mt-8 p-4 bg-muted rounded-lg border border-border flex items-center justify-between text-sm text-muted-foreground">
+        <div className="mt-8 p-5 bg-muted/50 rounded-xl border border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Flag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <span className="font-medium text-foreground">
-              Seen something inappropriate?
-            </span>
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <Flag className="w-4 h-4 text-destructive" />
+            </div>
+            <div>
+              <span className="text-sm font-medium text-foreground block">
+                Report content
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Flag inappropriate submissions for review
+              </span>
+            </div>
           </div>
           {isClerkLoaded && isSignedIn ? (
             <Button
               variant="outline"
               size="sm"
-              className="text-xs"
+              className="text-xs border-destructive/20 text-destructive hover:bg-destructive/10"
               onClick={handleOpenReportModal}
             >
-              Report this Submission
+              Report
             </Button>
           ) : isClerkLoaded && !isSignedIn ? (
             <Button
@@ -3167,6 +3359,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
           )}
         </div>
       )}
+        </div>
+        {/* Empty sidebar placeholder to maintain alignment */}
+        <div className="w-80 hidden lg:block" />
+      </div>
 
       {/* Report Modal */}
       <Dialog

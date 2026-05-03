@@ -26,12 +26,35 @@ import {
   // useAuth removed — per docs, use useConvexAuth() for Convex query guards
 } from "@clerk/nextjs";
 import { UserSyncer } from "./UserSyncer";
-import { WeeklyLeaderboard } from "./WeeklyLeaderboard";
-import { TopCategoriesOfWeek } from "./TopCategoriesOfWeek";
-import { RecentVibers } from "./RecentVibers";
+import dynamic from "next/dynamic";
+
+// Defer heavy sidebar widgets — they're below-the-fold on large screens and
+// hidden on mobile. Loading them lazily keeps the critical path lean.
+const WeeklyLeaderboard = dynamic(
+  () => import("./WeeklyLeaderboard").then((m) => ({ default: m.WeeklyLeaderboard })),
+  {
+    ssr: false,
+    loading: () => <div className="h-48 bg-muted/30 animate-pulse rounded-xl" />,
+  },
+);
+const TopCategoriesOfWeek = dynamic(
+  () => import("./TopCategoriesOfWeek").then((m) => ({ default: m.TopCategoriesOfWeek })),
+  {
+    ssr: false,
+    loading: () => <div className="h-48 bg-muted/30 animate-pulse rounded-xl" />,
+  },
+);
+const RecentVibers = dynamic(
+  () => import("./RecentVibers").then((m) => ({ default: m.RecentVibers })),
+  {
+    ssr: false,
+    loading: () => <div className="h-48 bg-muted/30 animate-pulse rounded-xl" />,
+  },
+);
 import { AuthRequiredDialog } from "./ui/AuthRequiredDialog";
 import { formatDistanceToNow } from "date-fns";
 import { Navbar5 } from "./ui/navbar-5";
+import { AutoBreadcrumbs } from "./AutoBreadcrumbs";
 import { cn } from "@/lib/utils";
 
 interface LayoutContextType {
@@ -202,6 +225,9 @@ export function Layout({ children }: { children?: ReactNode }) {
           convexUserDoc={convexUserDoc}
           settings={settings || undefined}
         />
+
+        {/* Auto Breadcrumbs - hidden on home and a few configured pages */}
+        <AutoBreadcrumbs />
 
         {/* Secondary Filter Bar */}
         {!isStoryDetailPage && !isJudgingPage && !isYCHackFormPage && !isDynamicSubmitFormPage && !isCustomFormPage && !isPublicResultsPage && !isAdminFormPage && (

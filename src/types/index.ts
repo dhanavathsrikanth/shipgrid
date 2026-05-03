@@ -42,7 +42,16 @@ export type Comment = Doc<"comments"> & {
   // Existing fields are from Doc<"comments">
   // Add new fields that come from the backend query (listApprovedByStory)
   authorName?: string;
-  authorUsername?: string;
+  authorUsername?: string | null;
+  authorRole?: string | null;
+  authorBio?: string | null;
+  authorImageUrl?: string | null;
+  authorIsVerified?: boolean;
+  hasVoted?: boolean;
+  isDeleted?: boolean;
+  isMakerResponse?: boolean;
+  flaggedAsLowQuality?: boolean;
+  qualityScore?: number;
   // replies?: Comment[]; // If you implement nested replies display directly in type
 };
 

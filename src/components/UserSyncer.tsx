@@ -63,13 +63,12 @@ export function UserSyncer({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {isSyncing ? (
-        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+      {children}
+      {isSyncing && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4" />
           <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-tight">Authenticating securely...</p>
         </div>
-      ) : (
-        children
       )}
     </>
   );

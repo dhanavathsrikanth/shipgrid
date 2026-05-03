@@ -26,7 +26,6 @@ Unlike generic launch boards (ProductHunt, BetaList), Shipgrid uses semantic AI 
 - [Homepage — Live feed of builder submissions](https://goshipgrid.app/)
 - [Explore — Full product directory](https://goshipgrid.app/explore)
 - [Leaderboard — Top apps this week](https://goshipgrid.app/leaderboard)
-- [Submit your app](https://goshipgrid.app/submit)
 
 ## Platform Features
 

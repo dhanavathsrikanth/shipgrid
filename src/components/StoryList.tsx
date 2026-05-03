@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ChevronUp,
   MessageSquare,
@@ -229,7 +230,7 @@ export function StoryList({
         <div className={mainContentContainerClass}>
           <div className="space-y-8">
             <div className={containerClass}>
-              {stories.map((story) => (
+              {stories.map((story, idx) => (
                 <StoryCardWrapper key={story._id} storyId={story._id} story={story}>
                 <article
                   className={`flex ${viewMode === "grid" ? "flex-col bg-card rounded-lg p-4 border border-border" : viewMode === "vibe" ? "flex-col md:flex-row items-start" : "flex-row bg-card rounded-lg p-[4px] border border-border"} gap-4`}
@@ -295,11 +296,16 @@ export function StoryList({
                       href={`/s/${story.slug}`}
                       className="w-full md:w-[195px] md:flex-shrink-0 aspect-video block overflow-hidden rounded-md"
                     >
-                      <img
+                      <Image
                         src={story.screenshotUrl}
                         alt={`${story.title} thumbnail`}
+                        width={390}
+                        height={219}
+                        sizes="(max-width: 768px) 100vw, 195px"
+                        {...(idx < 3
+                          ? { priority: true, fetchPriority: "high" as const }
+                          : { loading: "lazy" as const })}
                         className="w-full h-full object-cover border border-border shadow-sm"
-                        loading="lazy"
                       />
                     </Link>
                   )}
@@ -374,11 +380,16 @@ export function StoryList({
                           href={`/s/${story.slug}`}
                           className="block mb-4 rounded-md overflow-hidden hover:opacity-90 transition-opacity"
                         >
-                          <img
+                          <Image
                             src={story.screenshotUrl}
                             alt={story.title}
+                            width={600}
+                            height={192}
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            {...(idx < 3
+                              ? { priority: true, fetchPriority: "high" as const }
+                              : { loading: "lazy" as const })}
                             className="w-full h-48 object-cover"
-                            loading="lazy"
                           />
                         </Link>
                       )}
