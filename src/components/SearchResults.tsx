@@ -12,11 +12,15 @@ interface SearchResultsProps {
   query: string;
   stories: Story[];
   viewMode: "list" | "grid" | "vibe";
+  mode?: "keyword" | "ai";
 }
 
-export function SearchResults({ query, stories, viewMode }: SearchResultsProps) {
-  // Search for users as well
-  const users = useQuery(api.users.searchUsers, query.trim() ? { searchTerm: query } : "skip");
+export function SearchResults({ query, stories, viewMode, mode = "keyword" }: SearchResultsProps) {
+  // Only search for users in keyword mode (AI mode is app-intent only)
+  const users = useQuery(
+    api.users.searchUsers,
+    mode === "keyword" && query.trim() ? { searchTerm: query } : "skip",
+  );
 
   const totalResults = stories.length + (users?.length || 0);
 

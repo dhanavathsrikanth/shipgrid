@@ -189,6 +189,8 @@ export function TagManagement() {
       window.clearTimeout(timers[key]);
     }
     timers[key] = window.setTimeout(async () => {
+      // Skip new tags - they don't exist in DB yet, order will be set on create
+      if (String(tagId).startsWith("new-")) return;
       try {
         await updateTag({ tagId, order: orderNum as any });
       } catch (err) {
@@ -214,8 +216,8 @@ export function TagManagement() {
   const persistAllOrders = async (tags: EditableTag[]) => {
     // Persist sequentially only for tags whose order changed
     for (const tag of tags) {
-      // Skip deleted tags
-      if (tag.isDeleted) continue;
+      // Skip deleted tags and new tags (not in DB yet, will be created with order during save)
+      if (tag.isDeleted || tag.isNew) continue;
       try {
         await updateTag({ tagId: tag._id, order: tag.order as any });
       } catch (err) {

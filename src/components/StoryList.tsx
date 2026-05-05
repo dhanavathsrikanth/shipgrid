@@ -239,53 +239,35 @@ export function StoryList({
                     <div
                       className={`flex ${
                         viewMode === "vibe"
-                          ? "flex-col items-center w-[70px] flex-shrink-0"
-                          : "flex-col items-center min-w-[40px] pt-1"
+                          ? "flex-col items-center w-[72px] flex-shrink-0"
+                          : "flex-col items-center min-w-[48px] pt-1"
                       }`}
                     >
                     {viewMode === "vibe" ? (
-                        <div className="flex flex-col items-center w-full">
-                          <div className="bg-muted/50 rounded-t-md w-full h-[62px] flex flex-col items-center justify-center text-lg border border-border font-normal text-foreground mb-[0px]">
-                            <span className="font-alfa-slab-one">
-                              {story.votes}
-                            </span>
-                            <div className="text-xs">Vibes</div>
-                          </div>
-                          <div className="relative group">
-                            <button
-                              onClick={() => handleVote(story._id)}
-                              className="bg-card border border-t-0 border-border text-foreground hover:bg-muted/80 w-full rounded-b-md py-1 px-2 flex items-center justify-center gap-1 text-sm font-normal h-[24px] transition-colors"
-                            >
-                              Vibe it
-                            </button>
-                            <Link
-                              href="/scoring"
-                              className="absolute -right-5 top-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="How ranking works"
-                            >
-                              <Info className="w-3 h-3 text-muted-foreground" />
-                            </Link>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="relative group">
-                            <button
-                              onClick={() => handleVote(story._id)}
-                              className="text-foreground hover:bg-muted p-1 rounded"
-                            >
-                              <ChevronUp className="w-5 h-5" />
-                            </button>
-                            <div className="absolute left-full top-0 ml-1 hidden group-hover:flex items-center">
-                              <Link href="/scoring" title="How is ranking calculated?">
-                                <Info className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-                              </Link>
-                            </div>
-                          </div>
-                          <span className="text-foreground font-medium text-sm">
+                        <button
+                          onClick={() => handleVote(story._id)}
+                          title="Upvote this app"
+                          className="group flex flex-col items-center justify-center gap-0.5 w-full h-[72px] rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md"
+                        >
+                          <ChevronUp className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors stroke-[2.5]" />
+                          <span className="text-lg font-bold text-foreground leading-none group-hover:text-primary transition-colors">
                             {story.votes}
                           </span>
-                        </>
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                            Vibes
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleVote(story._id)}
+                          title="Upvote this app"
+                          className="group flex flex-col items-center justify-center gap-0 w-[44px] h-[52px] rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+                        >
+                          <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors stroke-[2.5]" />
+                          <span className="text-sm font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                            {story.votes}
+                          </span>
+                        </button>
                       )}
                     </div>
                   )}
@@ -336,17 +318,16 @@ export function StoryList({
                           />
                         )}
                         {viewMode === "grid" && (
-                          <>
-                            <button
-                              onClick={() => handleVote(story._id)}
-                              className="text-foreground hover:bg-muted p-1 rounded"
-                            >
-                              <ChevronUp className="w-5 h-5" />
-                            </button>
-                            <span className="text-foreground font-medium text-sm">
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVote(story._id); }}
+                            title="Upvote this app"
+                            className="group inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 flex-shrink-0"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors stroke-[2.5]" />
+                            <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                               {story.votes}
                             </span>
-                          </>
+                          </button>
                         )}
                         <h2
                           className={`${viewMode === "vibe" || viewMode === "list" ? "text-[15px]" : "text-base"} text-foreground font-bold truncate flex items-center gap-2`}

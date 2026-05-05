@@ -86,7 +86,7 @@ export function StoryForm() {
 
   const MAX_TAGLINE_LENGTH = 140;
 
-  const availableTags = useQuery(api.tags.listHeader);
+  const availableTags = useQuery(api.tags.list);
   const allTags = useQuery(api.tags.listAllForDropdown);
   const formFields = useQuery(api.storyFormFields.listEnabled);
   const settings = useQuery(api.settings.get);

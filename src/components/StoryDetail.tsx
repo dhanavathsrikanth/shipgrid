@@ -979,24 +979,27 @@ export function StoryDetail({ story }: StoryDetailProps) {
         <div className="flex-1 min-w-0">
           <article className="bg-card rounded-lg p-4 sm:p-6 border border-border">
             <div className="flex gap-4">
-              <div className="flex flex-col items-center gap-1 pt-1 min-w-[40px]">
+              <div className="flex flex-col items-center pt-1 w-[72px] flex-shrink-0">
                 <button
                   onClick={handleVote}
-                  disabled={!isClerkLoaded} // Disable while Clerk is loading to prevent premature clicks
-                  className={`text-foreground hover:bg-muted p-1 rounded ${
-                    !isSignedIn && isClerkLoaded ? "opacity-50 cursor-help" : ""
+                  disabled={!isClerkLoaded}
+                  className={`group flex flex-col items-center justify-center gap-0.5 w-full h-[80px] rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md ${
+                    !isSignedIn && isClerkLoaded ? "opacity-70 cursor-help" : ""
                   }`}
                   title={
                     !isSignedIn && isClerkLoaded
                       ? "Sign in to vote"
-                      : "Vote for this app"
+                      : "Upvote this app"
                   }
                 >
-                  <ChevronUp className="w-5 h-5" />
+                  <ChevronUp className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors stroke-[2.5]" />
+                  <span className="text-xl font-bold text-foreground leading-none group-hover:text-primary transition-colors">
+                    {story.votes}
+                  </span>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                    Vibes
+                  </span>
                 </button>
-                <span className="text-muted-foreground font-medium text-sm">
-                  {story.votes}
-                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">

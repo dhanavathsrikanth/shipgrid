@@ -184,6 +184,13 @@ export const commentDetailsForProfileValidator = v.object({
   storySlug: v.optional(v.string()), // Slug of the story commented on
   authorName: v.optional(v.string()), // Name of the comment author
   authorUsername: v.optional(v.string()), // Username of the comment author
+  // Additional fields returned from the comments table (all optional to stay compatible)
+  flaggedAsLowQuality: v.optional(v.boolean()),
+  isMakerResponse: v.optional(v.boolean()),
+  isQuestion: v.optional(v.boolean()),
+  qualityScore: v.optional(v.number()),
+  wordCount: v.optional(v.number()),
+  isDeleted: v.optional(v.boolean()),
 });
 
 // Validator for Rating object with story details in profile data

@@ -1,4 +1,4 @@
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
@@ -155,5 +155,60 @@ export const resolveProductStoryIds = internalQuery({
   handler: async (ctx, args) => {
     const docs = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
     return docs.filter((d): d is Doc<"productEmbeddings"> => d !== null).map((d) => d.storyId);
+  },
+});
+
+/**
+ * Public AI intent/semantic search.
+ * Generates an embedding for the user's natural-language query and runs
+ * a vector search against productEmbeddings. Returns full story details,
+ * ordered by similarity, with a matchScore (0-100) attached.
+ */
+export const semanticSearchStories = action({
+  args: {
+    searchTerm: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<any[]> => {
+    const term = args.searchTerm.trim();
+    if (term.length < 2) return [];
+
+    const limit = args.limit ?? 20;
+
+    // 1. Rewrite the query as a semantic description so it matches the
+    //    product-embedding text format (problem + audience + stage).
+    const searchText = `Looking for a product that solves: ${term}. Describes the problem, target audience, and use case.`;
+
+    // 2. Generate embedding via OpenRouter
+    const embedding: number[] = await ctx.runAction(
+      internal.embeddings.generateEmbedding,
+      { text: searchText },
+    );
+
+    // 3. Vector search
+    const results = await ctx.vectorSearch("productEmbeddings", "by_embedding", {
+      vector: embedding,
+      limit,
+    });
+    if (results.length === 0) return [];
+
+    // 4. Resolve embedding docs -> story IDs (preserve order)
+    const storyIds = await ctx.runQuery(
+      internal.embeddings.resolveProductStoryIds,
+      { ids: results.map((r) => r._id) },
+    );
+
+    // 5. Fetch full story details (also preserves order since we pass storyIds as-is)
+    const stories: any[] = await ctx.runQuery(
+      internal.stories.getStoriesByIdsInternal,
+      { storyIds },
+    );
+
+    // 6. Attach matchScore (0-100) from cosine similarity score
+    return stories.map((story, i) => {
+      const score = results[i]?._score ?? 0;
+      const matchScore = Math.max(0, Math.min(100, Math.round(score * 100)));
+      return { ...story, matchScore };
+    });
   },
 });
