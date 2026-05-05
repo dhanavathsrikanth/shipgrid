@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { Id } from "../../../convex/_generated/dataModel"
 import { useSearchParams } from "next/navigation"
 
-export default function VerdictPage() {
+function VerdictContent() {
   const searchParams = useSearchParams()
   const requestId = searchParams.get("r")
   const verdict = searchParams.get("v")
@@ -93,5 +93,19 @@ export default function VerdictPage() {
         </a>
       </div>
     </div>
+  )
+}
+
+export default function VerdictPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
+        </div>
+      }
+    >
+      <VerdictContent />
+    </Suspense>
   )
 }
