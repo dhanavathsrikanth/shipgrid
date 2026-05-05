@@ -481,6 +481,7 @@ export function TagManagement() {
       try {
         let iconStorageIdToSend: Id<"_storage"> | undefined = undefined;
         let shouldClearIcon = !tag.iconFile && !tag.iconUrl;
+        let newTagId: Id<"tags"> | undefined = undefined; // Track new tag ID from create
 
         if (tag.iconFile) {
           try {
@@ -537,7 +538,7 @@ export function TagManagement() {
           };
           if (iconStorageIdToSend)
             createPayload.iconStorageId = iconStorageIdToSend;
-          await createTag(createPayload);
+          newTagId = await createTag(createPayload);
         } else {
           // Existing tag update
           const updatePayload: any = {
@@ -572,6 +573,7 @@ export function TagManagement() {
                 t._id === tag._id
                   ? {
                       ...t,
+                      _id: newTagId || t._id, // Use server-generated ID for new tags
                       isModified: false,
                       isNew: false,
                       isDeleted: tag.isDeleted,
