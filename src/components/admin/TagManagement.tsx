@@ -90,6 +90,7 @@ export function TagManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input
   const orderSaveTimersRef = useRef<Record<string, number>>({}); // Debounce timers per tag
   const draggingTagIdRef = useRef<Id<"tags"> | null>(null); // Drag-and-drop state
+  const editableTagsRef = useRef<EditableTag[]>([]); // Track current tags for debounced updates
 
   // Handle scroll visibility for floating buttons
   useEffect(() => {
@@ -149,6 +150,11 @@ export function TagManagement() {
     // Keep dependency on isProcessing to prevent refresh during saves
   }, [allTagsAdmin, isProcessing]);
 
+  // Sync ref with state for debounced order updates
+  useEffect(() => {
+    editableTagsRef.current = editableTags;
+  }, [editableTags]);
+
   // --- Local State Update Handlers ---
 
   const handleFieldChange = (
@@ -191,8 +197,11 @@ export function TagManagement() {
     timers[key] = window.setTimeout(async () => {
       // Skip new tags - they don't exist in DB yet, order will be set on create
       if (String(tagId).startsWith("new-")) return;
+      // Get the current order value from ref to avoid stale closure
+      const currentTag = editableTagsRef.current.find(t => t._id === tagId);
+      const currentOrder = currentTag?.order;
       try {
-        await updateTag({ tagId, order: orderNum as any });
+        await updateTag({ tagId, order: currentOrder as any });
       } catch (err) {
         console.error("Failed to update tag order immediately:", err);
         setError(
